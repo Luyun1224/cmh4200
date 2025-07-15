@@ -128,12 +128,14 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
 
     <script>
+        // 全域變數
         let currentModalType = '';
         let editingIndex = null;
         let allProfiles = {};
         let currentStaffName = '';
         let profileData = {};
 
+        // DOM 元素
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modal-title');
         const modalContent = document.getElementById('modal-content');
@@ -144,21 +146,24 @@
         const confirmModalOkBtn = document.getElementById('confirm-modal-ok');
         const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel');
 
+        // 請將這裡換成您在 Google Apps Script 重新部署後取得的【全新】網址
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzJbUKp8uWkaCraQrNNy8VWQvtXtUjQrAIG72VYz7imP1oy_wFR1VcmhegTcleeuCMv/exec";
 
+        // ===== 核心功能：讀取與儲存 =====
+        
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('profilePhoto').addEventListener('change', handlePhotoUpload);
             
             showToast("正在從雲端讀取資料...", "success");
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error(`無法連接雲端: ${response.statusText}`);
                 allProfiles = await response.json();
                 console.log("成功從 Google Sheet 讀取資料:", allProfiles);
                 showToast("雲端資料讀取完畢！", "success");
             } catch (error) {
                 console.error("從 Google Sheet 讀取資料失敗:", error);
-                showToast("讀取雲端資料失敗！", "error");
+                showToast(`讀取雲端資料失敗: ${error.message}`, "error");
                 allProfiles = {};
             }
 
@@ -174,8 +179,9 @@
                 return;
             }
             
-            showToast("正在儲存資料至雲端...", "success");
-            document.querySelector('[onclick="saveProfile()"]').disabled = true; // 防止重複點擊
+            const saveButton = document.querySelector('[onclick="saveProfile()"]');
+            saveButton.disabled = true;
+            saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>儲存中...`;
             
             profileData.name = document.getElementById('profile-name').value;
             profileData.title = document.getElementById('profile-title').value;
@@ -184,27 +190,31 @@
             allProfiles[currentStaffName] = profileData;
             
             try {
-                // 使用 fetch API 將資料 POST 到 Google Apps Script
                 const response = await fetch(GOOGLE_SHEET_API_URL, {
                     method: 'POST',
-                    // Google Apps Script 的 doPost 部署後，通常是透過重新導向來處理，
-                    // 直接的 fetch 可能會遇到 CORS 問題，no-cors 是一種應對方式，但會讓你看不到回傳的 response body。
-                    // Apps Script 本身會處理寫入，前端只要相信它有成功即可。
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 使用 text/plain 避免觸發 CORS preflight
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(allProfiles)
                 });
 
-                console.log("成功發送儲存請求至 Google Sheet!");
-                showToast('個人資料已成功儲存至雲端！', 'success');
+                if (!response.ok) throw new Error(`伺服器錯誤: ${response.statusText}`);
+                const result = await response.json();
 
+                if (result.status === "success") {
+                    console.log(`成功儲存 ${result.rowCount} 筆資料至 Google Sheet!`);
+                    showToast('個人資料已成功儲存至雲端！', 'success');
+                } else {
+                    throw new Error(result.message || 'Apps Script 腳本執行失敗');
+                }
             } catch (e) {
                 console.error("儲存至 Google Sheet 失敗:", e);
-                showToast('儲存至雲端失敗，請查看主控台！', 'error');
+                showToast(`儲存至雲端失敗: ${e.message}`, 'error');
             } finally {
-                document.querySelector('[onclick="saveProfile()"]').disabled = false; // 恢復按鈕
+                saveButton.disabled = false;
+                saveButton.innerHTML = `<i class="fas fa-save mr-2"></i>儲存個人資料至雲端`;
             }
         }
+
+        // ===== 資料與畫面管理 =====
 
         function getCategoryInfo(type) {
             const map = {
@@ -261,42 +271,19 @@
             const { listName } = categoryInfo;
             
             switch (currentModalType) {
-                case 'duty':
-                    data = { content: document.getElementById('duty-content').value, startDate: document.getElementById('duty-start-date').value, endDate: document.getElementById('duty-end-date').value };
-                    if (!data.content || !data.startDate) isValid = false;
-                    break;
-                case 'experience':
-                    data = { name: document.getElementById('exp-name').value, startDate: document.getElementById('exp-start-date').value, endDate: document.getElementById('exp-end-date').value };
-                    if (!data.name) isValid = false;
-                    break;
-                case 'project':
-                    data = { name: document.getElementById('project-name').value, desc: document.getElementById('project-desc').value, status: document.getElementById('project-status').value, startDate: document.getElementById('project-start-date').value, endDate: document.getElementById('project-end-date').value };
-                    if (!data.name || !data.startDate) isValid = false;
-                    break;
-                case 'honor':
-                    data = { name: document.getElementById('honor-name').value, org: document.getElementById('honor-org').value, date: document.getElementById('honor-date').value };
-                    if (!data.name || !data.date) isValid = false;
-                    break;
-                case 'training':
-                    data = { name: document.getElementById('training-name').value, org: document.getElementById('training-org').value, hours: Number(document.getElementById('training-hours').value) || 0, date: document.getElementById('training-date').value };
-                    if (!data.name || !data.date) isValid = false;
-                    break;
+                case 'duty': data = { content: document.getElementById('duty-content').value, startDate: document.getElementById('duty-start-date').value, endDate: document.getElementById('duty-end-date').value }; if (!data.content || !data.startDate) isValid = false; break;
+                case 'experience': data = { name: document.getElementById('exp-name').value, startDate: document.getElementById('exp-start-date').value, endDate: document.getElementById('exp-end-date').value }; if (!data.name) isValid = false; break;
+                case 'project': data = { name: document.getElementById('project-name').value, desc: document.getElementById('project-desc').value, status: document.getElementById('project-status').value, startDate: document.getElementById('project-start-date').value, endDate: document.getElementById('project-end-date').value }; if (!data.name || !data.startDate) isValid = false; break;
+                case 'honor': data = { name: document.getElementById('honor-name').value, org: document.getElementById('honor-org').value, date: document.getElementById('honor-date').value }; if (!data.name || !data.date) isValid = false; break;
+                case 'training': data = { name: document.getElementById('training-name').value, org: document.getElementById('training-org').value, hours: Number(document.getElementById('training-hours').value) || 0, date: document.getElementById('training-date').value }; if (!data.name || !data.date) isValid = false; break;
             }
 
             if (!isValid) {
-                showToast('請填寫所有必要欄位', 'error');
-                return;
+                showToast('請填寫所有必要欄位', 'error'); return;
             }
 
-            if (!Array.isArray(profileData[listName])) {
-                profileData[listName] = [];
-            }
-            
-            if (editingIndex !== null) {
-                profileData[listName][editingIndex] = data;
-            } else {
-                profileData[listName].push(data);
-            }
+            if (!Array.isArray(profileData[listName])) { profileData[listName] = []; }
+            if (editingIndex !== null) { profileData[listName][editingIndex] = data; } else { profileData[listName].push(data); }
 
             renderList(currentModalType);
             closeModal();
@@ -304,9 +291,7 @@
         }
 
         function handlePhotoUpload(e) {
-            if (!currentStaffName) {
-                showToast('請先選擇一位人員再上傳照片！', 'error'); e.target.value = ""; return;
-            }
+            if (!currentStaffName) { showToast('請先選擇一位人員再上傳照片！', 'error'); e.target.value = ""; return; }
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -317,6 +302,8 @@
                 reader.readAsDataURL(file);
             }
         }
+        
+        // ===== 輔助函數 (無需修改) =====
 
         function getModalConfig(type, data = {}) {
             const configs = {
@@ -328,7 +315,6 @@
             };
             return configs[type];
         }
-
         function openModal(type, index = null) {
             if (!currentStaffName) { showToast('請先選擇一位人員！', 'error'); return; }
             currentModalType = type; editingIndex = index; const categoryInfo = getCategoryInfo(type);
@@ -336,10 +322,8 @@
             modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; modalContent.innerHTML = config.content;
             modalSaveBtn.onclick = () => saveModalData(); modal.classList.remove('hidden'); modal.classList.add('flex');
         }
-
         function closeModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); editingIndex = null; }
         function closeConfirmModal() { confirmModal.classList.add('hidden'); confirmModal.classList.remove('flex'); }
-        
         function getListItemHTML(type, item, index) {
             const baseClasses = "bg-white border border-gray-200 p-3 rounded-lg flex justify-between items-start"; let contentHTML = ''; let timeRange = '';
             switch (type) {
@@ -352,10 +336,8 @@
             const actionsHTML = `<div class="space-x-2 flex-shrink-0 ml-4"><button onclick="openModal('${type}', ${index})" class="text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button onclick="deleteItem('${type}', ${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`;
             return `<div class="${baseClasses}">${contentHTML}${actionsHTML}</div>`;
         }
-
         function getProjectStatusBadge(status) { const statusMap = { planned: { text: '預備中', class: 'bg-gray-200 text-gray-800' }, inprogress: { text: '進行中', class: 'bg-blue-200 text-blue-800' }, completed: { text: '已完成', class: 'bg-green-200 text-green-800' } }; const currentStatus = statusMap[status] || statusMap.planned; return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${currentStatus.class}">${currentStatus.text}</span>`; }
         function formatDate(dateString) { if (!dateString) return ''; return dateString.replace(/-/g, '/'); }
-
         function deleteItem(type, index) {
             const categoryInfo = getCategoryInfo(type);
             confirmModalTitle.textContent = `確認刪除`; confirmModalBody.textContent = `您確定要刪除這筆資料嗎？`;
@@ -365,10 +347,14 @@
             };
             confirmModalCancelBtn.onclick = () => { closeConfirmModal(); };
         }
-
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500'; toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`; toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
         }
+
+        // 把 onclick 會用到的函數掛到 window 上
+        window.openModal = openModal;
+        window.saveProfile = saveProfile;
+        window.closeModal = closeModal;
     </script>
 </body>
 </html>
