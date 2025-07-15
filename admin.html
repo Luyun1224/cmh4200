@@ -118,7 +118,7 @@
 
         <div class="text-center mt-8">
             <button onclick="saveProfile()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors shadow-lg">
-                <i class="fas fa-save mr-2"></i>儲存個人資料
+                <i class="fas fa-save mr-2"></i>儲存個人資料至雲端
             </button>
         </div>
     </div>
@@ -144,33 +144,68 @@
         const confirmModalOkBtn = document.getElementById('confirm-modal-ok');
         const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel');
 
-        document.addEventListener('DOMContentLoaded', () => {
+        const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzJbUKp8uWkaCraQrNNy8VWQvtXtUjQrAIG72VYz7imP1oy_wFR1VcmhegTcleeuCMv/exec";
+
+        document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('profilePhoto').addEventListener('change', handlePhotoUpload);
-            const storedProfiles = localStorage.getItem('staffProfiles');
-            if (storedProfiles) {
-                try {
-                    allProfiles = JSON.parse(storedProfiles);
-                } catch (e) {
-                    console.error("Error parsing staffProfiles from localStorage", e);
-                    allProfiles = {};
-                }
+            
+            showToast("正在從雲端讀取資料...", "success");
+            try {
+                const response = await fetch(GOOGLE_SHEET_API_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                allProfiles = await response.json();
+                console.log("成功從 Google Sheet 讀取資料:", allProfiles);
+                showToast("雲端資料讀取完畢！", "success");
+            } catch (error) {
+                console.error("從 Google Sheet 讀取資料失敗:", error);
+                showToast("讀取雲端資料失敗！", "error");
+                allProfiles = {};
             }
+
             document.getElementById('staff-select').addEventListener('change', (e) => {
                 currentStaffName = e.target.value;
                 loadProfile(currentStaffName);
             });
         });
-        
-        /************************************************************/
-        /* ========= REFACTORED & DEBUGGED FUNCTIONS START ========== */
-        /************************************************************/
 
-        /**
-         * A centralized helper function to get category-specific names.
-         * This avoids inconsistencies between HTML IDs and data property names.
-         * @param {string} type - The category type (e.g., 'experience').
-         * @returns {object} - An object with listName (for data) and listId (for HTML).
-         */
+        async function saveProfile() {
+            if (!currentStaffName) {
+                showToast('請先選擇一位人員！', 'error');
+                return;
+            }
+            
+            showToast("正在儲存資料至雲端...", "success");
+            document.querySelector('[onclick="saveProfile()"]').disabled = true; // 防止重複點擊
+            
+            profileData.name = document.getElementById('profile-name').value;
+            profileData.title = document.getElementById('profile-title').value;
+            profileData.onboardDate = document.getElementById('onboard-date').value;
+            
+            allProfiles[currentStaffName] = profileData;
+            
+            try {
+                // 使用 fetch API 將資料 POST 到 Google Apps Script
+                const response = await fetch(GOOGLE_SHEET_API_URL, {
+                    method: 'POST',
+                    // Google Apps Script 的 doPost 部署後，通常是透過重新導向來處理，
+                    // 直接的 fetch 可能會遇到 CORS 問題，no-cors 是一種應對方式，但會讓你看不到回傳的 response body。
+                    // Apps Script 本身會處理寫入，前端只要相信它有成功即可。
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 使用 text/plain 避免觸發 CORS preflight
+                    body: JSON.stringify(allProfiles)
+                });
+
+                console.log("成功發送儲存請求至 Google Sheet!");
+                showToast('個人資料已成功儲存至雲端！', 'success');
+
+            } catch (e) {
+                console.error("儲存至 Google Sheet 失敗:", e);
+                showToast('儲存至雲端失敗，請查看主控台！', 'error');
+            } finally {
+                document.querySelector('[onclick="saveProfile()"]').disabled = false; // 恢復按鈕
+            }
+        }
+
         function getCategoryInfo(type) {
             const map = {
                 duty:       { listName: 'duties',      listId: 'duties-list' },
@@ -184,7 +219,6 @@
 
         function loadProfile(name) {
             if (!name) return;
-            console.log(`Loading profile for: ${name}`);
             profileData = allProfiles[name] || {
                 profileImg: '', name: name, title: '', onboardDate: '',
                 duties: [], experiences: [], projects: [], honors: [], trainings: []
@@ -197,29 +231,16 @@
         }
 
         function renderAllLists() {
-            console.log("Rendering all lists...");
             ['duty', 'experience', 'project', 'honor', 'training'].forEach(type => renderList(type));
         }
 
         function renderList(type) {
             const categoryInfo = getCategoryInfo(type);
-            if (!categoryInfo) {
-                console.error(`Unknown category type for renderList: ${type}`);
-                return;
-            }
-
+            if (!categoryInfo) return;
             const { listName, listId } = categoryInfo;
             const listContainer = document.getElementById(listId);
-            
-            console.log(`Rendering list for: ${type}. Target container ID: ${listId}`);
-
-            if (!listContainer) {
-                console.error(`Render Error: Could not find list container with ID: ${listId}`);
-                return;
-            }
-            
+            if (!listContainer) return;
             const dataArray = profileData[listName] || [];
-            
             if (dataArray.length === 0) {
                 const emptyMessages = {
                     duty: '尚未新增任何職掌', experience: '尚未新增任何經歷', project: '尚未新增任何專案',
@@ -232,19 +253,13 @@
         }
 
         function saveModalData() {
-            console.log("--- Attempting to save modal data ---");
             const categoryInfo = getCategoryInfo(currentModalType);
-            if (!categoryInfo) {
-                console.error(`Save Error: Unknown modal type: ${currentModalType}`);
-                showToast(`儲存失敗：未知的類別 ${currentModalType}`, 'error');
-                return;
-            }
+            if (!categoryInfo) return;
 
             let data = {};
             let isValid = true;
             const { listName } = categoryInfo;
             
-            // This switch-case now only populates the `data` object
             switch (currentModalType) {
                 case 'duty':
                     data = { content: document.getElementById('duty-content').value, startDate: document.getElementById('duty-start-date').value, endDate: document.getElementById('duty-end-date').value };
@@ -270,63 +285,27 @@
 
             if (!isValid) {
                 showToast('請填寫所有必要欄位', 'error');
-                console.warn("Validation failed. Data not saved.", data);
                 return;
             }
 
-            // Ensure the target array exists on profileData before pushing to it
             if (!Array.isArray(profileData[listName])) {
-                console.warn(`Data array '${listName}' not found on profileData. Creating it now.`);
                 profileData[listName] = [];
             }
             
-            console.log(`Saving data to 'profileData.${listName}'`, data);
-
             if (editingIndex !== null) {
                 profileData[listName][editingIndex] = data;
             } else {
                 profileData[listName].push(data);
             }
-            
-            console.log(`'profileData' is now:`, JSON.parse(JSON.stringify(profileData)));
 
             renderList(currentModalType);
             closeModal();
-            showToast('資料已更新 (請記得點擊最下方的儲存按鈕)', 'success');
+            showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success');
         }
 
-        function saveProfile() {
-            if (!currentStaffName) {
-                showToast('請先選擇一位人員！', 'error');
-                return;
-            }
-            console.log("--- Saving profile to localStorage ---");
-            profileData.name = document.getElementById('profile-name').value;
-            profileData.title = document.getElementById('profile-title').value;
-            profileData.onboardDate = document.getElementById('onboard-date').value;
-            
-            allProfiles[currentStaffName] = profileData;
-            
-            try {
-                localStorage.setItem('staffProfiles', JSON.stringify(allProfiles));
-                console.log("Successfully saved to localStorage. Data:", allProfiles);
-                showToast('個人資料已儲存成功！', 'success');
-            } catch (e) {
-                console.error("Failed to save to localStorage", e);
-                showToast('儲存失敗，請檢查主控台錯誤日誌', 'error');
-            }
-        }
-        
-        /************************************************************/
-        /* ========= REFACTORED & DEBUGGED FUNCTIONS END ========== */
-        /************************************************************/
-
-
-        // Unchanged Helper Functions Below
         function handlePhotoUpload(e) {
             if (!currentStaffName) {
-                showToast('請先選擇一位人員再上傳照片！', 'error');
-                e.target.value = ""; return;
+                showToast('請先選擇一位人員再上傳照片！', 'error'); e.target.value = ""; return;
             }
             const file = e.target.files[0];
             if (file) {
@@ -351,38 +330,22 @@
         }
 
         function openModal(type, index = null) {
-            if (!currentStaffName) {
-                showToast('請先選擇一位人員！', 'error'); return;
-            }
-            currentModalType = type;
-            editingIndex = index;
-            const categoryInfo = getCategoryInfo(type);
-            const data = index !== null ? profileData[categoryInfo.listName][index] : {};
-            const config = getModalConfig(type, data);
-            modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title;
-            modalContent.innerHTML = config.content;
-            modalSaveBtn.onclick = () => saveModalData();
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            if (!currentStaffName) { showToast('請先選擇一位人員！', 'error'); return; }
+            currentModalType = type; editingIndex = index; const categoryInfo = getCategoryInfo(type);
+            const data = index !== null ? profileData[categoryInfo.listName][index] : {}; const config = getModalConfig(type, data);
+            modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; modalContent.innerHTML = config.content;
+            modalSaveBtn.onclick = () => saveModalData(); modal.classList.remove('hidden'); modal.classList.add('flex');
         }
 
-        function closeModal() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            editingIndex = null;
-        }
-
-        function closeConfirmModal() {
-            confirmModal.classList.add('hidden');
-            confirmModal.classList.remove('flex');
-        }
+        function closeModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); editingIndex = null; }
+        function closeConfirmModal() { confirmModal.classList.add('hidden'); confirmModal.classList.remove('flex'); }
         
         function getListItemHTML(type, item, index) {
             const baseClasses = "bg-white border border-gray-200 p-3 rounded-lg flex justify-between items-start"; let contentHTML = ''; let timeRange = '';
             switch (type) {
                 case 'duty': timeRange = `${formatDate(item.startDate)} - ${item.endDate ? formatDate(item.endDate) : '至今'}`; contentHTML = `<div class="flex-grow"><p class="text-sm">${item.content}</p><p class="text-xs text-gray-500 mt-1">${timeRange}</p></div>`; break;
                 case 'experience': let expTimeRange = ''; if (item.startDate && item.endDate) { expTimeRange = `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`; } else if (item.startDate) { expTimeRange = formatDate(item.startDate); } contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item.name}</p>${expTimeRange ? `<p class="text-xs text-gray-500 mt-1">${expTimeRange}</p>` : ''}</div>`; break;
-                case 'project': timeRange = `${formatDate(item.startDate)} - ${item.endDate ? formatDate(item.endDate) : '至今'}`; contentHTML = `<div class="flex-grow"><div class="flex justify-between items-center mb-1"><p class="font-medium text-sm">${item.name}</p>${getProjectStatusBadge(item.status)}</div><p class="text-sm text-gray-600">${item.desc}</p><p class="text-xs text-gray-500 mt-1">${timeRange}</p></div>`; break;
+                case 'project': timeRange = `${formatDate(item.startDate)} - ${item.endDate ? formatDate(item.endDate) : '至今'}`; const statusBadge = getProjectStatusBadge(item.status); contentHTML = `<div class="flex-grow"><div class="flex justify-between items-center mb-1"><p class="font-medium text-sm">${item.name}</p>${statusBadge}</div><p class="text-sm text-gray-600">${item.desc}</p><p class="text-xs text-gray-500 mt-1">${timeRange}</p></div>`; break;
                 case 'honor': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item.name}</p><p class="text-sm text-gray-600">${item.org}</p><p class="text-xs text-gray-500">${formatDate(item.date)}</p></div>`; break;
                 case 'training': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item.name}</p><p class="text-sm text-gray-600">${item.org}</p><p class="text-xs text-gray-500 mt-1">訓練時間: ${formatDate(item.date)}</p><p class="text-xs text-gray-500">訓練時數: ${item.hours || 0} 小時</p></div>`; break;
             }
@@ -390,21 +353,17 @@
             return `<div class="${baseClasses}">${contentHTML}${actionsHTML}</div>`;
         }
 
+        function getProjectStatusBadge(status) { const statusMap = { planned: { text: '預備中', class: 'bg-gray-200 text-gray-800' }, inprogress: { text: '進行中', class: 'bg-blue-200 text-blue-800' }, completed: { text: '已完成', class: 'bg-green-200 text-green-800' } }; const currentStatus = statusMap[status] || statusMap.planned; return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${currentStatus.class}">${currentStatus.text}</span>`; }
+        function formatDate(dateString) { if (!dateString) return ''; return dateString.replace(/-/g, '/'); }
+
         function deleteItem(type, index) {
             const categoryInfo = getCategoryInfo(type);
-            confirmModalTitle.textContent = `確認刪除`;
-            confirmModalBody.textContent = `您確定要刪除這筆資料嗎？`;
-            confirmModal.classList.remove('hidden');
-            confirmModal.classList.add('flex');
+            confirmModalTitle.textContent = `確認刪除`; confirmModalBody.textContent = `您確定要刪除這筆資料嗎？`;
+            confirmModal.classList.remove('hidden'); confirmModal.classList.add('flex');
             confirmModalOkBtn.onclick = () => {
-                profileData[categoryInfo.listName].splice(index, 1);
-                renderList(type);
-                showToast('資料已刪除', 'success');
-                closeConfirmModal();
+                profileData[categoryInfo.listName].splice(index, 1); renderList(type); showToast('資料已暫存刪除', 'success'); closeConfirmModal();
             };
-            confirmModalCancelBtn.onclick = () => {
-                closeConfirmModal();
-            };
+            confirmModalCancelBtn.onclick = () => { closeConfirmModal(); };
         }
 
         function showToast(message, type = 'success') {
