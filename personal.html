@@ -23,7 +23,8 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            border: 4px solid #f8fafc; /* Match body background */
+            border: 4px solid #f8fafc;
+            /* Match body background */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -51,131 +52,119 @@
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
 
-        <!-- Header -->
         <header class="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
             <h1 class="text-3xl font-bold text-slate-900 mb-2 sm:mb-0">個人歷程</h1>
             <div id="onboarding-date" class="text-sm font-semibold text-slate-500 bg-white px-4 py-2 rounded-lg shadow-sm">
-                入職日期：2019年04月01日
+                入職日期：
             </div>
         </header>
 
-        <!-- 個人成就儀表板 -->
         <section id="dashboard" class="mb-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Card 1: 工作年資 -->
                 <div class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4">
-                    <div class="bg-cyan-100 text-cyan-600 p-4 rounded-xl">
+                     <div class="bg-cyan-100 text-cyan-600 p-4 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
-                    <div>
+                     <div>
                         <p class="text-sm text-slate-500">工作年資</p>
                         <p id="work-seniority" class="text-2xl font-bold text-slate-800">計算中...</p>
                     </div>
-                </div>
-                <!-- Card 2: 完成專案 (Clickable) -->
+                 </div>
                 <div id="projects-card" class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
                     <div class="bg-green-100 text-green-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <div>
                         <p class="text-sm text-slate-500">完成專案</p>
-                        <p id="dashboard-projects-count" class="text-2xl font-bold text-slate-800">0 個</p>
+                         <p id="dashboard-projects-count" class="text-2xl font-bold text-slate-800">0 個</p>
                     </div>
                 </div>
-                <!-- Card 3: 榮譽獎項 (Clickable) -->
-                <div id="honors-card" class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
+                <div id="honors-card" class="bg-white p-5 
+rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
                     <div class="bg-amber-100 text-amber-600 p-4 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                    </div>
+                    
+</div>
                     <div>
                         <p class="text-sm text-slate-500">榮譽獎項</p>
                         <p id="dashboard-honors-count" class="text-2xl font-bold text-slate-800">0 項</p>
                     </div>
-                </div>
-                <!-- Card 4: 總學習時數 -->
+                 </div>
                 <div class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4">
                     <div class="bg-rose-100 text-rose-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      
+   <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <div>
                         <p class="text-sm text-slate-500">總學習時數</p>
-                        <p id="dashboard-hours-count" class="text-2xl font-bold text-slate-800">0 小時</p>
+                         <p id="dashboard-hours-count" class="text-2xl font-bold text-slate-800">0 小時</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 主要內容區域 -->
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <main class="grid grid-cols-1 lg:grid-cols-3 
+gap-8">
 
-            <!-- 左側欄位: 個人資訊 -->
             <div class="lg:col-span-1 space-y-8">
                 <div class="bg-white p-6 rounded-2xl shadow-xl">
                     <div class="flex flex-col items-center text-center">
-                        <img id="profile-photo" class="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white mb-4" src="https://placehold.co/200x200/06b6d4/ffffff?text=頭像" alt="個人大頭照">
+                        <img id="profile-photo" class="w-32 
+h-32 rounded-full object-cover shadow-lg border-4 border-white mb-4" src="https://placehold.co/200x200/06b6d4/ffffff?text=頭像" alt="個人大頭照">
                         <h2 id="profile-name" class="text-2xl font-bold text-slate-900"></h2>
                         <p id="profile-title" class="gradient-text font-semibold mt-1 text-lg"></p>
                     </div>
-                    <hr class="my-6 border-slate-200">
+                     <hr class="my-6 border-slate-200">
                     <div>
                         <h3 class="font-bold text-lg text-slate-800 mb-3">業務職掌</h3>
                         <ul id="duty-list" class="space-y-2.5 text-slate-600 text-sm"></ul>
-                    </div>
+                     </div>
                 </div>
             </div>
 
-            <!-- 右側欄位: 經歷與訓練時間軸 -->
             <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
-                <!-- 工作經歷區塊 -->
                 <div class="mb-12">
-                    <h3 class="text-2xl font-bold text-slate-900 mb-6">工作經歷</h3>
+ 
+                   <h3 class="text-2xl font-bold text-slate-900 mb-6">工作經歷</h3>
                     <div id="experience-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                        <!-- 動態載入 -->
-                    </div>
-                </div>
+                        </div>
+                 </div>
                 
-                <!-- 完成專案區塊 -->
                 <div class="mb-12">
                     <h3 class="text-2xl font-bold text-slate-900 mb-6">專案成果</h3>
-                    <div id="project-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                        <!-- 動態載入 -->
-                    </div>
+                     <div id="project-timeline" class="relative border-l-2 border-slate-200 pl-10">
+                        </div>
                 </div>
 
-                <!-- 榮譽事蹟區塊 -->
                 <div class="mb-12">
                     <h3 class="text-2xl font-bold text-slate-900 mb-6">榮譽事蹟</h3>
                     <div id="honor-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                        <!-- 動態載入 -->
-                    </div>
+                        </div>
                 </div>
 
-                <!-- 教育訓練區塊 -->
                 <div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-6">教育訓練</h3>
-                    <div id="training-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                         <!-- 動態載入 -->
-                    </div>
+                    <div id="training-timeline" class="relative border-l-2 
+border-slate-200 pl-10">
+                         </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal -->
-    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <!-- Overlay -->
+    <div id="modal" 
+class="fixed inset-0 z-50 flex items-center justify-center hidden">
         <div id="modal-overlay" class="modal-overlay absolute inset-0 bg-black bg-opacity-50 opacity-0"></div>
-        <!-- Content -->
         <div id="modal-content" class="modal-content bg-white rounded-2xl shadow-2xl p-6 w-11/12 md:max-w-2xl mx-auto z-10 transform scale-95">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="modal-title" class="text-xl font-bold text-slate-800"></h3>
-                <button id="modal-close-btn" class="text-slate-500 hover:text-slate-800">
+                 <button id="modal-close-btn" class="text-slate-500 hover:text-slate-800">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
             <div id="modal-body" class="max-h-[60vh] overflow-y-auto pr-2">
-                <!-- Modal content goes here -->
-            </div>
+  
+               </div>
         </div>
     </div>
 
@@ -183,9 +172,10 @@
 <script>
     // --- 取得個人資料 ---
     const params = new URLSearchParams(window.location.search);
-    const staffName = params.get('name') || '';
+    const staffName = params.get('name') || '未命名';
     const allProfiles = JSON.parse(localStorage.getItem('staffProfiles') || '{}');
-    const userData = allProfiles[staffName] || { name: staffName, title: '', profileImg: '', onboardDate: '', duties: [], experiences: [], projects: [], honors: [], trainings: [] };
+    const userData = allProfiles[staffName] ||
+{ name: staffName, title: '查無此人資料', profileImg: '', onboardDate: '', duties: [], experiences: [], projects: [], honors: [], trainings: [] };
 
     // --- DOM 元素 ---
     const workSeniorityEl = document.getElementById('work-seniority');
@@ -194,7 +184,6 @@
     const dashboardProjectsCount = document.getElementById('dashboard-projects-count');
     const dashboardHonorsCount = document.getElementById('dashboard-honors-count');
     const dashboardHoursCount = document.getElementById('dashboard-hours-count');
-    
     // Timelines
     const experienceTimeline = document.getElementById('experience-timeline');
     const projectTimeline = document.getElementById('project-timeline');
@@ -213,6 +202,10 @@
 
     /** 計算工作年資 */
     function calculateSeniority(startDateStr) {
+        if (!startDateStr) {
+            workSeniorityEl.textContent = "無日期紀錄";
+            return;
+        }
         const startDate = new Date(startDateStr);
         const today = new Date();
         let years = today.getFullYear() - startDate.getFullYear();
@@ -221,56 +214,55 @@
             years--;
             months += 12;
         }
-        workSeniorityEl.textContent = years > 0 ? `${years} 年 ${months} 個月` : `${months} 個月`;
+        workSeniorityEl.textContent = years > 0 ?
+`${years} 年 ${months} 個月` : `${months} 個月`;
     }
 
     function formatDate(str) {
-        return str ? str.replace(/-/g, '/') : '';
+        return str ?
+str.replace(/-/g, '/') : '';
     }
 
     /** 建立通用時間軸項目 */
-    function createTimelineItem(item, iconSvg, dotColorClass) {
-        const date = item.date || item.period;
-        const desc = item.desc || '';
+    function createTimelineItem(config) {
+        const { item, iconSvg, dotColorClass } = config;
+        let dateInfo = '';
+        if(item.startDate) {
+            dateInfo = `${formatDate(item.startDate)} - ${item.endDate ? formatDate(item.endDate) : '至今'}`;
+        } else if (item.date) {
+            dateInfo = formatDate(item.date);
+        }
+
+        const title = item.name || item.title || '';
+        const desc = item.desc || item.org || '';
         let detailsHtml = '';
 
-        // 檢查專案狀態
+        // 專案狀態
         if (item.status) {
-            if (item.status === '進行中') {
-                detailsHtml = `
-                    <div class="mt-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-semibold inline-block text-blue-600">進行中</span>
-                            <span class="text-xs font-semibold inline-block text-blue-600">${item.progress}%</span>
-                        </div>
-                        <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
-                            <div style="width:${item.progress}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-500"></div>
-                        </div>
-                    </div>`;
-            } else if (item.status === '已完成') {
-                detailsHtml = `
-                    <div class="mt-3">
-                        <span class="text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full text-green-600 bg-green-200">
-                            已完成
-                        </span>
-                    </div>`;
-            }
+            const statusMap = {
+                planned: { text: '預備中', class: 'bg-gray-200 text-gray-800' },
+                inprogress: { text: '進行中', class: 'bg-blue-200 text-blue-800' },
+                completed: { text: '已完成', class: 'bg-green-200 text-green-800' }
+            };
+            const currentStatus = statusMap[item.status] || {};
+            detailsHtml += `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${currentStatus.class} mt-2">${currentStatus.text}</span>`;
         }
-        // 檢查訓練時數
-        else if (item.hours) {
-            detailsHtml = `<div class="flex items-center text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full w-fit mt-2">
+        
+        // 教育訓練時數
+        if (item.hours) {
+            detailsHtml += `<div class="flex items-center text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full w-fit mt-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>修習時數：${item.hours} 小時</span>
+                 <span>修習時數：${item.hours} 小時</span>
             </div>`;
         }
         
         return `
             <div class="timeline-item relative pb-8">
                 <div class="timeline-dot ${dotColorClass}">${iconSvg}</div>
-                <p class="text-sm text-slate-500">${date}</p>
-                <h4 class="font-bold text-lg text-slate-800">${item.title}</h4>
-                <p class="text-slate-600 text-sm">${desc}</p>
-                ${detailsHtml}
+                <p class="text-sm text-slate-500">${dateInfo}</p>
+                <h4 class="font-bold text-lg text-slate-800">${title}</h4>
+                 <p class="text-slate-600 text-sm">${desc}</p>
+                <div class="mt-2">${detailsHtml}</div>
             </div>
         `;
     }
@@ -281,7 +273,7 @@
             container.innerHTML = `<p class="text-slate-500">尚無紀錄。</p>`;
             return;
         }
-        container.innerHTML = data.map(item => createTimelineItem(item, iconSvg, dotColorClass)).join('');
+        container.innerHTML = data.map(item => createTimelineItem({ item, iconSvg, dotColorClass })).join('');
     }
 
     /** 開啟 Modal */
@@ -313,9 +305,9 @@
         const trainingIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="timeline-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6.253v11.494m-9-5.747h18" /></svg>`;
 
         // 填入基本資料
-        document.getElementById('profile-name').textContent = userData.name || staffName || '未命名';
+        document.getElementById('profile-name').textContent = userData.name || staffName;
         document.getElementById('profile-title').textContent = userData.title || '';
-        document.getElementById('profile-photo').src = userData.profileImg || 'https://placehold.co/200x200/06b6d4/ffffff?text=頭像';
+        document.getElementById('profile-photo').src = userData.profileImg || 'https://placehold.co/200x200/cccccc/ffffff?text=頭像';
         document.getElementById('onboarding-date').textContent = userData.onboardDate ? `入職日期：${formatDate(userData.onboardDate)}` : '入職日期：-';
 
         // 業務職掌
@@ -326,17 +318,11 @@
             dutyList.innerHTML = '<li class="text-slate-500">尚無資料</li>';
         }
 
-        // 將資料轉為時間軸格式
-        const expData = (userData.experiences || []).map(e => ({ period: `${formatDate(e.startDate)}${e.endDate ? ' - ' + formatDate(e.endDate) : ''}`, title: e.name, desc: '' }));
-        const projData = (userData.projects || []).map(p => ({ date: `${formatDate(p.startDate)} - ${p.endDate ? formatDate(p.endDate) : '至今'}`, title: p.name, desc: p.desc, status: p.status === 'completed' ? '已完成' : p.status === 'inprogress' ? '進行中' : '預備中', progress: p.progress || 0 }));
-        const honorData = (userData.honors || []).map(h => ({ date: formatDate(h.date), title: h.name, desc: h.org }));
-        const trainData = (userData.trainings || []).map(t => ({ date: formatDate(t.date), title: t.name, desc: t.org, hours: t.hours }));
-
         // Populate timelines
-        populateTimeline(experienceTimeline, expData, experienceIcon, 'bg-cyan-500');
-        populateTimeline(projectTimeline, projData, projectIcon, 'bg-green-500');
-        populateTimeline(honorTimeline, honorData, honorIcon, 'bg-amber-500');
-        populateTimeline(trainingTimeline, trainData, trainingIcon, 'bg-orange-500');
+        populateTimeline(experienceTimeline, userData.experiences || [], experienceIcon, 'bg-cyan-500');
+        populateTimeline(projectTimeline, userData.projects || [], projectIcon, 'bg-green-500');
+        populateTimeline(honorTimeline, userData.honors || [], honorIcon, 'bg-amber-500');
+        populateTimeline(trainingTimeline, userData.trainings || [], trainingIcon, 'bg-orange-500');
 
         // Update dashboard
         calculateSeniority(userData.onboardDate);
@@ -348,26 +334,33 @@
 
         // Setup Modal Listeners
         projectsCard.addEventListener('click', () => {
-            const content = `<ul class="space-y-4">${userData.projects.map(p => {
-                const statusBadge = p.status === '已完成' 
-                    ? `<span class="text-xs font-semibold inline-block py-1 px-2 rounded-full text-green-600 bg-green-200 ml-2">已完成</span>`
-                    : `<span class="text-xs font-semibold inline-block py-1 px-2 rounded-full text-blue-600 bg-blue-200 ml-2">進行中</span>`;
-                return `<li class="border-b pb-2">
-                            <div class="flex justify-between items-center">
-                                <p class="font-semibold text-slate-700">${p.title}</p>
-                                ${statusBadge}
-                            </div>
-                            <p class="text-sm text-slate-500 mt-1">${p.desc}</p>
-                        </li>`
-            }).join('')}</ul>`;
+            const content = (userData.projects && userData.projects.length) 
+                ? `<ul class="space-y-4">${userData.projects.map(p => {
+                    const statusMap = {
+                        completed: `<span class="text-xs font-semibold inline-block py-1 px-2 rounded-full text-green-600 bg-green-200 ml-2">已完成</span>`,
+                        inprogress: `<span class="text-xs font-semibold inline-block py-1 px-2 rounded-full text-blue-600 bg-blue-200 ml-2">進行中</span>`,
+                        planned: `<span class="text-xs font-semibold inline-block py-1 px-2 rounded-full text-gray-600 bg-gray-200 ml-2">預備中</span>`
+                    };
+                    const statusBadge = statusMap[p.status] || '';
+                    return `<li class="border-b pb-2">
+                                <div class="flex justify-between items-center">
+                                    <p class="font-semibold text-slate-700">${p.name}</p>
+                                     ${statusBadge}
+                                </div>
+                                <p class="text-sm text-slate-500 mt-1">${p.desc}</p>
+                             </li>`
+                }).join('')}</ul>`
+                : '<p class="text-slate-500">尚無專案紀錄。</p>';
             openModal('專案列表', content);
         });
 
         honorsCard.addEventListener('click', () => {
-            const content = `<ul class="space-y-4">${userData.honors.map(h => `<li class="border-b pb-2"><p class="font-semibold text-slate-700">${h.title} <span class="text-xs font-normal text-slate-400">(${h.date})</span></p><p class="text-sm text-slate-500">${h.desc}</p></li>`).join('')}</ul>`;
+            const content = (userData.honors && userData.honors.length)
+                ? `<ul class="space-y-4">${userData.honors.map(h => `<li class="border-b pb-2"><p class="font-semibold text-slate-700">${h.name} <span class="text-xs font-normal text-slate-400">(${formatDate(h.date)})</span></p><p class="text-sm text-slate-500">${h.org}</p></li>`).join('')}</ul>`
+                : '<p class="text-slate-500">尚無榮譽事蹟紀錄。</p>';
             openModal('榮譽事蹟列表', content);
         });
-        
+
         modalOverlay.addEventListener('click', closeModal);
         modalCloseBtn.addEventListener('click', closeModal);
     };
