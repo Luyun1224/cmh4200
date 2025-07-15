@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人歷程發展中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 使用 Noto Sans TC 作為主要字體 */
+        body {
+            font-family: 'Noto Sans TC', 'Inter', sans-serif;
+        }
+        /* 自定義時間軸樣式 */
+        .timeline-item .timeline-dot {
+            position: absolute;
+            left: -29px; /* (40px寬度 + 16px間距)/2 - 1px邊框 */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">個人歷程發展中心</h1>
+            <p class="text-gray-600 mt-1">回顧您的成長軌跡，規劃未來職涯藍圖。</p>
+        </header>
+
+        <!-- 主要內容區域 -->
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- 左側欄位: 個人資訊 & 儀表板 -->
+            <div class="lg:col-span-1 space-y-8">
+                
+                <!-- 個人資訊卡片 -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg transition-shadow duration-300 hover:shadow-xl">
+                    <div class="flex flex-col items-center">
+                        <img class="w-32 h-32 rounded-full object-cover shadow-md border-4 border-white" src="https://placehold.co/200x200/6366f1/ffffff?text=頭像" alt="個人大頭照">
+                        <h2 class="text-2xl font-bold mt-4 text-gray-900">王大明</h2>
+                        <p class="text-indigo-600 font-semibold mt-1">資深軟體工程師</p>
+                        <div class="mt-4 text-sm text-gray-500 flex items-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>在職年資：5 年 3 個月</span>
+                        </div>
+                    </div>
+                    <hr class="my-6">
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-3">業務職掌</h3>
+                        <ul class="space-y-2 text-gray-600 text-sm list-disc list-inside">
+                            <li>負責核心產品之後端系統設計與開發。</li>
+                            <li>帶領專案團隊進行敏捷開發流程。</li>
+                            <li>導入自動化測試與 CI/CD 流程。</li>
+                            <li>新進同仁技術指導與 Code Review。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 學習儀表板 -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg transition-shadow duration-300 hover:shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg text-gray-800">年度學習儀表板</h3>
+                        <select id="year-selector" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2">
+                            <option selected>2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                        </select>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center bg-indigo-50 p-3 rounded-lg">
+                            <span class="font-semibold">年度總課程</span>
+                            <span class="text-xl font-bold text-indigo-600">8 門</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-green-50 p-3 rounded-lg">
+                            <span class="font-semibold">總學習時數</span>
+                            <span class="text-xl font-bold text-green-600">42 小時</span>
+                        </div>
+                        <div class="mt-4">
+                            <p class="font-semibold mb-2">課程類別分佈</p>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-blue-500 h-4 rounded-l-full" style="width: 50%" title="技術深化: 50%"></div>
+                                <div class="bg-yellow-500 h-4" style="width: 25%" title="專案管理: 25%"></div>
+                                <div class="bg-purple-500 h-4 rounded-r-full" style="width: 25%" title="領導力: 25%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs mt-1">
+                                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>技術</span>
+                                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>管理</span>
+                                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>領導</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 右側欄位: 經歷與訓練時間軸 -->
+            <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <div>
+                    <!-- 經歷區塊 -->
+                    <div class="mb-12">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            工作經歷
+                        </h3>
+                        <div class="relative border-l-2 border-gray-200 pl-8">
+                            <!-- 經歷項目 1 -->
+                            <div class="timeline-item mb-8 relative">
+                                <div class="timeline-dot bg-indigo-500"></div>
+                                <p class="text-sm text-gray-500">2022/08 - 至今</p>
+                                <h4 class="font-bold text-lg">資深軟體工程師</h4>
+                                <p class="text-gray-600 text-sm">因專案表現優異，晉升為資深工程師，開始負責帶領小型專案團隊。</p>
+                            </div>
+                            <!-- 經歷項目 2 -->
+                            <div class="timeline-item mb-8 relative">
+                                <div class="timeline-dot bg-indigo-500"></div>
+                                <p class="text-sm text-gray-500">2019/04 - 2022/08</p>
+                                <h4 class="font-bold text-lg">軟體工程師</h4>
+                                <p class="text-gray-600 text-sm">加入公司，擔任後端工程師，參與核心產品的開發與維護。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 教育訓練區塊 -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222 4 2.222V20" />
+                            </svg>
+                            教育訓練
+                        </h3>
+                        <div class="relative border-l-2 border-gray-200 pl-8">
+                             <!-- 訓練項目 1 -->
+                            <div class="timeline-item mb-8 relative">
+                                <div class="timeline-dot bg-green-500"></div>
+                                <p class="text-sm text-gray-500">2024/05</p>
+                                <h4 class="font-bold text-lg">高效能團隊領導力</h4>
+                                <p class="text-gray-600 text-sm mb-2">學習如何激勵團隊成員、建立共識，並提升團隊整體產出。</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>修習時數：8 小時</span>
+                                </div>
+                            </div>
+                            <!-- 訓練項目 2 -->
+                            <div class="timeline-item mb-8 relative">
+                                <div class="timeline-dot bg-green-500"></div>
+                                <p class="text-sm text-gray-500">2024/02</p>
+                                <h4 class="font-bold text-lg">進階資料庫效能調校</h4>
+                                <p class="text-gray-600 text-sm mb-2">深入研究索引策略、查詢優化與高併發處理，提升系統回應速度。</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>修習時數：16 小時</span>
+                                </div>
+                            </div>
+                            <!-- 訓練項目 3 -->
+                            <div class="timeline-item mb-8 relative">
+                                <div class="timeline-dot bg-green-500"></div>
+                                <p class="text-sm text-gray-500">2023/09</p>
+                                <h4 class="font-bold text-lg">敏捷專案管理實戰</h4>
+                                <p class="text-gray-600 text-sm mb-2">學習 Scrum 與 Kanban 方法論，並應用於實際專案中。</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>修習時數：12 小時</span>
+                                </div>
+                            </div>
+                             <!-- 訓練項目 4 -->
+                            <div class="timeline-item relative">
+                                <div class="timeline-dot bg-green-500"></div>
+                                <p class="text-sm text-gray-500">2022/11</p>
+                                <h4 class="font-bold text-lg">雲端架構設計入門</h4>
+                                <p class="text-gray-600 text-sm mb-2">了解主流雲端服務(AWS/GCP)的核心概念與架構設計原則。</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>修習時數：6 小時</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
