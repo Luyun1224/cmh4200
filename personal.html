@@ -112,19 +112,14 @@
             <div class="lg:col-span-1 space-y-8">
                 <div class="bg-white p-6 rounded-2xl shadow-xl">
                     <div class="flex flex-col items-center text-center">
-                        <img class="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white mb-4" src="https://placehold.co/200x200/06b6d4/ffffff?text=頭像" alt="個人大頭照">
-                        <h2 class="text-2xl font-bold text-slate-900">王大明</h2>
-                        <p class="gradient-text font-semibold mt-1 text-lg">資深軟體工程師</p>
+                        <img id="profile-photo" class="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white mb-4" src="https://placehold.co/200x200/06b6d4/ffffff?text=頭像" alt="個人大頭照">
+                        <h2 id="profile-name" class="text-2xl font-bold text-slate-900"></h2>
+                        <p id="profile-title" class="gradient-text font-semibold mt-1 text-lg"></p>
                     </div>
                     <hr class="my-6 border-slate-200">
                     <div>
                         <h3 class="font-bold text-lg text-slate-800 mb-3">業務職掌</h3>
-                        <ul class="space-y-2.5 text-slate-600 text-sm">
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>負責核心產品之後端系統設計與開發。</span></li>
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>帶領專案團隊進行敏捷開發流程。</span></li>
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>導入自動化測試與 CI/CD 流程。</span></li>
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>新進同仁技術指導與 Code Review。</span></li>
-                        </ul>
+                        <ul id="duty-list" class="space-y-2.5 text-slate-600 text-sm"></ul>
                     </div>
                 </div>
             </div>
@@ -186,33 +181,11 @@
 
 
 <script>
-    // --- 模擬資料庫 ---
-    const userData = {
-        onboardingDate: '2019-04-01',
-        experience: [
-            { period: "2022/08 - 至今", title: "資深軟體工程師", desc: "因專案表現優異，晉升為資深工程師，開始負責帶領小型專案團隊。" },
-            { period: "2019/04 - 2022/08", title: "軟體工程師", desc: "加入公司，擔任後端工程師，參與核心產品的開發與維護。" }
-        ],
-        projects: [
-            { date: "2025 Q2", title: "AI 智能客服導入", desc: "導入 AI 聊天機器人，預計降低 40% 人工客服負擔。", status: '進行中', progress: 60 },
-            { date: "2024 Q1", title: "客戶關係管理系統 (CRM) 導入", desc: "主導 CRM 系統的技術評估與導入，提升業務團隊 30% 工作效率。", status: '已完成' },
-            { date: "2023 Q2", title: "『鳳凰專案』- 後端重構", desc: "負責核心交易模組的重構，將系統可用性提升至 99.95%。", status: '已完成' },
-            { date: "2022 Q4", title: "自動化測試平台開發", desc: "從零到一建立內部使用的 CI/CD 自動化測試平台。", status: '已完成' },
-            { date: "2021", title: "數據中台建置", desc: "參與公司數據中台的初期建置，負責數據清洗與 ETL 流程開發。", status: '已完成' }
-        ],
-        honors: [
-            { date: "2023 Q3", title: "最佳員工獎", desc: "因在「鳳凰專案」中的卓越貢獻與領導表現，獲選為季度最佳員工。" },
-            { date: "2022", title: "年度創新專案獎", desc: "主導開發的「自動化測試平台」獲得公司年度創新獎項肯定。" }
-        ],
-        training: [
-            { date: "2024/05", title: "高效能團隊領導力", desc: "學習如何激勵團隊成員、建立共識，並提升團隊整體產出。", hours: 8 },
-            { date: "2024/02", title: "進階資料庫效能調校", desc: "深入研究索引策略、查詢優化與高併發處理。", hours: 16 },
-            { date: "2023/09", title: "敏捷專案管理實戰", desc: "學習 Scrum 與 Kanban 方法論。", hours: 12 },
-            { date: "2023/04", title: "現代前端框架 Vue.js", desc: "學習 Vue.js 全家桶。", hours: 18 },
-            { date: "2022/11", title: "雲端架構設計入門", desc: "了解主流雲端服務(AWS/GCP)的核心概念。", hours: 6 },
-            { date: "2022/07", title: "Python 網頁爬蟲", desc: "學習使用 Python 進行網路資料擷取與分析。", hours: 8 },
-        ]
-    };
+    // --- 取得個人資料 ---
+    const params = new URLSearchParams(window.location.search);
+    const staffName = params.get('name') || '';
+    const allProfiles = JSON.parse(localStorage.getItem('staffProfiles') || '{}');
+    const userData = allProfiles[staffName] || { name: staffName, title: '', profileImg: '', onboardDate: '', duties: [], experiences: [], projects: [], honors: [], trainings: [] };
 
     // --- DOM 元素 ---
     const workSeniorityEl = document.getElementById('work-seniority');
@@ -249,6 +222,10 @@
             months += 12;
         }
         workSeniorityEl.textContent = years > 0 ? `${years} 年 ${months} 個月` : `${months} 個月`;
+    }
+
+    function formatDate(str) {
+        return str ? str.replace(/-/g, '/') : '';
     }
 
     /** 建立通用時間軸項目 */
@@ -335,18 +312,38 @@
         const honorIcon = `<svg xmlns="http="http://www.w3.org/2000/svg" class="timeline-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>`;
         const trainingIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="timeline-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6.253v11.494m-9-5.747h18" /></svg>`;
 
+        // 填入基本資料
+        document.getElementById('profile-name').textContent = userData.name || staffName || '未命名';
+        document.getElementById('profile-title').textContent = userData.title || '';
+        document.getElementById('profile-photo').src = userData.profileImg || 'https://placehold.co/200x200/06b6d4/ffffff?text=頭像';
+        document.getElementById('onboarding-date').textContent = userData.onboardDate ? `入職日期：${formatDate(userData.onboardDate)}` : '入職日期：-';
+
+        // 業務職掌
+        const dutyList = document.getElementById('duty-list');
+        if (userData.duties && userData.duties.length) {
+            dutyList.innerHTML = userData.duties.map(d => `<li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>${d.content}</span></li>`).join('');
+        } else {
+            dutyList.innerHTML = '<li class="text-slate-500">尚無資料</li>';
+        }
+
+        // 將資料轉為時間軸格式
+        const expData = (userData.experiences || []).map(e => ({ period: `${formatDate(e.startDate)}${e.endDate ? ' - ' + formatDate(e.endDate) : ''}`, title: e.name, desc: '' }));
+        const projData = (userData.projects || []).map(p => ({ date: `${formatDate(p.startDate)} - ${p.endDate ? formatDate(p.endDate) : '至今'}`, title: p.name, desc: p.desc, status: p.status === 'completed' ? '已完成' : p.status === 'inprogress' ? '進行中' : '預備中', progress: p.progress || 0 }));
+        const honorData = (userData.honors || []).map(h => ({ date: formatDate(h.date), title: h.name, desc: h.org }));
+        const trainData = (userData.trainings || []).map(t => ({ date: formatDate(t.date), title: t.name, desc: t.org, hours: t.hours }));
+
         // Populate timelines
-        populateTimeline(experienceTimeline, userData.experience, experienceIcon, 'bg-cyan-500');
-        populateTimeline(projectTimeline, userData.projects, projectIcon, 'bg-green-500');
-        populateTimeline(honorTimeline, userData.honors, honorIcon, 'bg-amber-500');
-        populateTimeline(trainingTimeline, userData.training, trainingIcon, 'bg-orange-500');
+        populateTimeline(experienceTimeline, expData, experienceIcon, 'bg-cyan-500');
+        populateTimeline(projectTimeline, projData, projectIcon, 'bg-green-500');
+        populateTimeline(honorTimeline, honorData, honorIcon, 'bg-amber-500');
+        populateTimeline(trainingTimeline, trainData, trainingIcon, 'bg-orange-500');
 
         // Update dashboard
-        calculateSeniority(userData.onboardingDate);
-        const completedProjects = userData.projects.filter(p => p.status === '已完成');
+        calculateSeniority(userData.onboardDate);
+        const completedProjects = (userData.projects || []).filter(p => p.status === 'completed');
         dashboardProjectsCount.textContent = `${completedProjects.length} 個`;
-        dashboardHonorsCount.textContent = `${userData.honors.length} 項`;
-        const totalHours = userData.training.reduce((sum, item) => sum + item.hours, 0);
+        dashboardHonorsCount.textContent = `${(userData.honors || []).length} 項`;
+        const totalHours = (userData.trainings || []).reduce((sum, item) => sum + (item.hours || 0), 0);
         dashboardHoursCount.textContent = `${totalHours} 小時`;
 
         // Setup Modal Listeners
