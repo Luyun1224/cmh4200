@@ -46,9 +46,6 @@
                 <label for="staff-select" class="block text-sm font-medium text-gray-700 mb-2">選擇教學中心人員</label>
                 <select id="staff-select" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected>請選擇人員</option>
-                    <option>廖家德</option>
-                    <option>劉雯</option>
-                    <option>楊依玲</option>
                 </select>
             </div>
             
@@ -207,6 +204,10 @@
         // --- 全域變數 ---
         let currentModalType = '';
         let editingIndex = null;
+        let currentStaff = '';
+        const staffNames = [
+            '廖家德','劉雯','楊依玲','吳曉琪','王嬿茹','許淑怡','侯昱瑾','林淑雅','盧英云','黃惠津','林汶秀','楊宜婷','陳詩芸','高瑞穗','李迎真','林盟淦'
+        ];
         const profileData = {
             profileImg: '',
             name: '',
@@ -233,11 +234,14 @@
 
         // --- 初始化 ---
         document.addEventListener('DOMContentLoaded', () => {
+            const staffSelect = document.getElementById('staff-select');
+            staffSelect.innerHTML += staffNames.map(n => `<option value="${n}">${n}</option>`).join('');
+            staffSelect.addEventListener('change', e => loadProfile(e.target.value));
             document.getElementById('profilePhoto').addEventListener('change', handlePhotoUpload);
         });
 
         // --- 照片上傳 ---
-        function handlePhotoUpload(e) {
+function handlePhotoUpload(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -246,7 +250,18 @@
                     profileData.profileImg = event.target.result;
                 };
                 reader.readAsDataURL(file);
-            }
+}
+
+        function loadProfile(name) {
+            currentStaff = name;
+            const all = JSON.parse(localStorage.getItem('staffProfiles') || '{}');
+            const data = all[name] || { profileImg:'', name:'', title:'', onboardDate:'', duties:[], experiences:[], projects:[], honors:[], trainings:[] };
+            Object.assign(profileData, JSON.parse(JSON.stringify(data)));
+            document.getElementById('profilePreview').src = data.profileImg || 'https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽';
+            document.getElementById('profile-name').value = data.name || '';
+            document.getElementById('profile-title').value = data.title || '';
+            document.getElementById('onboard-date').value = data.onboardDate || '';
+            ['duty','experience','project','honor','training'].forEach(renderList);
         }
 
         // --- 模態框邏輯 ---
@@ -528,12 +543,18 @@
 
         // --- 儲存與提示 ---
         function saveProfile() {
+            if (!currentStaff) {
+                showToast('請先選擇人員', 'error');
+                return;
+            }
             profileData.name = document.getElementById('profile-name').value;
             profileData.title = document.getElementById('profile-title').value;
             profileData.onboardDate = document.getElementById('onboard-date').value;
-            
-            // In a real application, you would send `profileData` to a server.
-            console.log("儲存的資料:", JSON.stringify(profileData, null, 2));
+
+            const all = JSON.parse(localStorage.getItem('staffProfiles') || '{}');
+            all[currentStaff] = JSON.parse(JSON.stringify(profileData));
+            localStorage.setItem('staffProfiles', JSON.stringify(all));
+            console.log('儲存的資料:', all[currentStaff]);
             showToast('個人資料已儲存成功！', 'success');
         }
 
