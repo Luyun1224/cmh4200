@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人歷程</title>
+    <title>教學中心同仁個人歷程</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,370 +11,149 @@
     <style>
         body {
             font-family: 'Noto Sans TC', 'Inter', sans-serif;
-            background-color: #f8fafc; /* bg-slate-50 */
-            background-image: radial-gradient(#d1d5db 0.5px, transparent 0.5px), radial-gradient(#d1d5db 0.5px, #f8fafc 0.5px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
-        }
-        .timeline-item .timeline-dot {
-            position: absolute;
-            left: -31px; /* (40px寬度 + 20px間距)/2 - 1px邊框 */
-            top: 12px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border: 4px solid #f8fafc; /* Match body background */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .timeline-item .timeline-icon {
-            width: 10px;
-            height: 10px;
-            color: white;
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #06b6d4, #f97316);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        /* Modal styles */
-        .modal-overlay {
-            transition: opacity 0.3s ease-in-out;
-        }
-        .modal-content {
-            transition: transform 0.3s ease-in-out;
+            background-color: #f1f5f9; /* bg-slate-100 */
         }
     </style>
 </head>
 <body class="text-slate-800">
 
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
 
         <!-- Header -->
-        <header class="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
-            <h1 class="text-3xl font-bold text-slate-900 mb-2 sm:mb-0">個人歷程</h1>
-            <div id="onboarding-date" class="text-sm font-semibold text-slate-500 bg-white px-4 py-2 rounded-lg shadow-sm">
-                入職日期：2019年04月01日
-            </div>
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-slate-900">教學中心同仁個人歷程</h1>
+            <p class="mt-2 text-lg text-slate-600">點擊組員姓名，查看詳細的個人職涯發展與成就。</p>
         </header>
 
-        <!-- 個人成就儀表板 -->
-        <section id="dashboard" class="mb-8">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Card 1: 工作年資 -->
-                <div class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4">
-                    <div class="bg-cyan-100 text-cyan-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        <!-- Groups Grid -->
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            
+            <!-- Group Card: 教學中心 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-red-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-red-100 text-red-600 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
                     </div>
-                    <div>
-                        <p class="text-sm text-slate-500">工作年資</p>
-                        <p id="work-seniority" class="text-2xl font-bold text-slate-800">計算中...</p>
-                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">教學中心</h2>
                 </div>
-                <!-- Card 2: 完成專案 (Clickable) -->
-                <div id="projects-card" class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
-                    <div class="bg-green-100 text-green-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500">完成專案</p>
-                        <p id="dashboard-projects-count" class="text-2xl font-bold text-slate-800">0 個</p>
-                    </div>
-                </div>
-                <!-- Card 3: 榮譽獎項 (Clickable) -->
-                <div id="honors-card" class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
-                    <div class="bg-amber-100 text-amber-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500">榮譽獎項</p>
-                        <p id="dashboard-honors-count" class="text-2xl font-bold text-slate-800">0 項</p>
-                    </div>
-                </div>
-                <!-- Card 4: 總學習時數 -->
-                <div class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4">
-                    <div class="bg-rose-100 text-rose-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500">總學習時數</p>
-                        <p id="dashboard-hours-count" class="text-2xl font-bold text-slate-800">0 小時</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 主要內容區域 -->
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            <!-- 左側欄位: 個人資訊 -->
-            <div class="lg:col-span-1 space-y-8">
-                <div class="bg-white p-6 rounded-2xl shadow-xl">
-                    <div class="flex flex-col items-center text-center">
-                        <img class="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white mb-4" src="https://placehold.co/200x200/06b6d4/ffffff?text=頭像" alt="個人大頭照">
-                        <h2 class="text-2xl font-bold text-slate-900">王大明</h2>
-                        <p class="gradient-text font-semibold mt-1 text-lg">資深軟體工程師</p>
-                    </div>
-                    <hr class="my-6 border-slate-200">
-                    <div>
-                        <h3 class="font-bold text-lg text-slate-800 mb-3">業務職掌</h3>
-                        <ul class="space-y-2.5 text-slate-600 text-sm">
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>負責核心產品之後端系統設計與開發。</span></li>
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>帶領專案團隊進行敏捷開發流程。</span></li>
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>導入自動化測試與 CI/CD 流程。</span></li>
-                            <li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>新進同仁技術指導與 Code Review。</span></li>
-                        </ul>
-                    </div>
-                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-red-600 hover:underline">廖家德</a></li>
+                    <li><a href="#" class="hover:text-red-600 hover:underline">劉雯</a></li>
+                    <li><a href="#" class="hover:text-red-600 hover:underline">楊依玲</a></li>
+                </ul>
             </div>
 
-            <!-- 右側欄位: 經歷與訓練時間軸 -->
-            <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
-                <!-- 工作經歷區塊 -->
-                <div class="mb-12">
-                    <h3 class="text-2xl font-bold text-slate-900 mb-6">工作經歷</h3>
-                    <div id="experience-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                        <!-- 動態載入 -->
+            <!-- Group Card: 畢業後一般醫學訓練組 (PGY) -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-cyan-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-cyan-100 text-cyan-600 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </div>
+                    <h2 class="text-xl font-bold text-slate-800">畢業後一般醫學訓練組</h2>
                 </div>
-                
-                <!-- 完成專案區塊 -->
-                <div class="mb-12">
-                    <h3 class="text-2xl font-bold text-slate-900 mb-6">專案成果</h3>
-                    <div id="project-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                        <!-- 動態載入 -->
-                    </div>
-                </div>
-
-                <!-- 榮譽事蹟區塊 -->
-                <div class="mb-12">
-                    <h3 class="text-2xl font-bold text-slate-900 mb-6">榮譽事蹟</h3>
-                    <div id="honor-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                        <!-- 動態載入 -->
-                    </div>
-                </div>
-
-                <!-- 教育訓練區塊 -->
-                <div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-6">教育訓練</h3>
-                    <div id="training-timeline" class="relative border-l-2 border-slate-200 pl-10">
-                         <!-- 動態載入 -->
-                    </div>
-                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-cyan-600 hover:underline">吳曉琪</a></li>
+                    <li><a href="#" class="hover:text-cyan-600 hover:underline">王嬿茹</a></li>
+                </ul>
             </div>
+
+            <!-- Group Card: 實習醫學生訓練組 (UGY) -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-teal-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-teal-100 text-teal-600 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222 4 2.222V20" /></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">實習醫學生訓練組</h2>
+                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-teal-600 hover:underline">許淑怡</a></li>
+                    <li><a href="#" class="hover:text-teal-600 hover:underline">侯昱瑾</a></li>
+                </ul>
+            </div>
+            
+            <!-- Group Card: 住院醫師訓練組 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-pink-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-pink-100 text-pink-600 p-3 rounded-full mr-4">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">住院醫師訓練組</h2>
+                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-pink-600 hover:underline">林淑雅</a></li>
+                </ul>
+            </div>
+
+            <!-- Group Card: 臨床技能中心 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-blue-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-blue-100 text-blue-600 p-3 rounded-full mr-4">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">臨床技能中心</h2>
+                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-blue-600 hover:underline">盧英云</a></li>
+                    <li><a href="#" class="hover:text-blue-600 hover:underline">黃惠津</a></li>
+                </ul>
+            </div>
+
+            <!-- Group Card: 師資培育中心 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-indigo-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-indigo-100 text-indigo-600 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-1.78-4.125a4 4 0 00-6.44 0A6 6 0 003 20v1h12z" /></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">師資培育中心</h2>
+                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-indigo-600 hover:underline">林汶秀</a></li>
+                </ul>
+            </div>
+
+            <!-- Group Card: 醫事人員訓練組 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-purple-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-purple-100 text-purple-600 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9l4-9 4 9h-8zm-8 11l4-9h4l-4 9H2zm14 0l4-9h4l-4 9h-4z" /></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">醫事人員訓練組</h2>
+                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-purple-600 hover:underline">楊宜婷</a></li>
+                    <li><a href="#" class="hover:text-purple-600 hover:underline">陳詩芸</a></li>
+                </ul>
+            </div>
+            
+            <!-- Group Card: 全院演講/教職 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-yellow-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">全院演講/教職</h2>
+                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-yellow-600 hover:underline">高瑞穗</a></li>
+                </ul>
+            </div>
+
+            <!-- Group Card: 病歷審查組 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-orange-500 transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-orange-100 text-orange-600 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">病歷審查組</h2>
+                </div>
+                <ul class="space-y-3 text-slate-600">
+                    <li><a href="#" class="hover:text-orange-600 hover:underline">李迎真</a></li>
+                    <li><a href="#" class="hover:text-orange-600 hover:underline">林盟淦</a></li>
+                </ul>
+            </div>
+
         </main>
     </div>
-
-    <!-- Modal -->
-    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <!-- Overlay -->
-        <div id="modal-overlay" class="modal-overlay absolute inset-0 bg-black bg-opacity-50 opacity-0"></div>
-        <!-- Content -->
-        <div id="modal-content" class="modal-content bg-white rounded-2xl shadow-2xl p-6 w-11/12 md:max-w-2xl mx-auto z-10 transform scale-95">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="modal-title" class="text-xl font-bold text-slate-800"></h3>
-                <button id="modal-close-btn" class="text-slate-500 hover:text-slate-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-            <div id="modal-body" class="max-h-[60vh] overflow-y-auto pr-2">
-                <!-- Modal content goes here -->
-            </div>
-        </div>
-    </div>
-
-
-<script>
-    // --- 模擬資料庫 ---
-    const userData = {
-        onboardingDate: '2019-04-01',
-        experience: [
-            { period: "2022/08 - 至今", title: "資深軟體工程師", desc: "因專案表現優異，晉升為資深工程師，開始負責帶領小型專案團隊。" },
-            { period: "2019/04 - 2022/08", title: "軟體工程師", desc: "加入公司，擔任後端工程師，參與核心產品的開發與維護。" }
-        ],
-        projects: [
-            { date: "2025 Q2", title: "AI 智能客服導入", desc: "導入 AI 聊天機器人，預計降低 40% 人工客服負擔。", status: '進行中', progress: 60 },
-            { date: "2024 Q1", title: "客戶關係管理系統 (CRM) 導入", desc: "主導 CRM 系統的技術評估與導入，提升業務團隊 30% 工作效率。", status: '已完成' },
-            { date: "2023 Q2", title: "『鳳凰專案』- 後端重構", desc: "負責核心交易模組的重構，將系統可用性提升至 99.95%。", status: '已完成' },
-            { date: "2022 Q4", title: "自動化測試平台開發", desc: "從零到一建立內部使用的 CI/CD 自動化測試平台。", status: '已完成' },
-            { date: "2021", title: "數據中台建置", desc: "參與公司數據中台的初期建置，負責數據清洗與 ETL 流程開發。", status: '已完成' }
-        ],
-        honors: [
-            { date: "2023 Q3", title: "最佳員工獎", desc: "因在「鳳凰專案」中的卓越貢獻與領導表現，獲選為季度最佳員工。" },
-            { date: "2022", title: "年度創新專案獎", desc: "主導開發的「自動化測試平台」獲得公司年度創新獎項肯定。" }
-        ],
-        training: [
-            { date: "2024/05", title: "高效能團隊領導力", desc: "學習如何激勵團隊成員、建立共識，並提升團隊整體產出。", hours: 8 },
-            { date: "2024/02", title: "進階資料庫效能調校", desc: "深入研究索引策略、查詢優化與高併發處理。", hours: 16 },
-            { date: "2023/09", title: "敏捷專案管理實戰", desc: "學習 Scrum 與 Kanban 方法論。", hours: 12 },
-            { date: "2023/04", title: "現代前端框架 Vue.js", desc: "學習 Vue.js 全家桶。", hours: 18 },
-            { date: "2022/11", title: "雲端架構設計入門", desc: "了解主流雲端服務(AWS/GCP)的核心概念。", hours: 6 },
-            { date: "2022/07", title: "Python 網頁爬蟲", desc: "學習使用 Python 進行網路資料擷取與分析。", hours: 8 },
-        ]
-    };
-
-    // --- DOM 元素 ---
-    const workSeniorityEl = document.getElementById('work-seniority');
-    const projectsCard = document.getElementById('projects-card');
-    const honorsCard = document.getElementById('honors-card');
-    const dashboardProjectsCount = document.getElementById('dashboard-projects-count');
-    const dashboardHonorsCount = document.getElementById('dashboard-honors-count');
-    const dashboardHoursCount = document.getElementById('dashboard-hours-count');
-    
-    // Timelines
-    const experienceTimeline = document.getElementById('experience-timeline');
-    const projectTimeline = document.getElementById('project-timeline');
-    const honorTimeline = document.getElementById('honor-timeline');
-    const trainingTimeline = document.getElementById('training-timeline');
-
-    // Modal
-    const modal = document.getElementById('modal');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const modalContent = document.getElementById('modal-content');
-    const modalTitle = document.getElementById('modal-title');
-    const modalBody = document.getElementById('modal-body');
-    const modalCloseBtn = document.getElementById('modal-close-btn');
-
-    // --- Functions ---
-
-    /** 計算工作年資 */
-    function calculateSeniority(startDateStr) {
-        const startDate = new Date(startDateStr);
-        const today = new Date();
-        let years = today.getFullYear() - startDate.getFullYear();
-        let months = today.getMonth() - startDate.getMonth();
-        if (months < 0 || (months === 0 && today.getDate() < startDate.getDate())) {
-            years--;
-            months += 12;
-        }
-        workSeniorityEl.textContent = years > 0 ? `${years} 年 ${months} 個月` : `${months} 個月`;
-    }
-
-    /** 建立通用時間軸項目 */
-    function createTimelineItem(item, iconSvg, dotColorClass) {
-        const date = item.date || item.period;
-        const desc = item.desc || '';
-        let detailsHtml = '';
-
-        // 檢查專案狀態
-        if (item.status) {
-            if (item.status === '進行中') {
-                detailsHtml = `
-                    <div class="mt-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-semibold inline-block text-blue-600">進行中</span>
-                            <span class="text-xs font-semibold inline-block text-blue-600">${item.progress}%</span>
-                        </div>
-                        <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
-                            <div style="width:${item.progress}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-500"></div>
-                        </div>
-                    </div>`;
-            } else if (item.status === '已完成') {
-                detailsHtml = `
-                    <div class="mt-3">
-                        <span class="text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full text-green-600 bg-green-200">
-                            已完成
-                        </span>
-                    </div>`;
-            }
-        }
-        // 檢查訓練時數
-        else if (item.hours) {
-            detailsHtml = `<div class="flex items-center text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full w-fit mt-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>修習時數：${item.hours} 小時</span>
-            </div>`;
-        }
-        
-        return `
-            <div class="timeline-item relative pb-8">
-                <div class="timeline-dot ${dotColorClass}">${iconSvg}</div>
-                <p class="text-sm text-slate-500">${date}</p>
-                <h4 class="font-bold text-lg text-slate-800">${item.title}</h4>
-                <p class="text-slate-600 text-sm">${desc}</p>
-                ${detailsHtml}
-            </div>
-        `;
-    }
-    
-    /** 填充時間軸 */
-    function populateTimeline(container, data, iconSvg, dotColorClass) {
-        if (!data || data.length === 0) {
-            container.innerHTML = `<p class="text-slate-500">尚無紀錄。</p>`;
-            return;
-        }
-        container.innerHTML = data.map(item => createTimelineItem(item, iconSvg, dotColorClass)).join('');
-    }
-
-    /** 開啟 Modal */
-    function openModal(title, contentHtml) {
-        modalTitle.textContent = title;
-        modalBody.innerHTML = contentHtml;
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-            modalOverlay.classList.remove('opacity-0');
-            modalContent.classList.remove('scale-95');
-        }, 10);
-    }
-
-    /** 關閉 Modal */
-    function closeModal() {
-        modalOverlay.classList.add('opacity-0');
-        modalContent.classList.add('scale-95');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 300);
-    }
-
-    // --- Event Listeners & Initialization ---
-    window.onload = () => {
-        // Icons for timelines
-        const experienceIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="timeline-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`;
-        const projectIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="timeline-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.5a1.5 1.5 0 01-3 0V6z" clip-rule="evenodd" /><path d="M6 12a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2v-2z" /></svg>`;
-        const honorIcon = `<svg xmlns="http="http://www.w3.org/2000/svg" class="timeline-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>`;
-        const trainingIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="timeline-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6.253v11.494m-9-5.747h18" /></svg>`;
-
-        // Populate timelines
-        populateTimeline(experienceTimeline, userData.experience, experienceIcon, 'bg-cyan-500');
-        populateTimeline(projectTimeline, userData.projects, projectIcon, 'bg-green-500');
-        populateTimeline(honorTimeline, userData.honors, honorIcon, 'bg-amber-500');
-        populateTimeline(trainingTimeline, userData.training, trainingIcon, 'bg-orange-500');
-
-        // Update dashboard
-        calculateSeniority(userData.onboardingDate);
-        const completedProjects = userData.projects.filter(p => p.status === '已完成');
-        dashboardProjectsCount.textContent = `${completedProjects.length} 個`;
-        dashboardHonorsCount.textContent = `${userData.honors.length} 項`;
-        const totalHours = userData.training.reduce((sum, item) => sum + item.hours, 0);
-        dashboardHoursCount.textContent = `${totalHours} 小時`;
-
-        // Setup Modal Listeners
-        projectsCard.addEventListener('click', () => {
-            const content = `<ul class="space-y-4">${userData.projects.map(p => {
-                const statusBadge = p.status === '已完成' 
-                    ? `<span class="text-xs font-semibold inline-block py-1 px-2 rounded-full text-green-600 bg-green-200 ml-2">已完成</span>`
-                    : `<span class="text-xs font-semibold inline-block py-1 px-2 rounded-full text-blue-600 bg-blue-200 ml-2">進行中</span>`;
-                return `<li class="border-b pb-2">
-                            <div class="flex justify-between items-center">
-                                <p class="font-semibold text-slate-700">${p.title}</p>
-                                ${statusBadge}
-                            </div>
-                            <p class="text-sm text-slate-500 mt-1">${p.desc}</p>
-                        </li>`
-            }).join('')}</ul>`;
-            openModal('專案列表', content);
-        });
-
-        honorsCard.addEventListener('click', () => {
-            const content = `<ul class="space-y-4">${userData.honors.map(h => `<li class="border-b pb-2"><p class="font-semibold text-slate-700">${h.title} <span class="text-xs font-normal text-slate-400">(${h.date})</span></p><p class="text-sm text-slate-500">${h.desc}</p></li>`).join('')}</ul>`;
-            openModal('榮譽事蹟列表', content);
-        });
-        
-        modalOverlay.addEventListener('click', closeModal);
-        modalCloseBtn.addEventListener('click', closeModal);
-    };
-</script>
 
 </body>
 </html>
