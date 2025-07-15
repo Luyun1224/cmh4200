@@ -18,7 +18,6 @@
             transform: translateY(0);
             opacity: 1;
         }
-        /* 讓日期選擇器的提示文字變淡 */
         input[type="date"]:invalid::-webkit-calendar-picker-indicator {
             opacity: 0.6;
         }
@@ -30,7 +29,6 @@
             <button onclick="window.location.href='index.html'" class="absolute left-0 top-0 bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">
                 返回首頁
             </button>
-            
             <h1 class="text-3xl font-bold text-gray-800 mb-2">個人歷程後台管理</h1>
             <p class="text-gray-600">點擊下方各區塊的按鈕來建立您的個人資料</p>
         </div>
@@ -40,7 +38,6 @@
                 <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">1</span>
                 個人基本資料
             </h2>
-
             <div class="mb-6">
                 <label for="staff-select" class="block text-sm font-medium text-gray-700 mb-2">選擇人員</label>
                 <select id="staff-select" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -63,7 +60,6 @@
                     <option>林盟淦</option>
                 </select>
             </div>
-            
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">個人大頭照</label>
                 <div class="flex items-center space-x-4">
@@ -72,27 +68,20 @@
                     </div>
                     <div>
                         <input type="file" id="profilePhoto" accept="image/*" class="hidden">
-                         <button onclick="document.getElementById('profilePhoto').click()" 
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
-                            上傳照片
-                        </button>
-                     </div>
+                         <button onclick="document.getElementById('profilePhoto').click()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">上傳照片</button>
+                    </div>
                 </div>
             </div>
-
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
-                    <input type="text" id="profile-name" placeholder="請先選擇人員" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" readonly>
+                    <input type="text" id="profile-name" placeholder="請先選擇人員" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" readonly>
                 </div>
                 <div>
                      <label class="block text-sm font-medium text-gray-700 mb-2">職稱</label>
-                    <input type="text" id="profile-title" placeholder="請輸入職稱" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="text" id="profile-title" placeholder="請輸入職稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-             </div>
-
+            </div>
             <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
                 <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -102,67 +91,52 @@
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>
-                     業務職掌
+                    <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌
                 </h3>
                 <div id="duties-list" class="space-y-2 mb-4 min-h-[60px] flex-grow">
                     <p class="text-gray-500 text-sm">尚未新增任何職掌</p>
                 </div>
-                 <button onclick="openModal('duty')" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">
-                    新增職掌
-                </button>
+                 <button onclick="openModal('duty')" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增職掌</button>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
                  <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>
-                    工作經歷
+                    <span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>工作經歷
                 </h3>
-                <div id="experiences-list" class="space-y-2 mb-4 min-h-[60px] flex-grow">
+                <div id="experience-list" class="space-y-2 mb-4 min-h-[60px] flex-grow">
                     <p class="text-gray-500 text-sm">尚未新增任何經歷</p>
                 </div>
-                <button onclick="openModal('experience')" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">
-                    新增經歷
-                 </button>
+                <button onclick="openModal('experience')" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增經歷</button>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>
-                   專案成果
+                    <span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>專案成果
                 </h3>
                 <div id="projects-list" class="space-y-2 mb-4 min-h-[60px] flex-grow">
                     <p class="text-gray-500 text-sm">尚未新增任何專案</p>
                 </div>
-                   <button onclick="openModal('project')" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">
-                    新增專案
-                </button>
+                   <button onclick="openModal('project')" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增專案</button>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <span class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>
-                    榮譽事蹟
+                    <span class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>榮譽事蹟
                 </h3>
                  <div id="honors-list" class="space-y-2 mb-4 min-h-[60px] flex-grow">
                     <p class="text-gray-500 text-sm">尚未新增任何榮譽</p>
                 </div>
-                <button onclick="openModal('honor')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">
-                    新增榮譽
-                 </button>
+                <button onclick="openModal('honor')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增榮譽</button>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>
-                    教育訓練
+                    <span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>教育訓練
                 </h3>
-                <div id="trainings-list" class="space-y-2 mb-4 min-h-[60px] flex-grow">
+                <div id="training-list" class="space-y-2 mb-4 min-h-[60px] flex-grow">
                     <p class="text-gray-500 text-sm">尚未新增任何訓練</p>
                 </div>
-                <button onclick="openModal('training')" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">
-                    新增訓練
-                </button>
+                <button onclick="openModal('training')" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增訓練</button>
             </div>
         </div>
 
@@ -178,40 +152,30 @@
             <h3 id="modal-title" class="text-lg font-semibold mb-4"></h3>
             <div id="modal-content" class="space-y-4"></div>
             <div class="flex justify-end space-x-3 mt-6">
-                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">
-                    取消
-                 </button>
-                <button id="modal-save" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
-                    確認
-                </button>
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button>
+                <button id="modal-save" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">確認</button>
             </div>
         </div>
     </div>
-
     <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-auto">
             <h3 id="confirm-modal-title" class="text-lg font-semibold mb-4">確認刪除</h3>
             <p id="confirm-modal-body" class="text-gray-600 mb-6">您確定要刪除這筆資料嗎？</p>
             <div class="flex justify-end space-x-3">
-                <button id="confirm-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">
-                   取消
-                </button>
-                <button id="confirm-modal-ok" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
-                    刪除
-                </button>
-             </div>
+                <button id="confirm-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button>
+                <button id="confirm-modal-ok" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">刪除</button>
+            </div>
         </div>
     </div>
-
     <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
 
     <script>
         // --- 全域變數 ---
         let currentModalType = '';
         let editingIndex = null;
-        let allProfiles = {}; // 用於儲存所有人員的資料
-        let currentStaffName = ''; // 目前正在編輯的人員
-        let profileData = {}; // 目前正在編輯的人員資料
+        let allProfiles = {};
+        let currentStaffName = '';
+        let profileData = {};
 
         // --- DOM元素 ---
         const modal = document.getElementById('modal');
@@ -224,18 +188,13 @@
         const confirmModalOkBtn = document.getElementById('confirm-modal-ok');
         const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel');
 
-
         // --- 初始化 ---
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('profilePhoto').addEventListener('change', handlePhotoUpload);
-
-            // 載入 localStorage 中已儲存的資料
             const storedProfiles = localStorage.getItem('staffProfiles');
             if (storedProfiles) {
                 allProfiles = JSON.parse(storedProfiles);
             }
-
-            // 監聽人員選擇下拉選單的變化
             document.getElementById('staff-select').addEventListener('change', (e) => {
                 currentStaffName = e.target.value;
                 loadProfile(currentStaffName);
@@ -245,27 +204,14 @@
         // --- 載入與渲染 ---
         function loadProfile(name) {
             if (!name) return;
-
-            // 從 allProfiles 中取得該員資料，若無則初始化一個新的空物件
             profileData = allProfiles[name] || {
-                profileImg: '',
-                name: name,
-                title: '',
-                onboardDate: '',
-                duties: [],
-                experiences: [],
-                projects: [],
-                honors: [],
-                trainings: []
+                profileImg: '', name: name, title: '', onboardDate: '',
+                duties: [], experiences: [], projects: [], honors: [], trainings: []
             };
-
-            // 將資料填入各個基本資料欄位
             document.getElementById('profile-name').value = profileData.name || '';
             document.getElementById('profile-title').value = profileData.title || '';
             document.getElementById('onboard-date').value = profileData.onboardDate || '';
             document.getElementById('profilePreview').src = profileData.profileImg || 'https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽';
-            
-            // 渲染所有項目的列表
             renderAllLists();
         }
 
@@ -277,11 +223,10 @@
             renderList('training');
         }
 
-        // --- 照片上傳 ---
         function handlePhotoUpload(e) {
             if (!currentStaffName) {
                 showToast('請先選擇一位人員再上傳照片！', 'error');
-                e.target.value = ""; // 清空選擇，避免下次無法觸發 change
+                e.target.value = "";
                 return;
             }
             const file = e.target.files[0];
@@ -289,86 +234,33 @@
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     document.getElementById('profilePreview').src = event.target.result;
-                    profileData.profileImg = event.target.result; // 直接更新到當前的 profileData
+                    profileData.profileImg = event.target.result;
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        // --- 模態框邏輯 ---
         function getModalConfig(type, data = {}) {
             const configs = {
                 duty: {
                     title: '業務職掌',
-                    content: `
-                        <textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-24">${data.content || ''}</textarea>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">開始時間</label>
-                            <input type="date" id="duty-start-date" value="${data.startDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">結束時間 (若無則不填)</label>
-                            <input type="date" id="duty-end-date" value="${data.endDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>`
+                    content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-24">${data.content || ''}</textarea><div><label class="block text-sm font-medium text-gray-700 mb-1">開始時間</label><input type="date" id="duty-start-date" value="${data.startDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data.endDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>`
                 },
                 experience: {
                     title: '工作經歷',
-                    content: `
-                        <input type="text" id="exp-name" placeholder="經歷名稱 (例如: 擔任簡報講師)" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">開始日期 (選填)</label>
-                            <input type="date" id="exp-start-date" value="${data.startDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">結束日期 (選填)</label>
-                            <input type="date" id="exp-end-date" value="${data.endDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>`
+                    content: `<input type="text" id="exp-name" placeholder="經歷名稱 (例如: 擔任簡報講師)" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><div><label class="block text-sm font-medium text-gray-700 mb-1">開始日期 (選填)</label><input type="date" id="exp-start-date" value="${data.startDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">結束日期 (選填)</label><input type="date" id="exp-end-date" value="${data.endDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>`
                 },
                 project: {
                     title: '專案成果',
-                    content: `
-                        <input type="text" id="project-name" placeholder="專案名稱" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <textarea id="project-desc" placeholder="專案描述" class="w-full px-3 py-2 border border-gray-300 rounded-lg h-24">${data.desc || ''}</textarea>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">專案狀態</label>
-                            <select id="project-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                <option value="planned" ${data.status === 'planned' ? 'selected' : ''}>預備中</option>
-                                <option value="inprogress" ${data.status === 'inprogress' ? 'selected' : ''}>進行中</option>
-                                <option value="completed" ${data.status === 'completed' ? 'selected' : ''}>已完成</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">專案開始時間</label>
-                            <input type="date" id="project-start-date" value="${data.startDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">專案結束時間</label>
-                            <input type="date" id="project-end-date" value="${data.endDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>`
+                    content: `<input type="text" id="project-name" placeholder="專案名稱" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><textarea id="project-desc" placeholder="專案描述" class="w-full px-3 py-2 border border-gray-300 rounded-lg h-24">${data.desc || ''}</textarea><div><label class="block text-sm font-medium text-gray-700 mb-1">專案狀態</label><select id="project-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="planned" ${data.status === 'planned' ? 'selected' : ''}>預備中</option><option value="inprogress" ${data.status === 'inprogress' ? 'selected' : ''}>進行中</option><option value="completed" ${data.status === 'completed' ? 'selected' : ''}>已完成</option></select></div><div><label class="block text-sm font-medium text-gray-700 mb-1">專案開始時間</label><input type="date" id="project-start-date" value="${data.startDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">專案結束時間</label><input type="date" id="project-end-date" value="${data.endDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>`
                 },
                 honor: {
                     title: '榮譽事蹟',
-                    content: `
-                        <input type="text" id="honor-name" placeholder="榮譽名稱" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <input type="text" id="honor-org" placeholder="頒發機構及單位" value="${data.org || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">獲獎時間</label>
-                            <input type="date" id="honor-date" value="${data.date || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>`
+                    content: `<input type="text" id="honor-name" placeholder="榮譽名稱" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><input type="text" id="honor-org" placeholder="頒發機構及單位" value="${data.org || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><div><label class="block text-sm font-medium text-gray-700 mb-1">獲獎時間</label><input type="date" id="honor-date" value="${data.date || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>`
                 },
                 training: {
                     title: '教育訓練',
-                    content: `
-                        <input type="text" id="training-name" placeholder="訓練名稱" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <input type="text" id="training-org" placeholder="訓練機構" value="${data.org || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">訓練時數</label>
-                            <input type="number" id="training-hours" placeholder="請輸入數字" value="${data.hours || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">訓練時間</label>
-                            <input type="date" id="training-date" value="${data.date || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>`
+                    content: `<input type="text" id="training-name" placeholder="訓練名稱" value="${data.name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><input type="text" id="training-org" placeholder="訓練機構" value="${data.org || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><div class="mt-4"><label class="block text-sm font-medium text-gray-700 mb-1">訓練時數</label><input type="number" id="training-hours" placeholder="請輸入數字" value="${data.hours || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div><div class="mt-4"><label class="block text-sm font-medium text-gray-700 mb-1">訓練時間</label><input type="date" id="training-date" value="${data.date || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>`
                 }
             };
             return configs[type];
@@ -385,21 +277,19 @@
             const listName = type === 'duty' ? 'duties' : type + 's';
             const data = isEditing ? profileData[listName][index] : {};
             const config = getModalConfig(type, data);
-
             modalTitle.textContent = (isEditing ? '編輯' : '新增') + config.title;
             modalContent.innerHTML = config.content;
             modalSaveBtn.onclick = () => saveModalData();
-            
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
 
         function closeModal() {
-             modal.classList.add('hidden');
+            modal.classList.add('hidden');
             modal.classList.remove('flex');
             editingIndex = null;
         }
-        
+
         function closeConfirmModal() {
             confirmModal.classList.add('hidden');
             confirmModal.classList.remove('flex');
@@ -408,80 +298,53 @@
         function saveModalData() {
             let data = {};
             let isValid = true;
-            const listName = type === 'duty' ? 'duties' : type + 's';
-            switch(currentModalType) {
+            const listName = currentModalType === 'duty' ? 'duties' : currentModalType + 's';
+            switch (currentModalType) {
                 case 'duty':
-                    data = {
-                        content: document.getElementById('duty-content').value,
-                        startDate: document.getElementById('duty-start-date').value,
-                        endDate: document.getElementById('duty-end-date').value,
-                    };
+                    data = { content: document.getElementById('duty-content').value, startDate: document.getElementById('duty-start-date').value, endDate: document.getElementById('duty-end-date').value };
                     if (!data.content || !data.startDate) isValid = false;
                     break;
                 case 'experience':
-                    data = { 
-                        name: document.getElementById('exp-name').value, 
-                        startDate: document.getElementById('exp-start-date').value, 
-                        endDate: document.getElementById('exp-end-date').value 
-                    };
+                    data = { name: document.getElementById('exp-name').value, startDate: document.getElementById('exp-start-date').value, endDate: document.getElementById('exp-end-date').value };
                     if (!data.name) isValid = false;
                     break;
                 case 'project':
-                    data = { 
-                        name: document.getElementById('project-name').value, 
-                        desc: document.getElementById('project-desc').value, 
-                        status: document.getElementById('project-status').value,
-                        startDate: document.getElementById('project-start-date').value,
-                        endDate: document.getElementById('project-end-date').value,
-                    };
+                    data = { name: document.getElementById('project-name').value, desc: document.getElementById('project-desc').value, status: document.getElementById('project-status').value, startDate: document.getElementById('project-start-date').value, endDate: document.getElementById('project-end-date').value };
                     if (!data.name || !data.startDate) isValid = false;
                     break;
                 case 'honor':
-                    data = { 
-                        name: document.getElementById('honor-name').value, 
-                        org: document.getElementById('honor-org').value, 
-                        date: document.getElementById('honor-date').value 
-                    };
+                    data = { name: document.getElementById('honor-name').value, org: document.getElementById('honor-org').value, date: document.getElementById('honor-date').value };
                     if (!data.name || !data.date) isValid = false;
                     break;
                 case 'training':
-                    data = { 
-                        name: document.getElementById('training-name').value, 
-                        org: document.getElementById('training-org').value, 
-                        hours: Number(document.getElementById('training-hours').value) || 0,
-                        date: document.getElementById('training-date').value 
-                    };
+                    data = { name: document.getElementById('training-name').value, org: document.getElementById('training-org').value, hours: Number(document.getElementById('training-hours').value) || 0, date: document.getElementById('training-date').value };
                     if (!data.name || !data.date) isValid = false;
                     break;
             }
-
             if (!isValid) {
                 showToast('請填寫所有必要欄位', 'error');
                 return;
             }
-
             if (editingIndex !== null) {
                 profileData[listName][editingIndex] = data;
             } else {
                 profileData[listName].push(data);
             }
-            
             renderList(currentModalType);
             closeModal();
             showToast('資料已更新', 'success');
         }
 
-        // --- 渲染列表 ---
         function getProjectStatusBadge(status) {
             const statusMap = {
                 planned: { text: '預備中', class: 'bg-gray-200 text-gray-800' },
                 inprogress: { text: '進行中', class: 'bg-blue-200 text-blue-800' },
-                 completed: { text: '已完成', class: 'bg-green-200 text-green-800' }
+                completed: { text: '已完成', class: 'bg-green-200 text-green-800' }
             };
             const currentStatus = statusMap[status] || statusMap.planned;
             return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${currentStatus.class}">${currentStatus.text}</span>`;
         }
-        
+
         function formatDate(dateString) {
             if (!dateString) return '';
             return dateString.replace(/-/g, '/');
@@ -491,15 +354,10 @@
             const baseClasses = "bg-white border border-gray-200 p-3 rounded-lg flex justify-between items-start";
             let contentHTML = '';
             let timeRange = '';
-
-            switch(type) {
+            switch (type) {
                 case 'duty':
                     timeRange = `${formatDate(item.startDate)} - ${item.endDate ? formatDate(item.endDate) : '至今'}`;
-                    contentHTML = `
-                        <div class="flex-grow">
-                            <p class="text-sm">${item.content}</p>
-                            <p class="text-xs text-gray-500 mt-1">${timeRange}</p>
-                         </div>`;
+                    contentHTML = `<div class="flex-grow"><p class="text-sm">${item.content}</p><p class="text-xs text-gray-500 mt-1">${timeRange}</p></div>`;
                     break;
                 case 'experience':
                     let expTimeRange = '';
@@ -508,23 +366,11 @@
                     } else if (item.startDate) {
                         expTimeRange = formatDate(item.startDate);
                     }
-                    contentHTML = `
-                        <div class="flex-grow">
-                            <p class="font-medium text-sm">${item.name}</p>
-                             ${expTimeRange ? `<p class="text-xs text-gray-500 mt-1">${expTimeRange}</p>` : ''}
-                        </div>`;
+                    contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item.name}</p>${expTimeRange ? `<p class="text-xs text-gray-500 mt-1">${expTimeRange}</p>` : ''}</div>`;
                     break;
                 case 'project':
                     timeRange = `${formatDate(item.startDate)} - ${item.endDate ? formatDate(item.endDate) : '至今'}`;
-                    contentHTML = `
-                        <div class="flex-grow">
-                            <div class="flex justify-between items-center mb-1">
-                                <p class="font-medium text-sm">${item.name}</p>
-                                 ${getProjectStatusBadge(item.status)}
-                            </div>
-                            <p class="text-sm text-gray-600">${item.desc}</p>
-                             <p class="text-xs text-gray-500 mt-1">${timeRange}</p>
-                        </div>`;
+                    contentHTML = `<div class="flex-grow"><div class="flex justify-between items-center mb-1"><p class="font-medium text-sm">${item.name}</p>${getProjectStatusBadge(item.status)}</div><p class="text-sm text-gray-600">${item.desc}</p><p class="text-xs text-gray-500 mt-1">${timeRange}</p></div>`;
                     break;
                 case 'honor':
                     contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item.name}</p><p class="text-sm text-gray-600">${item.org}</p><p class="text-xs text-gray-500">${formatDate(item.date)}</p></div>`;
@@ -533,19 +379,24 @@
                     contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item.name}</p><p class="text-sm text-gray-600">${item.org}</p><p class="text-xs text-gray-500 mt-1">訓練時間: ${formatDate(item.date)}</p><p class="text-xs text-gray-500">訓練時數: ${item.hours || 0} 小時</p></div>`;
                     break;
             }
-            
-            const actionsHTML = `
-                <div class="space-x-2 flex-shrink-0 ml-4">
-                    <button onclick="openModal('${type}', ${index})" class="text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteItem('${type}', ${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-                 </div>`;
+            const actionsHTML = `<div class="space-x-2 flex-shrink-0 ml-4"><button onclick="openModal('${type}', ${index})" class="text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button onclick="deleteItem('${type}', ${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`;
             return `<div class="${baseClasses}">${contentHTML}${actionsHTML}</div>`;
         }
 
+        /************************************************************/
+        /* FIXED SECTION                       */
+        /************************************************************/
         function renderList(type) {
-            // The JavaScript logic expects plural names for list containers (e.g., "experiences-list")
-            // The HTML IDs have now been updated to match this expectation.
-            const listId = type === 'duty' ? 'duties-list' : type + 's-list';
+            // This function now uses a precise mapping to find the correct HTML element ID,
+            // fixing the bug where 'experience' and 'training' lists would not update.
+            const idMap = {
+                duty: 'duties-list',
+                experience: 'experience-list',
+                project: 'projects-list',
+                honor: 'honors-list',
+                training: 'training-list'
+            };
+            const listId = idMap[type];
             const listName = type === 'duty' ? 'duties' : type + 's';
             const listContainer = document.getElementById(listId);
 
@@ -572,7 +423,6 @@
             confirmModalBody.textContent = `您確定要刪除這筆${getModalConfig(type).title}資料嗎？`;
             confirmModal.classList.remove('hidden');
             confirmModal.classList.add('flex');
-
             confirmModalOkBtn.onclick = () => {
                 const listName = type === 'duty' ? 'duties' : type + 's';
                 profileData[listName].splice(index, 1);
@@ -585,24 +435,16 @@
             };
         }
 
-        // --- 儲存與提示 ---
         function saveProfile() {
             if (!currentStaffName) {
                 showToast('請先選擇一位人員！', 'error');
                 return;
             }
-
-            // 更新 profileData 物件中的基本資料
             profileData.name = document.getElementById('profile-name').value;
             profileData.title = document.getElementById('profile-title').value;
             profileData.onboardDate = document.getElementById('onboard-date').value;
-
-            // 將當前編輯的 profileData 存回 allProfiles 物件中
             allProfiles[currentStaffName] = profileData;
-
-            // 將整個 allProfiles 物件轉換為 JSON 字串並儲存到 localStorage
             localStorage.setItem('staffProfiles', JSON.stringify(allProfiles));
-            
             console.log("儲存的資料:", JSON.stringify(allProfiles, null, 2));
             showToast('個人資料已儲存成功！', 'success');
         }
@@ -614,10 +456,7 @@
             toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`;
             toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`;
             container.appendChild(toast);
-
-            // Animate in
             setTimeout(() => toast.classList.add('show'), 10);
-            // Animate out and remove
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => container.removeChild(toast), 500);
