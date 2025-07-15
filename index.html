@@ -231,10 +231,10 @@
                 loginMessage.textContent = '登入成功！';
                 loginMessage.classList.remove('text-red-500');
                 loginMessage.classList.add('text-green-500');
-                
-                // Hide the modal after a short delay
+
+                // Redirect to admin page after a short delay
                 setTimeout(() => {
-                    loginModal.classList.add('hidden');
+                    window.location.href = 'admin.html';
                 }, 1500); // 1.5 seconds
 
             } else {
