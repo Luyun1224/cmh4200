@@ -104,15 +104,16 @@
         let currentStaffName = '';
         let profileData = {};
         
-        // 請將這裡換成您在 Google Apps Script「新增部署作業」後取得的【全新】網址
-        const GOOGLE_SHEET_API_URL = "在此貼上您的全新API網址";
+        // 請將這裡換成您在 Google Apps Script 重新部署後取得的【全新】網址
+        const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzhYxSKmbpi0_WREpCwcmfMAKfg1KlRDwjg7OWHoNcjXettT4REDRe5FrrumwGm1BkF/exec";
 
         // ===== 核心功能：讀取與儲存 =====
+        
         async function fetchAllData() {
             showToast("正在從雲端讀取資料...", "success");
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL);
-                if (!response.ok) throw new Error(`無法連接雲端: ${response.status} ${response.statusText}`);
+                if (!response.ok) throw new Error(`無法連接雲端: ${response.statusText}`);
                 allProfiles = await response.json();
                 console.log("成功從 Google Sheet 讀取資料:", allProfiles);
                 showToast("雲端資料讀取完畢！", "success");
@@ -127,7 +128,6 @@
             if (!currentStaffName) {
                 showToast('請先選擇一位人員！', 'error'); return;
             }
-            
             const saveButton = document.getElementById('save-profile-btn');
             saveButton.disabled = true;
             saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>儲存中...`;
@@ -142,14 +142,10 @@
                 const response = await fetch(GOOGLE_SHEET_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(allProfiles),
-                    // Google Apps Script doPost 需要一個 workaround，所以我們不能直接用 redirect
-                    // 但因為我們已經在後端處理了 CORS，所以這裡不需要 'no-cors'
+                    body: JSON.stringify(allProfiles)
                 });
-
                 if (!response.ok) throw new Error(`伺服器錯誤: ${response.statusText}`);
                 const result = await response.json();
-
                 if (result.status === "success") {
                     console.log(`成功儲存 ${result.rowCount} 筆資料至 Google Sheet!`);
                     showToast('個人資料已成功儲存至雲端！', 'success');
@@ -245,6 +241,7 @@
             }
         }
         
+        // ===== 輔助函數 (無需修改) =====
         function getModalConfig(type, data = {}) {
             const configs = {
                 '業務職掌': { title: '業務職掌', content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border rounded">${data['內容'] || ''}</textarea><div><label class="block text-sm">開始時間</label><input type="date" id="duty-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},
@@ -261,10 +258,8 @@
             const dataArray = profileData[categoryInfo.listName] || [];
             const data = index !== null ? dataArray[index] : {}; const config = getModalConfig(type, data);
             if (!config) { console.error(`找不到 ${type} 的模態框設定`); return; }
-            document.getElementById('modal-title').textContent = (index !== null ? '編輯' : '新增') + config.title; 
-            document.getElementById('modal-content').innerHTML = config.content;
-            document.getElementById('modal').classList.remove('hidden'); 
-            document.getElementById('modal').classList.add('flex');
+            modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; modalContent.innerHTML = config.content;
+            modal.classList.remove('hidden'); modal.classList.add('flex');
         }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); editingIndex = null; }
         
@@ -292,12 +287,13 @@
                 profileData[listName].splice(index, 1); renderList(type); showToast('資料已暫存刪除', 'success');
                 confirmModal.classList.add('hidden');
             };
+            document.getElementById('confirm-modal-cancel').onclick = () => confirmModal.classList.add('hidden');
         }
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500'; toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`; toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
         }
         
-        // ===== 事件監聽綁定 =====
+        // ===== 事件監聽綁定 (Event Listeners) =====
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchAllData();
             document.getElementById('staff-select').addEventListener('change', (e) => loadProfile(e.target.value));
