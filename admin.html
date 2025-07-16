@@ -59,7 +59,7 @@
                 <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg">
             </div>
         </div>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="action-cards-container">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌</h3>
                 <div id="duties-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何職掌</p></div>
@@ -105,7 +105,7 @@
         let profileData = {};
         
         // 請將這裡換成您在 Google Apps Script 重新部署後取得的【全新】網址
-        const GOOGLE_SHEET_API_URL = "在此貼上您的全新API網址";
+        const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzhYxSKmbpi0_WREpCwcmfMAKfg1KlRDwjg7OWHoNcjXettT4REDRe5FrrumwGm1BkF/exec";
 
         // ===== 核心功能：讀取與儲存 =====
         
@@ -113,7 +113,7 @@
             showToast("正在從雲端讀取資料...", "success");
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL);
-                if (!response.ok) throw new Error(`無法連接雲端: ${response.status} ${response.statusText}`);
+                if (!response.ok) throw new Error(`無法連接雲端: ${response.statusText}`);
                 allProfiles = await response.json();
                 console.log("成功從 Google Sheet 讀取資料:", allProfiles);
                 showToast("雲端資料讀取完畢！", "success");
@@ -128,7 +128,6 @@
             if (!currentStaffName) {
                 showToast('請先選擇一位人員！', 'error'); return;
             }
-            
             const saveButton = document.getElementById('save-profile-btn');
             saveButton.disabled = true;
             saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>儲存中...`;
@@ -140,18 +139,22 @@
             allProfiles[currentStaffName] = profileData;
             
             try {
-                // 使用最穩定的 no-cors 模式來發送儲存請求
-                await fetch(GOOGLE_SHEET_API_URL, {
+                const response = await fetch(GOOGLE_SHEET_API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(allProfiles)
                 });
-                console.log("已發送儲存請求至 Google Sheet!");
-                showToast('資料已發送到雲端儲存！', 'success');
+                if (!response.ok) throw new Error(`伺服器錯誤: ${response.statusText}`);
+                const result = await response.json();
+                if (result.status === "success") {
+                    console.log(`成功儲存 ${result.rowCount} 筆資料至 Google Sheet!`);
+                    showToast('個人資料已成功儲存至雲端！', 'success');
+                } else {
+                    throw new Error(result.message || 'Apps Script 腳本執行失敗');
+                }
             } catch (e) {
                 console.error("儲存至 Google Sheet 失敗:", e);
-                showToast(`儲存請求發送失敗: ${e.message}`, 'error');
+                showToast(`儲存至雲端失敗: ${e.message}`, 'error');
             } finally {
                 saveButton.disabled = false;
                 saveButton.innerHTML = `<i class="fas fa-save mr-2"></i>儲存個人資料至雲端`;
@@ -238,6 +241,7 @@
             }
         }
         
+        // ===== 輔助函數 (無需修改) =====
         function getModalConfig(type, data = {}) {
             const configs = {
                 '業務職掌': { title: '業務職掌', content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border rounded">${data['內容'] || ''}</textarea><div><label class="block text-sm">開始時間</label><input type="date" id="duty-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},
@@ -254,10 +258,8 @@
             const dataArray = profileData[categoryInfo.listName] || [];
             const data = index !== null ? dataArray[index] : {}; const config = getModalConfig(type, data);
             if (!config) { console.error(`找不到 ${type} 的模態框設定`); return; }
-            document.getElementById('modal-title').textContent = (index !== null ? '編輯' : '新增') + config.title; 
-            document.getElementById('modal-content').innerHTML = config.content;
-            document.getElementById('modal').classList.remove('hidden'); 
-            document.getElementById('modal').classList.add('flex');
+            modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; modalContent.innerHTML = config.content;
+            modal.classList.remove('hidden'); modal.classList.add('flex');
         }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); editingIndex = null; }
         
@@ -285,12 +287,13 @@
                 profileData[listName].splice(index, 1); renderList(type); showToast('資料已暫存刪除', 'success');
                 confirmModal.classList.add('hidden');
             };
+            document.getElementById('confirm-modal-cancel').onclick = () => confirmModal.classList.add('hidden');
         }
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500'; toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`; toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
         }
         
-        // ===== 事件監聽綁定 =====
+        // ===== 事件監聽綁定 (Event Listeners) =====
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchAllData();
             document.getElementById('staff-select').addEventListener('change', (e) => loadProfile(e.target.value));
@@ -298,15 +301,17 @@
             document.getElementById('upload-photo-btn').addEventListener('click', () => document.getElementById('profilePhoto').click());
             document.getElementById('profilePhoto').addEventListener('change', handlePhotoUpload);
             document.querySelectorAll('.modal-open-btn').forEach(btn => btn.addEventListener('click', (e) => openModal(e.target.dataset.modalType)));
-            document.getElementById('action-cards-container').addEventListener('click', (e) => {
-                const button = e.target.closest('button');
-                if (!button) return;
-                const { modalType, index, type } = button.dataset;
-                if (button.classList.contains('modal-edit-btn')) {
-                    openModal(modalType, parseInt(index, 10));
-                } else if (button.classList.contains('delete-item-btn')) {
-                    deleteItem(type, parseInt(index, 10));
-                }
+            document.querySelectorAll('.data-list').forEach(list => {
+                list.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    const { modalType, index, type } = button.dataset;
+                    if (button.classList.contains('modal-edit-btn')) {
+                        openModal(modalType, parseInt(index, 10));
+                    } else if (button.classList.contains('delete-item-btn')) {
+                        deleteItem(type, parseInt(index, 10));
+                    }
+                });
             });
             document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
             document.getElementById('modal-save-btn').addEventListener('click', saveModalData);
