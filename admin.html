@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>個人歷程後台管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -15,24 +15,173 @@
   </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-  <!-- === 內容省略：你的原版 HTML 結構完全保留 === -->
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="text-center mb-8 relative">
+      <a href="index.html" class="absolute left-0 top-0 bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">返回首頁</a>
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">個人歷程後台管理</h1>
+      <p class="text-gray-600">點擊下方各區塊的按鈕來建立您的個人資料</p>
+    </div>
 
-  <!-- ======== 省略的區塊以 … 表示，確保結構未動 ======== -->
-  … <!--（表單、Modal、Toast DOM 結構與你提供的一致）-->
+    <!-- ① 個人基本資料 -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">1</span>個人基本資料
+      </h2>
+      <div class="mb-6">
+        <label for="staff-select" class="block text-sm font-medium text-gray-700 mb-2">選擇人員</label>
+        <select id="staff-select" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>請選擇人員</option>
+          <option>廖家德</option><option>劉雯</option><option>楊依玲</option><option>吳曉琪</option>
+          <option>王嬿茹</option><option>許淑怡</option><option>侯昱瑾</option><option>林淑雅</option>
+          <option>盧英云</option><option>黃惠津</option><option>林汶秀</option><option>楊宜婷</option>
+          <option>陳詩芸</option><option>高瑞穗</option><option>李迎真</option><option>林盟淦</option>
+        </select>
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">個人大頭照</label>
+        <div class="flex items-center space-x-4">
+          <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+            <img id="profilePreview" src="https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽" alt="預覽" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <input type="file" id="profilePhoto" accept="image/*" class="hidden">
+            <button id="upload-photo-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">上傳照片</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+          <input type="text" id="profile-name" placeholder="請先選擇人員"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">職稱</label>
+          <input type="text" id="profile-title" placeholder="請輸入職稱"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
+        <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg">
+      </div>
+    </div>
 
+    <!-- ②~⑥ 區塊 -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 業務職掌 -->
+      <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌
+        </h3>
+        <div id="duties-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow">
+          <p class="text-gray-500 text-sm">尚未新增任何職掌</p></div>
+        <button data-modal-type="業務職掌"
+                class="modal-open-btn w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg mt-auto">
+          新增職掌
+        </button>
+      </div>
+      <!-- 工作經歷 -->
+      <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>工作經歷
+        </h3>
+        <div id="experience-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow">
+          <p class="text-gray-500 text-sm">尚未新增任何經歷</p></div>
+        <button data-modal-type="工作經歷"
+                class="modal-open-btn w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg mt-auto">
+          新增經歷
+        </button>
+      </div>
+      <!-- 專案成果 -->
+      <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>專案成果
+        </h3>
+        <div id="projects-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow">
+          <p class="text-gray-500 text-sm">尚未新增任何專案</p></div>
+        <button data-modal-type="專案成果"
+                class="modal-open-btn w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg mt-auto">
+          新增專案
+        </button>
+      </div>
+      <!-- 榮譽事蹟 -->
+      <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>榮譽事蹟
+        </h3>
+        <div id="honors-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow">
+          <p class="text-gray-500 text-sm">尚未新增任何榮譽</p></div>
+        <button data-modal-type="榮譽事蹟"
+                class="modal-open-btn w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg mt-auto">
+          新增榮譽
+        </button>
+      </div>
+      <!-- 教育訓練 -->
+      <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>教育訓練
+        </h3>
+        <div id="training-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow">
+          <p class="text-gray-500 text-sm">尚未新增任何訓練</p></div>
+        <button data-modal-type="教育訓練"
+                class="modal-open-btn w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg mt-auto">
+          新增訓練
+        </button>
+      </div>
+    </div>
+
+    <!-- 儲存按鈕 -->
+    <div class="text-center mt-8">
+      <button id="save-profile-btn"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg">
+        <i class="fas fa-save mr-2"></i>儲存個人資料至雲端
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== Modal & Toast DOM (與你原來相同) ===== -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-auto overflow-y-auto max-h-full">
+      <h3 id="modal-title" class="text-lg font-semibold mb-4"></h3>
+      <div id="modal-content" class="space-y-4"></div>
+      <div class="flex justify-end space-x-3 mt-6">
+        <button id="modal-cancel-btn"
+                class="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg border">取消</button>
+        <button id="modal-save-btn"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">確認</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-auto">
+      <h3 id="confirm-modal-title" class="text-lg font-semibold mb-4">確認刪除</h3>
+      <p id="confirm-modal-body" class="text-gray-600 mb-6">您確定要刪除這筆資料嗎？</p>
+      <div class="flex justify-end space-x-3">
+        <button id="confirm-modal-cancel"
+                class="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg border">取消</button>
+        <button id="confirm-modal-ok"
+                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">刪除</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
+
+  <!-- ========= Script ========= -->
   <script>
-    /* ========= 全域變數 ========= */
+    /* ======= 全域變數 ======= */
     let currentModalType = '';
     let editingIndex     = null;
     let allProfiles      = {};
     let currentStaffName = '';
     let profileData      = {};
 
-    /* <<< 換成你重新部署後的 URL >>> */
     const GOOGLE_SHEET_API_URL =
       'https://script.google.com/macros/s/AKfycbzhYxSKmbpi0_WREpCwcmfMAKfg1KlRDwjg7OWHoNcjXettT4REDRe5FrrumwGm1BkF/exec';
 
-    /* ========= 核心功能 ========= */
+    /* ======= 核心功能 ======= */
     async function fetchAllData () {
       showToast('正在從雲端讀取資料...', 'success');
       try {
@@ -80,7 +229,7 @@
       }
     }
 
-    /* ========= 資料與畫面管理 ========= */
+    /* ======= 資料與畫面管理 ======= */
     function getCategoryInfo (type) {
       return {
         '業務職掌': { listName: '業務職掌', listId: 'duties-list' },
@@ -108,28 +257,48 @@
       document.getElementById('profile-name' ).value = profileData['姓名'];
       document.getElementById('profile-title').value = profileData['職稱'];
       document.getElementById('onboard-date' ).value = profileData['入職日期'];
-      document.getElementById('profilePreview').src = profileData['大頭照'] ||
-        'https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽';
+      document.getElementById('profilePreview').src =
+        profileData['大頭照'] || 'https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽';
       renderAllLists();
     }
 
-    /* === 修正版本：直接列舉五種類別 === */
+    /* 修正版：固定五個類別 */
     function renderAllLists () {
       ['業務職掌','工作經歷','專案成果','榮譽事蹟','教育訓練']
         .forEach(type => renderList(type));
     }
 
-    /* === 之後的 renderList、Modal、Toast… 內容與你原始碼相同 === */
-    … /* 省略：其餘 JS 保持不變 */
+    /* renderList 及其餘 Modal / Toast / 刪除 / 日期格式化… 與原程式碼相同 */
+    /* ========================== 這裡保留你原本函式內容 ========================== */
 
-    /* ========= 事件綁定 ========= */
+    /* ======= 事件監聽 ======= */
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchAllData();
       document.getElementById('staff-select').addEventListener('change', e => loadProfile(e.target.value));
       document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
       document.getElementById('upload-photo-btn').addEventListener('click', () => document.getElementById('profilePhoto').click());
       document.getElementById('profilePhoto').addEventListener('change', handlePhotoUpload);
-      … /* 其他事件監聽與原碼一致 */
+
+      /* Modal 相關事件 */
+      document.querySelectorAll('.modal-open-btn').forEach(btn =>
+        btn.addEventListener('click', e => openModal(e.target.dataset.modalType))
+      );
+      document.querySelectorAll('.data-list').forEach(list => {
+        list.addEventListener('click', e => {
+          const button = e.target.closest('button');
+          if (!button) return;
+          const { modalType, index, type } = button.dataset;
+          if (button.classList.contains('modal-edit-btn')) {
+            openModal(modalType, parseInt(index, 10));
+          } else if (button.classList.contains('delete-item-btn')) {
+            deleteItem(type, parseInt(index, 10));
+          }
+        });
+      });
+      document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+      document.getElementById('modal-save-btn').addEventListener('click', saveModalData);
+      document.getElementById('confirm-modal-cancel')
+              .addEventListener('click', () => document.getElementById('confirm-modal').classList.add('hidden'));
     });
   </script>
 </body>
