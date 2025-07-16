@@ -12,51 +12,38 @@
         .toast { transition: transform 0.5s, opacity 0.5s; transform: translateY(100%); opacity: 0; }
         .toast.show { transform: translateY(0); opacity: 1; }
         input[type="date"]:invalid::-webkit-calendar-picker-indicator { opacity: 0.6; }
-        .disabled-area {
-            opacity: 0.5;
-            pointer-events: none;
-        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <div class="text-center mb-8 relative">
             <a href="index.html" class="absolute left-0 top-0 bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">返回首頁</a>
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">個人歷程後台管理</h1>
-            <p class="text-gray-600">請先選擇人員，以開始編輯個人資料</p>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">新增 / 更新人員資料</h1>
+            <p class="text-gray-600">請填寫人員資料，完成後點擊儲存。如果姓名已存在，則會更新該人員的資料。</p>
         </div>
         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                 <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">1</span>個人基本資料
             </h2>
-            <div class="mb-6">
-                <label for="staff-select" class="block text-sm font-medium text-gray-700 mb-2">選擇人員</label>
-                <select id="staff-select" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="" disabled selected>請選擇人員</option>
-                    <option>廖家德</option><option>劉雯</option><option>楊依玲</option><option>吳曉琪</option><option>王嬿茹</option><option>許淑怡</option><option>侯昱瑾</option><option>林淑雅</option><option>盧英云</option><option>黃惠津</option><option>林汶秀</option><option>楊宜婷</option><option>陳詩芸</option><option>高瑞穗</option><option>李迎真</option><option>林盟淦</option>
-                </select>
-                <p id="selection-prompt" class="text-sm text-red-600 mt-2">請先從上方選擇一位人員以啟用編輯功能。</p>
-            </div>
-            
-            <div id="edit-area" class="disabled-area">
+            <div id="edit-area">
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
-                        <input type="text" id="profile-name" placeholder="請先選擇人員" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
+                        <label for="profile-name" class="block text-sm font-medium text-gray-700 mb-2">姓名 (必填)</label>
+                        <input type="text" id="profile-name" placeholder="請輸入人員姓名" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">職稱</label>
+                        <label for="profile-title" class="block text-sm font-medium text-gray-700 mb-2">職稱</label>
                         <input type="text" id="profile-title" placeholder="請輸入職稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
                 <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
+                    <label for="onboard-date" class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
                     <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg">
                 </div>
             </div>
         </div>
         
-        <div id="details-area" class="disabled-area">
+        <div id="details-area">
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌</h3>
@@ -86,7 +73,7 @@
             </div>
             <div class="text-center mt-8">
                 <button id="save-profile-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors shadow-lg">
-                    <i class="fas fa-save mr-2"></i>儲存個人資料至雲端
+                    <i class="fas fa-save mr-2"></i>儲存資料
                 </button>
             </div>
         </div>
@@ -99,60 +86,45 @@
         // ===== 全域變數 =====
         let currentModalType = '';
         let editingIndex = null;
-        let allProfiles = {};
-        let currentStaffName = '';
-        let profileData = {};
+        let profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
         
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzm98Ejnz795AwJD_a6rT8z15HUw8S7eQcMxzZ93E7sJZTssDoLMF03DCtD8dOzmBgA/exec";
 
-        // ===== DOM 元素 =====
-        const editArea = document.getElementById('edit-area');
-        const detailsArea = document.getElementById('details-area');
-        const selectionPrompt = document.getElementById('selection-prompt');
-
-        // ===== 核心功能：讀取與儲存 =====
-        
-        async function fetchAllData() {
-            showToast("正在從雲端讀取資料...", "success");
-            try {
-                const response = await fetch(GOOGLE_SHEET_API_URL);
-                if (!response.ok) throw new Error(`無法連接雲端: ${response.statusText}`);
-                allProfiles = await response.json();
-                console.log("成功從 Google Sheet 讀取資料:", allProfiles);
-                showToast("雲端資料讀取完畢！", "success");
-            } catch (error) {
-                console.error("從 Google Sheet 讀取資料失敗:", error);
-                showToast(`讀取雲端資料失敗: ${error.message}`, "error");
-                allProfiles = {};
-            }
-        }
-
+        // ===== 核心功能 =====
         async function saveProfile() {
-            if (!currentStaffName) {
-                showToast('請先選擇一位人員！', 'error'); return;
+            const name = document.getElementById('profile-name').value.trim();
+            if (!name) {
+                showToast('「姓名」為必填欄位！', 'error');
+                return;
             }
+
+            // 收集表單資料
+            profileData['姓名'] = name;
+            profileData['職稱'] = document.getElementById('profile-title').value;
+            profileData['入職日期'] = document.getElementById('onboard-date').value;
+
+            const payload = { [name]: profileData };
+
             const saveButton = document.getElementById('save-profile-btn');
             saveButton.disabled = true;
             saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>儲存中...`;
-            
-            profileData['姓名'] = document.getElementById('profile-name').value;
-            profileData['職稱'] = document.getElementById('profile-title').value;
-            profileData['入職日期'] = document.getElementById('onboard-date').value;
-            
-            allProfiles[currentStaffName] = profileData;
             
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL, {
                     method: 'POST',
                     mode: 'cors',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(allProfiles)
+                    body: JSON.stringify(payload)
                 });
-                if (!response.ok) throw new Error(`伺服器錯誤: ${response.statusText}`);
+
+                if (!response.ok) {
+                    throw new Error(`伺服器回應錯誤 (${response.status})`);
+                }
+
                 const result = await response.json();
                 if (result.status === "success") {
-                    console.log(`成功儲存 ${result.rowCount} 筆資料至 Google Sheet!`);
-                    showToast('個人資料已成功儲存至雲端！', 'success');
+                    showToast('資料已成功儲存至雲端！', 'success');
+                    clearForm(); // 成功後清空表單
                 } else {
                     throw new Error(result.message || 'Apps Script 腳本執行失敗');
                 }
@@ -161,23 +133,11 @@
                 showToast(`儲存至雲端失敗: ${e.message}`, 'error');
             } finally {
                 saveButton.disabled = false;
-                saveButton.innerHTML = `<i class="fas fa-save mr-2"></i>儲存個人資料至雲端`;
+                saveButton.innerHTML = `<i class="fas fa-save mr-2"></i>儲存資料`;
             }
         }
 
         // ===== 資料與畫面管理 =====
-        function setFormEnabled(enabled) {
-            if (enabled) {
-                editArea.classList.remove('disabled-area');
-                detailsArea.classList.remove('disabled-area');
-                selectionPrompt.classList.add('hidden');
-            } else {
-                editArea.classList.add('disabled-area');
-                detailsArea.classList.add('disabled-area');
-                selectionPrompt.classList.remove('hidden');
-            }
-        }
-
         function getCategoryInfo(type) {
             const map = {
                 '業務職掌': { listName: '業務職掌', listId: 'duties-list' },
@@ -187,34 +147,6 @@
                 '教育訓練': { listName: '教育訓練', listId: 'training-list' }
             };
             return map[type];
-        }
-
-        function loadProfile(name) {
-            if (!name) return;
-            currentStaffName = name;
-
-            profileData = allProfiles[name] || {
-                '姓名': name,
-                '職稱': '', 
-                '入職日期': '',
-                '業務職掌': [], 
-                '工作經歷': [], 
-                '專案成果': [], 
-                '榮譽事蹟': [], 
-                '教育訓練': []
-            };
-
-            document.getElementById('profile-name').value = name;
-            document.getElementById('profile-title').value = profileData['職稱'] || '';
-            document.getElementById('onboard-date').value = profileData['入職日期'] || '';
-            
-            renderAllLists();
-            setFormEnabled(true); // 啟用表單
-        }
-
-        function renderAllLists() {
-            const allTypes = ['業務職掌', '工作經歷', '專案成果', '榮譽事蹟', '教育訓練'];
-            allTypes.forEach(type => renderList(type));
         }
 
         function renderList(type) {
@@ -252,6 +184,15 @@
             showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success');
         }
 
+        function clearForm() {
+            document.getElementById('profile-name').value = '';
+            document.getElementById('profile-title').value = '';
+            document.getElementById('onboard-date').value = '';
+            profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
+            const allTypes = ['業務職掌', '工作經歷', '專案成果', '榮譽事蹟', '教育訓練'];
+            allTypes.forEach(type => renderList(type));
+        }
+
         // ===== 輔助函數 =====
         function getModalConfig(type, data = {}) {
             const configs = {
@@ -264,7 +205,6 @@
             return configs[type];
         }
         function openModal(type, index = null) {
-            if (!currentStaffName) { showToast('請先選擇一位人員！', 'error'); return; }
             currentModalType = type; 
             editingIndex = index;
             const modal = document.getElementById('modal');
@@ -314,14 +254,11 @@
             document.getElementById('confirm-modal-cancel').onclick = () => confirmModal.classList.add('hidden');
         }
         function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500'; toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`; toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
+            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500'; toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`; toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 5000);
         }
         
         // ===== 事件監聽綁定 (Event Listeners) =====
         document.addEventListener('DOMContentLoaded', async () => {
-            setFormEnabled(false); // 初始禁用表單
-            await fetchAllData();
-            document.getElementById('staff-select').addEventListener('change', (e) => loadProfile(e.target.value));
             document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
             document.querySelectorAll('.modal-open-btn').forEach(btn => btn.addEventListener('click', (e) => openModal(e.target.dataset.modalType)));
             document.querySelectorAll('.data-list').forEach(list => {
