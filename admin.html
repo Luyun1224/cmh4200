@@ -99,31 +99,91 @@ async function saveProfile() {
         return;
     }
 
+    // 檢查 1: 網路連線是否正常
+    console.log('檢查 1: 網路連線狀態 -', navigator.onLine ? '正常' : '離線');
+    if (!navigator.onLine) {
+        showToast('網路連線異常，請檢查網路設定', 'error');
+        return;
+    }
+
     // 收集表單資料
     profileData['姓名'] = name;
-    profileData['職稱'] = document.getElementById('profile-title').value;
-    profileData['入職日期'] = document.getElementById('onboard-date').value;
+    profileData['職稱'] = document.getElementById('profile-title').value || '';
+    profileData['入職日期'] = document.getElementById('onboard-date').value || '';
 
-    const payload = { [name]: profileData };
+    // 檢查 2: Google Apps Script URL 是否正確
+    console.log('檢查 2: Google Apps Script URL -', GOOGLE_SHEET_API_URL);
+    if (!GOOGLE_SHEET_API_URL || !GOOGLE_SHEET_API_URL.includes('script.google.com')) {
+        showToast('Google Apps Script URL 設定錯誤', 'error');
+        return;
+    }
+
+    // 確保所有陣列都存在且格式正確
+    const cleanedProfileData = {
+        '姓名': name,
+        '職稱': profileData['職稱'] || '',
+        '入職日期': profileData['入職日期'] || '',
+        '業務職掌': Array.isArray(profileData['業務職掌']) ? profileData['業務職掌'] : [],
+        '工作經歷': Array.isArray(profileData['工作經歷']) ? profileData['工作經歷'] : [],
+        '專案成果': Array.isArray(profileData['專案成果']) ? profileData['專案成果'] : [],
+        '榮譽事蹟': Array.isArray(profileData['榮譽事蹟']) ? profileData['榮譽事蹟'] : [],
+        '教育訓練': Array.isArray(profileData['教育訓練']) ? profileData['教育訓練'] : []
+    };
+
+    const payload = { [name]: cleanedProfileData };
+
+    // 檢查 3: Apps Script 是否正確部署
+    console.log('檢查 3: 準備驗證 Apps Script 部署狀態');
 
     const saveButton = document.getElementById('save-profile-btn');
     saveButton.disabled = true;
     saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>儲存中...`;
     
     try {
-        console.log('準備發送的資料:', payload);
-        console.log('目標 URL:', GOOGLE_SHEET_API_URL);
+        console.log('準備發送的清理後資料:', payload);
+        console.log('資料大小:', JSON.stringify(payload).length, 'bytes');
         
-        // 先測試 GET 請求看看伺服器是否可達
-        console.log('測試伺服器連線...');
+        // 先驗證 Apps Script 是否可以接收 POST 請求
+        console.log('驗證 Apps Script 部署狀態...');
+        const testPayload = { 
+            "測試": { 
+                "姓名": "測試", 
+                "職稱": "", 
+                "入職日期": "", 
+                "業務職掌": [], 
+                "工作經歷": [], 
+                "專案成果": [], 
+                "榮譽事蹟": [], 
+                "教育訓練": [] 
+            } 
+        };
+        
+        console.log('發送測試資料驗證部署...');
         const testResponse = await fetch(GOOGLE_SHEET_API_URL, {
-            method: 'GET',
-            mode: 'cors'
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(testPayload),
+            signal: AbortSignal.timeout(10000) // 10秒超時
         });
-        console.log('伺服器連線測試結果:', testResponse.status);
 
-        // 發送 POST 請求
-        console.log('發送 POST 請求...');
+        console.log('測試請求狀態:', testResponse.status);
+        
+        if (!testResponse.ok) {
+            throw new Error(`Apps Script 部署測試失敗: ${testResponse.status} ${testResponse.statusText}`);
+        }
+
+        const testResult = await testResponse.json();
+        console.log('測試請求結果:', testResult);
+        
+        if (testResult.status !== 'success') {
+            throw new Error(`Apps Script 測試回應異常: ${testResult.message || '未知錯誤'}`);
+        }
+
+        // 測試成功，發送真實資料
+        console.log('部署驗證成功，發送實際資料...');
         const response = await fetch(GOOGLE_SHEET_API_URL, {
             method: 'POST',
             mode: 'cors',
@@ -131,19 +191,18 @@ async function saveProfile() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),
-            // 增加超時設定
             signal: AbortSignal.timeout(30000) // 30秒超時
         });
 
-        console.log('POST 請求回應狀態:', response.status);
-        console.log('POST 請求回應 headers:', [...response.headers.entries()]);
+        console.log('實際請求狀態:', response.status);
+        console.log('實際請求 headers:', [...response.headers.entries()]);
 
         if (!response.ok) {
             throw new Error(`HTTP 錯誤！狀態: ${response.status} ${response.statusText}`);
         }
 
         const result = await response.json();
-        console.log('伺服器回應內容:', result);
+        console.log('最終回應內容:', result);
         
         if (result.status === "success") {
             showToast('資料已成功儲存至雲端！', 'success');
@@ -158,11 +217,11 @@ async function saveProfile() {
         let errorMessage = '儲存至雲端失敗: ';
         
         if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            errorMessage += '網路連線失敗，請檢查：\n1. 網路連線是否正常\n2. Google Apps Script URL 是否正確\n3. Apps Script 是否已正確部署';
+            errorMessage = '儲存至雲端失敗: 網路連線失敗，請檢查：\n1. 網路連線是否正常✓\n2. Google Apps Script URL 是否正確✓\n3. Apps Script 是否正確部署❌';
         } else if (error.name === 'AbortError') {
-            errorMessage += '請求超時，請稍後再試';
-        } else if (error.message.includes('CORS')) {
-            errorMessage += 'CORS 設定問題，請確認 Apps Script 部署設定';
+            errorMessage = '儲存至雲端失敗: 請求超時，請稍後再試';
+        } else if (error.message.includes('Apps Script')) {
+            errorMessage = `儲存至雲端失敗: ${error.message}\n請檢查 Apps Script 部署設定`;
         } else {
             errorMessage += error.message;
         }
@@ -176,6 +235,7 @@ async function saveProfile() {
         console.log('完整錯誤:', error);
         console.log('使用的 URL:', GOOGLE_SHEET_API_URL);
         console.log('發送的資料:', payload);
+        console.log('清理後的資料:', cleanedProfileData);
         console.groupEnd();
         
     } finally {
