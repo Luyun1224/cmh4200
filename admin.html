@@ -83,7 +83,7 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
 
     <script>
-      // ===== 全域變數 =====
+     // ===== 全域變數 =====
 let currentModalType = '';
 let editingIndex = null;
 let profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
@@ -159,6 +159,11 @@ async function saveProfile() {
         };
         
         console.log('發送測試資料驗證部署...');
+        
+        // 創建兼容的 timeout 控制器
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+        
         const testResponse = await fetch(GOOGLE_SHEET_API_URL, {
             method: 'POST',
             mode: 'cors',
@@ -166,8 +171,10 @@ async function saveProfile() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(testPayload),
-            signal: AbortSignal.timeout(10000) // 10秒超時
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId); // 清除超時定時器
 
         console.log('測試請求狀態:', testResponse.status);
         
@@ -184,6 +191,11 @@ async function saveProfile() {
 
         // 測試成功，發送真實資料
         console.log('部署驗證成功，發送實際資料...');
+        
+        // 創建另一個 timeout 控制器
+        const mainController = new AbortController();
+        const mainTimeoutId = setTimeout(() => mainController.abort(), 30000); // 30秒超時
+        
         const response = await fetch(GOOGLE_SHEET_API_URL, {
             method: 'POST',
             mode: 'cors',
@@ -191,8 +203,10 @@ async function saveProfile() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(30000) // 30秒超時
+            signal: mainController.signal
         });
+        
+        clearTimeout(mainTimeoutId); // 清除超時定時器
 
         console.log('實際請求狀態:', response.status);
         console.log('實際請求 headers:', [...response.headers.entries()]);
@@ -220,6 +234,8 @@ async function saveProfile() {
             errorMessage = '儲存至雲端失敗: 網路連線失敗，請檢查：\n1. 網路連線是否正常✓\n2. Google Apps Script URL 是否正確✓\n3. Apps Script 是否正確部署❌';
         } else if (error.name === 'AbortError') {
             errorMessage = '儲存至雲端失敗: 請求超時，請稍後再試';
+        } else if (error.message.includes('Load failed')) {
+            errorMessage = '儲存至雲端失敗: 瀏覽器載入失敗，請重新整理頁面後再試';
         } else if (error.message.includes('Apps Script')) {
             errorMessage = `儲存至雲端失敗: ${error.message}\n請檢查 Apps Script 部署設定`;
         } else {
