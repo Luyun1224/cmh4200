@@ -12,6 +12,10 @@
         .toast { transition: transform 0.5s, opacity 0.5s; transform: translateY(100%); opacity: 0; }
         .toast.show { transform: translateY(0); opacity: 1; }
         input[type="date"]:invalid::-webkit-calendar-picker-indicator { opacity: 0.6; }
+        .disabled-area {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
@@ -19,7 +23,7 @@
         <div class="text-center mb-8 relative">
             <a href="index.html" class="absolute left-0 top-0 bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">返回首頁</a>
             <h1 class="text-3xl font-bold text-gray-800 mb-2">個人歷程後台管理</h1>
-            <p class="text-gray-600">點擊下方各區塊的按鈕來建立您的個人資料</p>
+            <p class="text-gray-600">請先選擇人員，以開始編輯個人資料</p>
         </div>
         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
@@ -31,65 +35,60 @@
                     <option value="" disabled selected>請選擇人員</option>
                     <option>廖家德</option><option>劉雯</option><option>楊依玲</option><option>吳曉琪</option><option>王嬿茹</option><option>許淑怡</option><option>侯昱瑾</option><option>林淑雅</option><option>盧英云</option><option>黃惠津</option><option>林汶秀</option><option>楊宜婷</option><option>陳詩芸</option><option>高瑞穗</option><option>李迎真</option><option>林盟淦</option>
                 </select>
+                <p id="selection-prompt" class="text-sm text-red-600 mt-2">請先從上方選擇一位人員以啟用編輯功能。</p>
             </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">個人大頭照</label>
-                <div class="flex items-center space-x-4">
-                    <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                        <img id="profilePreview" src="https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽" alt="預覽" class="w-full h-full object-cover">
+            
+            <div id="edit-area" class="disabled-area">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                        <input type="text" id="profile-name" placeholder="請先選擇人員" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
                     </div>
                     <div>
-                        <input type="file" id="profilePhoto" accept="image/*" class="hidden">
-                        <button id="upload-photo-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">上傳照片</button>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">職稱</label>
+                        <input type="text" id="profile-title" placeholder="請輸入職稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
-            </div>
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
-                    <input type="text" id="profile-name" placeholder="請先選擇人員" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">職稱</label>
-                    <input type="text" id="profile-title" placeholder="請輸入職稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
+                    <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg">
                 </div>
             </div>
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
-                <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg">
-            </div>
         </div>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌</h3>
-                <div id="duties-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何職掌</p></div>
-                <button data-modal-type="業務職掌" class="modal-open-btn w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增職掌</button>
+        
+        <div id="details-area" class="disabled-area">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌</h3>
+                    <div id="duties-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何職掌</p></div>
+                    <button data-modal-type="業務職掌" class="modal-open-btn w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增職掌</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>工作經歷</h3>
+                    <div id="experience-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何經歷</p></div>
+                    <button data-modal-type="工作經歷" class="modal-open-btn w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增經歷</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>專案成果</h3>
+                    <div id="projects-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何專案</p></div>
+                    <button data-modal-type="專案成果" class="modal-open-btn w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增專案</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>榮譽事蹟</h3>
+                    <div id="honors-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何榮譽</p></div>
+                    <button data-modal-type="榮譽事蹟" class="modal-open-btn w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增榮譽</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>教育訓練</h3>
+                    <div id="training-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何訓練</p></div>
+                    <button data-modal-type="教育訓練" class="modal-open-btn w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增訓練</button>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>工作經歷</h3>
-                <div id="experience-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何經歷</p></div>
-                <button data-modal-type="工作經歷" class="modal-open-btn w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增經歷</button>
+            <div class="text-center mt-8">
+                <button id="save-profile-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors shadow-lg">
+                    <i class="fas fa-save mr-2"></i>儲存個人資料至雲端
+                </button>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>專案成果</h3>
-                <div id="projects-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何專案</p></div>
-                <button data-modal-type="專案成果" class="modal-open-btn w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增專案</button>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>榮譽事蹟</h3>
-                <div id="honors-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何榮譽</p></div>
-                <button data-modal-type="榮譽事蹟" class="modal-open-btn w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增榮譽</button>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>教育訓練</h3>
-                <div id="training-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何訓練</p></div>
-                <button data-modal-type="教育訓練" class="modal-open-btn w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增訓練</button>
-            </div>
-        </div>
-        <div class="text-center mt-8">
-            <button id="save-profile-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors shadow-lg">
-                <i class="fas fa-save mr-2"></i>儲存個人資料至雲端
-            </button>
         </div>
     </div>
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4"><div class="bg-white rounded-xl p-6 w-full max-w-md mx-auto overflow-y-auto max-h-full"><h3 id="modal-title" class="text-lg font-semibold mb-4"></h3><div id="modal-content" class="space-y-4"></div><div class="flex justify-end space-x-3 mt-6"><button id="modal-cancel-btn" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button><button id="modal-save-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">確認</button></div></div></div>
@@ -104,8 +103,12 @@
         let currentStaffName = '';
         let profileData = {};
         
-        // 請將這裡換成您在 Google Apps Script 重新部署後取得的【全新】網址
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzhYxSKmbpi0_WREpCwcmfMAKfg1KlRDwjg7OWHoNcjXettT4REDRe5FrrumwGm1BkF/exec";
+
+        // ===== DOM 元素 =====
+        const editArea = document.getElementById('edit-area');
+        const detailsArea = document.getElementById('details-area');
+        const selectionPrompt = document.getElementById('selection-prompt');
 
         // ===== 核心功能：讀取與儲存 =====
         
@@ -141,6 +144,7 @@
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL, {
                     method: 'POST',
+                    mode: 'cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(allProfiles)
                 });
@@ -161,7 +165,19 @@
             }
         }
 
-        // ===== 資料與畫面管理 (已全面中文化) =====
+        // ===== 資料與畫面管理 =====
+        function setFormEnabled(enabled) {
+            if (enabled) {
+                editArea.classList.remove('disabled-area');
+                detailsArea.classList.remove('disabled-area');
+                selectionPrompt.classList.add('hidden');
+            } else {
+                editArea.classList.add('disabled-area');
+                detailsArea.classList.add('disabled-area');
+                selectionPrompt.classList.remove('hidden');
+            }
+        }
+
         function getCategoryInfo(type) {
             const map = {
                 '業務職掌': { listName: '業務職掌', listId: 'duties-list' },
@@ -177,33 +193,27 @@
             if (!name) return;
             currentStaffName = name;
 
-            // 從已載入的 allProfiles 中取得該人員的資料，若無則建立一個新的空物件
             profileData = allProfiles[name] || {
-                '職稱': '', '大頭照': '', '入職日期': '',
-                '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': []
+                '姓名': name,
+                '職稱': '', 
+                '入職日期': '',
+                '業務職掌': [], 
+                '工作經歷': [], 
+                '專案成果': [], 
+                '榮譽事蹟': [], 
+                '教育訓練': []
             };
 
-            // 【關鍵修正】
-            // 強制將資料物件中的「姓名」設定為下拉選單選中的值，並更新到輸入框中。
-            // 這樣可以確保即時顯示，並避免後端資料暫時不一致的問題。
-            profileData['姓名'] = name;
             document.getElementById('profile-name').value = name;
-
-            // 載入該人員的其他基本資料
             document.getElementById('profile-title').value = profileData['職稱'] || '';
             document.getElementById('onboard-date').value = profileData['入職日期'] || '';
-            document.getElementById('profilePreview').src = profileData['大頭照'] || 'https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽';
             
-            // 重新渲染下方的所有列表（業務職掌、工作經歷等）
             renderAllLists();
+            setFormEnabled(true); // 啟用表單
         }
 
         function renderAllLists() {
-            // 在 getCategoryInfo() 中取得所有 key，並對每一個 key 執行 renderList
-            // 如果 getCategoryInfo 沒有傳入參數，需要修改 getCategoryInfo 讓它能返回所有 keys
-            const allTypes = Object.keys({
-                '業務職掌': '', '工作經歷': '', '專案成果': '', '榮譽事蹟': '', '教育訓練': ''
-            });
+            const allTypes = ['業務職掌', '工作經歷', '專案成果', '榮譽事蹟', '教育訓練'];
             allTypes.forEach(type => renderList(type));
         }
 
@@ -242,22 +252,7 @@
             showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success');
         }
 
-        function handlePhotoUpload(e) {
-            if (!currentStaffName) { showToast('請先選擇一位人員再上傳照片！', 'error'); e.target.value = ""; return; }
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('profilePreview').src = event.target.result;
-                    profileData['大頭照'] = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                showToast('請選擇有效的圖片檔案', 'error');
-            }
-        }
-        
-        // ===== 輔助函數 (無需修改) =====
+        // ===== 輔助函數 =====
         function getModalConfig(type, data = {}) {
             const configs = {
                 '業務職掌': { title: '業務職掌', content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border rounded">${data['內容'] || ''}</textarea><div><label class="block text-sm">開始時間</label><input type="date" id="duty-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},
@@ -270,14 +265,27 @@
         }
         function openModal(type, index = null) {
             if (!currentStaffName) { showToast('請先選擇一位人員！', 'error'); return; }
-            currentModalType = type; editingIndex = index; const categoryInfo = getCategoryInfo(type);
+            currentModalType = type; 
+            editingIndex = index;
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const categoryInfo = getCategoryInfo(type);
             const dataArray = profileData[categoryInfo.listName] || [];
-            const data = index !== null ? dataArray[index] : {}; const config = getModalConfig(type, data);
+            const data = index !== null ? dataArray[index] : {}; 
+            const config = getModalConfig(type, data);
             if (!config) { console.error(`找不到 ${type} 的模態框設定`); return; }
-            modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; modalContent.innerHTML = config.content;
-            modal.classList.remove('hidden'); modal.classList.add('flex');
+            modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; 
+            modalContent.innerHTML = config.content;
+            modal.classList.remove('hidden'); 
+            modal.classList.add('flex');
         }
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); editingIndex = null; }
+        function closeModal() { 
+            const modal = document.getElementById('modal');
+            modal.classList.add('hidden'); 
+            modal.classList.remove('flex'); 
+            editingIndex = null; 
+        }
         
         function getListItemHTML(type, item, index) {
             const baseClasses = "bg-white border border-gray-200 p-3 rounded-lg flex justify-between items-start"; let contentHTML = ''; let timeRange = '';
@@ -311,11 +319,10 @@
         
         // ===== 事件監聽綁定 (Event Listeners) =====
         document.addEventListener('DOMContentLoaded', async () => {
+            setFormEnabled(false); // 初始禁用表單
             await fetchAllData();
             document.getElementById('staff-select').addEventListener('change', (e) => loadProfile(e.target.value));
             document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
-            document.getElementById('upload-photo-btn').addEventListener('click', () => document.getElementById('profilePhoto').click());
-            document.getElementById('profilePhoto').addEventListener('change', handlePhotoUpload);
             document.querySelectorAll('.modal-open-btn').forEach(btn => btn.addEventListener('click', (e) => openModal(e.target.dataset.modalType)));
             document.querySelectorAll('.data-list').forEach(list => {
                 list.addEventListener('click', (e) => {
