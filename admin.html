@@ -176,19 +176,35 @@
         function loadProfile(name) {
             if (!name) return;
             currentStaffName = name;
+
+            // 從已載入的 allProfiles 中取得該人員的資料，若無則建立一個新的空物件
             profileData = allProfiles[name] || {
-                '姓名': name, '職稱': '', '大頭照': '', '入職日期': '',
+                '職稱': '', '大頭照': '', '入職日期': '',
                 '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': []
             };
-            document.getElementById('profile-name').value = profileData['姓名'] || '';
+
+            // 【關鍵修正】
+            // 強制將資料物件中的「姓名」設定為下拉選單選中的值，並更新到輸入框中。
+            // 這樣可以確保即時顯示，並避免後端資料暫時不一致的問題。
+            profileData['姓名'] = name;
+            document.getElementById('profile-name').value = name;
+
+            // 載入該人員的其他基本資料
             document.getElementById('profile-title').value = profileData['職稱'] || '';
             document.getElementById('onboard-date').value = profileData['入職日期'] || '';
             document.getElementById('profilePreview').src = profileData['大頭照'] || 'https://placehold.co/96x96/E2E8F0/A0AEC0?text=預覽';
+            
+            // 重新渲染下方的所有列表（業務職掌、工作經歷等）
             renderAllLists();
         }
 
         function renderAllLists() {
-            Object.keys(getCategoryInfo()).forEach(type => renderList(type));
+            // 在 getCategoryInfo() 中取得所有 key，並對每一個 key 執行 renderList
+            // 如果 getCategoryInfo 沒有傳入參數，需要修改 getCategoryInfo 讓它能返回所有 keys
+            const allTypes = Object.keys({
+                '業務職掌': '', '工作經歷': '', '專案成果': '', '榮譽事蹟': '', '教育訓練': ''
+            });
+            allTypes.forEach(type => renderList(type));
         }
 
         function renderList(type) {
