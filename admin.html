@@ -133,12 +133,12 @@
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超時
 
+            // =======================================================
+            // === 最終修正點：已移除 headers 區塊以繞過預檢請求  ===
+            // =======================================================
             const response = await fetch(GOOGLE_SHEET_API_URL, {
                 method: 'POST',
                 mode: 'cors',
-                // =======================================================
-                // === 修正點：已移除 headers 區塊以繞過預檢請求 ===
-                // =======================================================
                 body: JSON.stringify(payload),
                 signal: controller.signal
             });
@@ -146,7 +146,14 @@
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                throw new Error(`HTTP 錯誤！狀態: ${response.status} ${response.statusText}`);
+                // 嘗試解析錯誤回應的內容
+                let errorBody = '無詳細錯誤訊息';
+                try {
+                    errorBody = await response.text();
+                } catch (e) {
+                    // 忽略解析錯誤
+                }
+                throw new Error(`HTTP 錯誤！狀態: ${response.status} ${response.statusText}. 伺服器回應: ${errorBody}`);
             }
 
             const result = await response.json();
