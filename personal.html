@@ -143,12 +143,31 @@
             
             const dutyList = document.getElementById('duty-list');
             if (Array.isArray(userData.duties) && userData.duties.length > 0) {
-                dutyList.innerHTML = userData.duties.map(d => `<li class="flex items-start"><span class="text-cyan-500 mr-2 mt-1">&#10003;</span><span>${d['內容']}</span></li>`).join('');
+                // =======================================================
+                // === 修正點 1：業務職掌顯示起訖時間 ===
+                // =======================================================
+                dutyList.innerHTML = userData.duties.map(d => {
+                    const startDate = formatDate(d['開始日期']);
+                    const endDate = d['結束日期'] ? formatDate(d['結束日期']) : '迄今';
+                    const dateRange = startDate ? `<div class="text-xs text-slate-500 mt-1">${startDate} - ${endDate}</div>` : '';
+                    return `<li class="mb-2">
+                                <div class="flex items-start">
+                                    <span class="text-cyan-500 mr-2 mt-1">&#10003;</span>
+                                    <div class="flex-grow">
+                                        <span>${d['內容']}</span>
+                                        ${dateRange}
+                                    </div>
+                                </div>
+                            </li>`;
+                }).join('');
             } else {
                 dutyList.innerHTML = '<li class="text-slate-500">尚無資料</li>';
             }
 
-            const expData = (userData.experiences || []).map(e => ({ period: `${formatDate(e['開始日期'])}${e['結束日期'] ? ' - ' + formatDate(e['結束日期']) : ''}`, title: e['經歷名稱'], desc: '' }));
+            // =======================================================
+            // === 修正點 2：工作經歷在沒有結束日期時顯示「迄今」 ===
+            // =======================================================
+            const expData = (userData.experiences || []).map(e => ({ period: `${formatDate(e['開始日期'])}${e['結束日期'] ? ' - ' + formatDate(e['結束日期']) : ' - 迄今'}`, title: e['經歷名稱'], desc: '' }));
             const projData = (userData.projects || []).map(p => ({ date: `${formatDate(p['開始日期'])} - ${p['結束日期'] ? formatDate(p['結束日期']) : '至今'}`, title: p['專案名稱'], desc: p['專案描述'], status: p['狀態']}));
             const honorData = (userData.honors || []).map(h => ({ date: formatDate(h['獲獎日期']), title: h['榮譽名稱'], desc: h['頒發機構'] }));
             const trainData = (userData.trainings || []).map(t => ({ date: formatDate(t['訓練日期']), title: t['訓練名稱'], desc: t['訓練機構'], hours: t['時數'] }));
@@ -173,26 +192,15 @@
 
         // ===== 輔助函數 =====
         
-        /**
-         * 修正後的日期格式化函式
-         * @param {string} dateString - 來自後端的日期字串 (可能為 ISO 格式)
-         * @returns {string} - 格式化後的 YYYY/MM/DD 字串
-         */
         function formatDate(dateString) {
             if (!dateString) return '';
-
             const date = new Date(dateString);
-
-            // 檢查日期是否有效。如果無效，可能是一個已格式化的字串，直接回傳
             if (isNaN(date.getTime())) {
                 return String(dateString).split('T')[0].replace(/-/g, '/');
             }
-
-            // 使用本地時區的年、月、日來抵銷時區轉換的影響
             const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() 是 0-11
+            const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-
             return `${year}/${month}/${day}`;
         }
 
