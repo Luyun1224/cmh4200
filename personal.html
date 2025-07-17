@@ -102,15 +102,12 @@
             document.getElementById('profile-name').textContent = `正在從雲端載入 ${staffName} 的資料...`;
 
             try {
-                // =======================================================
-                // === 修正點：使用 POST 請求來獲取所有人員的資料 ===
-                // =======================================================
                 const payload = { action: 'getAllProfiles' };
                 const response = await fetch(GOOGLE_SHEET_API_URL, {
                     method: 'POST',
                     mode: 'cors',
                     body: JSON.stringify(payload),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' } // 繞過 CORS 預檢
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
 
                 if (!response.ok) throw new Error(`無法連接雲端: ${response.statusText}`);
@@ -174,13 +171,94 @@
             document.getElementById('modal-close-btn').addEventListener('click', closeModal);
         }
 
-        function formatDate(str) { return str ? String(str).replace(/-/g, '/') : ''; }
-        function calculateSeniority(startDateStr) { const workSeniorityEl = document.getElementById('work-seniority'); if (!startDateStr) { workSeniorityEl.textContent = "無日期紀錄"; return; } const startDate = new Date(startDateStr); if(isNaN(startDate)) { workSeniorityEl.textContent = "日期格式錯誤"; return; } const today = new Date(); let years = today.getFullYear() - startDate.getFullYear(); let months = today.getMonth() - startDate.getMonth(); if (months < 0 || (months === 0 && today.getDate() < startDate.getDate())) { years--; months += 12; } workSeniorityEl.textContent = years > 0 ? `${years} 年 ${months} 個月` : `${months} 個月`; }
-        function createTimelineItem(item, iconSvg, dotColorClass) { let date = item.date || item.period || ''; let detailsHtml = ''; if (item.status) { const statusMap = { '已完成': 'text-green-600 bg-green-200', '進行中': 'text-blue-600 bg-blue-200', '預備中': 'text-gray-600 bg-gray-200' }; detailsHtml = `<div class="mt-3"><span class="text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full ${statusMap[item.status] || ''}">${item.status}</span></div>`; } else if (item.hours) { detailsHtml = `<div class="flex items-center text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full w-fit mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>修習時數：${item.hours} 小時</span></div>`; } return `<div class="timeline-item relative pb-8"><div class="timeline-dot ${dotColorClass}">${iconSvg}</div><p class="text-sm text-slate-500">${date}</p><h4 class="font-bold text-lg text-slate-800">${item.title || ''}</h4><p class="text-slate-600 text-sm">${item.desc || ''}</p>${detailsHtml}</div>`; }
-        function populateTimeline(container, data, iconSvg, dotColorClass) { if (!data || data.length === 0) { container.innerHTML = `<p class="text-slate-500">尚無紀錄。</p>`; return; } container.innerHTML = data.map(item => createTimelineItem(item, iconSvg, dotColorClass)).join(''); }
-        function openModal(title, contentHtml) { const modal = document.getElementById('modal'); const modalTitle = document.getElementById('modal-title'); const modalBody = document.getElementById('modal-body'); const modalOverlay = document.getElementById('modal-overlay'); const modalContent = document.getElementById('modal-content'); modalTitle.textContent = title; modalBody.innerHTML = contentHtml; modal.classList.remove('hidden'); setTimeout(() => { modalOverlay.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10); }
-        function closeModal() { const modal = document.getElementById('modal'); const modalOverlay = document.getElementById('modal-overlay'); const modalContent = document.getElementById('modal-content'); modalOverlay.classList.add('opacity-0'); modalContent.classList.add('scale-95'); setTimeout(() => { modal.classList.add('hidden'); }, 300); }
-        function createModalList(items, titleKey, descKey) { if (!items || !Array.isArray(items) || items.length === 0) return '<p class="text-slate-500">尚無紀錄。</p>'; return `<ul class="space-y-4">${items.map(item => `<li class="border-b pb-2"><p class="font-semibold text-slate-700">${item[titleKey] || ''}</p><p class="text-sm text-slate-500">${item[descKey] || ''}</p></li>`).join('')}</ul>`; }
+        // ===== 輔助函數 =====
+        
+        /**
+         * 修正後的日期格式化函式
+         * @param {string} dateString - 來自後端的日期字串 (可能為 ISO 格式)
+         * @returns {string} - 格式化後的 YYYY/MM/DD 字串
+         */
+        function formatDate(dateString) {
+            if (!dateString) return '';
+
+            const date = new Date(dateString);
+
+            // 檢查日期是否有效。如果無效，可能是一個已格式化的字串，直接回傳
+            if (isNaN(date.getTime())) {
+                return String(dateString).split('T')[0].replace(/-/g, '/');
+            }
+
+            // 使用本地時區的年、月、日來抵銷時區轉換的影響
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() 是 0-11
+            const day = String(date.getDate()).padStart(2, '0');
+
+            return `${year}/${month}/${day}`;
+        }
+
+        function calculateSeniority(startDateStr) { 
+            const workSeniorityEl = document.getElementById('work-seniority'); 
+            if (!startDateStr) { 
+                workSeniorityEl.textContent = "無日期紀錄"; return; 
+            } 
+            const startDate = new Date(startDateStr); 
+            if(isNaN(startDate)) { 
+                workSeniorityEl.textContent = "日期格式錯誤"; return; 
+            } 
+            const today = new Date(); 
+            let years = today.getFullYear() - startDate.getFullYear(); 
+            let months = today.getMonth() - startDate.getMonth(); 
+            if (months < 0 || (months === 0 && today.getDate() < startDate.getDate())) { 
+                years--; 
+                months += 12; 
+            } 
+            workSeniorityEl.textContent = years > 0 ? `${years} 年 ${months} 個月` : `${months} 個月`; 
+        }
+
+        function createTimelineItem(item, iconSvg, dotColorClass) { 
+            let date = item.date || item.period || ''; 
+            let detailsHtml = ''; 
+            if (item.status) { 
+                const statusMap = { '已完成': 'text-green-600 bg-green-200', '進行中': 'text-blue-600 bg-blue-200', '預備中': 'text-gray-600 bg-gray-200' }; 
+                detailsHtml = `<div class="mt-3"><span class="text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full ${statusMap[item.status] || ''}">${item.status}</span></div>`; 
+            } else if (item.hours) { 
+                detailsHtml = `<div class="flex items-center text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full w-fit mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>修習時數：${item.hours} 小時</span></div>`; 
+            } 
+            return `<div class="timeline-item relative pb-8"><div class="timeline-dot ${dotColorClass}">${iconSvg}</div><p class="text-sm text-slate-500">${date}</p><h4 class="font-bold text-lg text-slate-800">${item.title || ''}</h4><p class="text-slate-600 text-sm">${item.desc || ''}</p>${detailsHtml}</div>`; 
+        }
+
+        function populateTimeline(container, data, iconSvg, dotColorClass) { 
+            if (!data || data.length === 0) { 
+                container.innerHTML = `<p class="text-slate-500">尚無紀錄。</p>`; return; 
+            } 
+            container.innerHTML = data.map(item => createTimelineItem(item, iconSvg, dotColorClass)).join(''); 
+        }
+
+        function openModal(title, contentHtml) { 
+            const modal = document.getElementById('modal'); 
+            const modalTitle = document.getElementById('modal-title'); 
+            const modalBody = document.getElementById('modal-body'); 
+            const modalOverlay = document.getElementById('modal-overlay'); 
+            const modalContent = document.getElementById('modal-content'); 
+            modalTitle.textContent = title; 
+            modalBody.innerHTML = contentHtml; 
+            modal.classList.remove('hidden'); 
+            setTimeout(() => { modalOverlay.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10); 
+        }
+
+        function closeModal() { 
+            const modal = document.getElementById('modal'); 
+            const modalOverlay = document.getElementById('modal-overlay'); 
+            const modalContent = document.getElementById('modal-content'); 
+            modalOverlay.classList.add('opacity-0'); 
+            modalContent.classList.add('scale-95'); 
+            setTimeout(() => { modal.classList.add('hidden'); }, 300); 
+        }
+
+        function createModalList(items, titleKey, descKey) { 
+            if (!items || !Array.isArray(items) || items.length === 0) return '<p class="text-slate-500">尚無紀錄。</p>'; 
+            return `<ul class="space-y-4">${items.map(item => `<li class="border-b pb-2"><p class="font-semibold text-slate-700">${item[titleKey] || ''}</p><p class="text-sm text-slate-500">${item[descKey] || ''}</p></li>`).join('')}</ul>`; 
+        }
     </script>
 </body>
 </html>
