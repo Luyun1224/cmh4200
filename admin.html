@@ -29,9 +29,10 @@
             <div class="mb-6">
                 <label for="select-person" class="block text-sm font-medium text-gray-700 mb-2">選擇已存在的人員進行編輯</label>
                 <select id="select-person" class="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- 請選擇或直接輸入新姓名 --</option>
+                    <option value="">-- 正在載入人員列表... --</option>
                 </select>
             </div>
+
             <div id="edit-area">
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
@@ -52,31 +53,11 @@
         
         <div id="details-area">
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌</h3>
-                    <div id="duties-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何職掌</p></div>
-                    <button data-modal-type="業務職掌" class="modal-open-btn w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增職掌</button>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>工作經歷</h3>
-                    <div id="experience-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何經歷</p></div>
-                    <button data-modal-type="工作經歷" class="modal-open-btn w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增經歷</button>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>專案成果</h3>
-                    <div id="projects-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何專案</p></div>
-                    <button data-modal-type="專案成果" class="modal-open-btn w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增專案</button>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>榮譽事蹟</h3>
-                    <div id="honors-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何榮譽</p></div>
-                    <button data-modal-type="榮譽事蹟" class="modal-open-btn w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增榮譽</button>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>教育訓練</h3>
-                    <div id="training-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何訓練</p></div>
-                    <button data-modal-type="教育訓練" class="modal-open-btn w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增訓練</button>
-                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col"><h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>業務職掌</h3><div id="duties-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何職掌</p></div><button data-modal-type="業務職掌" class="modal-open-btn w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增職掌</button></div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col"><h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>工作經歷</h3><div id="experience-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何經歷</p></div><button data-modal-type="工作經歷" class="modal-open-btn w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增經歷</button></div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col"><h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>專案成果</h3><div id="projects-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何專案</p></div><button data-modal-type="專案成果" class="modal-open-btn w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增專案</button></div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col"><h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>榮譽事蹟</h3><div id="honors-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何榮譽</p></div><button data-modal-type="榮譽事蹟" class="modal-open-btn w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增榮譽</button></div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col"><h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>教育訓練</h3><div id="training-list" class="data-list space-y-2 mb-4 min-h-[60px] flex-grow"><p class="text-gray-500 text-sm">尚未新增任何訓練</p></div><button data-modal-type="教育訓練" class="modal-open-btn w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-auto">新增訓練</button></div>
             </div>
             <div class="text-center mt-8">
                 <button id="save-profile-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors shadow-lg">
@@ -93,7 +74,7 @@
     // ===== 全域變數 =====
     let currentModalType = '';
     let editingIndex = null;
-    let localProfilesData = {}; // 用於儲存從後端抓取的完整資料
+    let localProfilesData = {};
     let profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
 
     // !!! 請務必將此處的網址替換成您重新部署後產生的新網址 !!!
@@ -101,30 +82,39 @@
 
     // ===== 核心功能 =====
 
-    // 載入所有人員資料到下拉選單
     async function loadAllProfiles() {
+        const selectElement = document.getElementById('select-person');
         try {
-            const response = await fetch(GOOGLE_SHEET_API_URL);
+            const payload = { action: 'getAllProfiles' };
+            const response = await fetch(GOOGLE_SHEET_API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify(payload)
+            });
+
             if (!response.ok) throw new Error('無法從後端獲取人員列表');
             
-            localProfilesData = await response.json();
-            const selectElement = document.getElementById('select-person');
-            selectElement.innerHTML = '<option value="">-- 請選擇或直接輸入新姓名 --</option>'; // Reset
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+
+            localProfilesData = result.data;
+            
+            selectElement.innerHTML = '<option value="">-- 請選擇或直接輸入新姓名 --</option>';
             
             const sortedNames = Object.keys(localProfilesData).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
             
-            for (const name of sortedNames) {
+            sortedNames.forEach(name => {
                 const option = document.createElement('option');
                 option.value = name;
                 option.textContent = name;
                 selectElement.appendChild(option);
-            }
+            });
         } catch (error) {
             showToast(error.message, 'error');
+            selectElement.innerHTML = '<option value="">-- 載入失敗 --</option>';
         }
     }
 
-    // 當從下拉選單選擇人員時，載入其資料
     function loadProfileForEdit(name) {
         if (!name) {
             clearForm();
@@ -137,12 +127,10 @@
             return;
         }
         
-        // 填充基本資料
         document.getElementById('profile-name').value = data.name || '';
         document.getElementById('profile-title').value = data.title || '';
         document.getElementById('onboard-date').value = data.onboardDate || '';
 
-        // 填充詳細資料
         profileData = {
             '業務職掌': data.duties || [],
             '工作經歷': data.experiences || [],
@@ -151,7 +139,6 @@
             '教育訓練': data.trainings || []
         };
         
-        // 重新渲染所有列表
         Object.keys(profileData).forEach(type => renderList(type));
         showToast(`已載入 ${name} 的資料`, 'success');
     }
@@ -163,12 +150,6 @@
             return;
         }
 
-        if (!navigator.onLine) {
-            showToast('網路連線異常，請檢查網路設定', 'error');
-            return;
-        }
-
-        // 收集表單資料
         profileData['姓名'] = name;
         profileData['職稱'] = document.getElementById('profile-title').value || '';
         profileData['入職日期'] = document.getElementById('onboard-date').value || '';
@@ -189,19 +170,14 @@
                 body: JSON.stringify(payload),
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP 錯誤！狀態: ${response.status}. ${errorText}`);
+            const result = await response.json();
+            if (result.status !== 'success') {
+                throw new Error(result.message || '伺服器發生未知錯誤');
             }
 
-            const result = await response.json();
-            if (result.status === "success") {
-                showToast(result.message || '資料已成功儲存至雲端！', 'success');
-                clearForm();
-                await loadAllProfiles(); // 儲存後重新載入人員列表
-            } else {
-                throw new Error(result.message || '伺服器回應格式錯誤');
-            }
+            showToast(result.data.message || '資料已成功儲存至雲端！', 'success');
+            clearForm();
+            await loadAllProfiles();
             
         } catch (error) {
             showToast('儲存失敗: ' + error.message, 'error');
@@ -211,100 +187,13 @@
         }
     }
     
-    // ===== 以下為頁面互動邏輯 (大部分保持不變) =====
-    
-    function getCategoryInfo(type) {
-        const map = {
-            '業務職掌': { listName: '業務職掌', listId: 'duties-list', keyMap: { title: '內容', startDate: '開始日期', endDate: '結束日期' } },
-            '工作經歷': { listName: '工作經歷', listId: 'experience-list', keyMap: { title: '經歷名稱', startDate: '開始日期', endDate: '結束日期' } },
-            '專案成果': { listName: '專案成果', listId: 'projects-list', keyMap: { title: '專案名稱', desc: '專案描述', status: '狀態', startDate: '開始日期', endDate: '結束日期' } },
-            '榮譽事蹟': { listName: '榮譽事蹟', listId: 'honors-list', keyMap: { title: '榮譽名稱', org: '頒發機構', date: '獲獎日期' } },
-            '教育訓練': { listName: '教育訓練', listId: 'training-list', keyMap: { title: '訓練名稱', org: '訓練機構', hours: '時數', date: '訓練日期' } }
-        };
-        return map[type];
-    }
-
-    function renderList(type) {
-        const categoryInfo = getCategoryInfo(type);
-        if (!categoryInfo) return;
-        const { listName, listId } = categoryInfo;
-        const listContainer = document.getElementById(listId);
-        const dataArray = profileData[listName] || [];
-        if (dataArray.length === 0) {
-            listContainer.innerHTML = `<p class="text-gray-500 text-sm">尚未新增任何資料</p>`;
-        } else {
-            listContainer.innerHTML = dataArray.map((item, index) => getListItemHTML(type, item, index)).join('');
-        }
-    }
-
-    function saveModalData() {
-        const categoryInfo = getCategoryInfo(currentModalType);
-        if (!categoryInfo) return;
-        let data = {};
-        let isValid = true;
-        const { listName } = categoryInfo;
-        switch (currentModalType) {
-            case '業務職掌': data = { '內容': document.getElementById('duty-content').value, '開始日期': document.getElementById('duty-start-date').value, '結束日期': document.getElementById('duty-end-date').value }; if (!data['內容'] || !data['開始日期']) isValid = false; break;
-            case '工作經歷': data = { '經歷名稱': document.getElementById('exp-name').value, '開始日期': document.getElementById('exp-start-date').value, '結束日期': document.getElementById('exp-end-date').value }; if (!data['經歷名稱']) isValid = false; break;
-            case '專案成果': data = { '專案名稱': document.getElementById('project-name').value, '專案描述': document.getElementById('project-desc').value, '狀態': document.getElementById('project-status').value, '開始日期': document.getElementById('project-start-date').value, '結束日期': document.getElementById('project-end-date').value }; if (!data['專案名稱'] || !data['開始日期']) isValid = false; break;
-            case '榮譽事蹟': data = { '榮譽名稱': document.getElementById('honor-name').value, '頒發機構': document.getElementById('honor-org').value, '獲獎日期': document.getElementById('honor-date').value }; if (!data['榮譽名稱'] || !data['獲獎日期']) isValid = false; break;
-            case '教育訓練': data = { '訓練名稱': document.getElementById('training-name').value, '訓練機構': document.getElementById('training-org').value, '時數': Number(document.getElementById('training-hours').value) || 0, '訓練日期': document.getElementById('training-date').value }; if (!data['訓練名稱'] || !data['訓練日期']) isValid = false; break;
-        }
-        if (!isValid) { showToast('請填寫所有必要欄位', 'error'); return; }
-        if (!Array.isArray(profileData[listName])) { profileData[listName] = []; }
-        if (editingIndex !== null) { profileData[listName][editingIndex] = data; } else { profileData[listName].push(data); }
-        renderList(currentModalType);
-        closeModal();
-        showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success');
-    }
-
-    function clearForm() {
-        document.getElementById('profile-name').value = '';
-        document.getElementById('profile-title').value = '';
-        document.getElementById('onboard-date').value = '';
-        document.getElementById('select-person').value = ''; // 清空下拉選單
-        profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
-        const allTypes = Object.keys(profileData);
-        allTypes.forEach(type => renderList(type));
-    }
-
-    function getListItemHTML(type, item, index) {
-        const baseClasses = "bg-white border border-gray-200 p-3 rounded-lg flex justify-between items-start";
-        let contentHTML = '';
-        const keyMap = getCategoryInfo(type).keyMap;
-
-        // 生成主要內容
-        const title = item[keyMap.title] || '';
-        const org = item[keyMap.org] || '';
-        const desc = item[keyMap.desc] || '';
-        const startDate = formatDate(item[keyMap.startDate]);
-        const endDate = item[keyMap.endDate] ? formatDate(item[keyMap.endDate]) : '至今';
-        const date = formatDate(item[keyMap.date]);
-        const hours = item[keyMap.hours] || 0;
-
-        contentHTML += `<div class="flex-grow">`;
-        if (title) contentHTML += `<p class="font-medium text-sm">${title}</p>`;
-        if (org) contentHTML += `<p class="text-sm text-gray-600">${org}</p>`;
-        if (desc) contentHTML += `<p class="text-sm text-gray-600 mt-1">${desc}</p>`;
-
-        // 時間或日期相關資訊
-        if (startDate) contentHTML += `<p class="text-xs text-gray-500 mt-1">${startDate} - ${endDate}</p>`;
-        else if (date) contentHTML += `<p class="text-xs text-gray-500 mt-1">${date}</p>`;
-        
-        if (type === '教育訓練') {
-             contentHTML += `<p class="text-xs text-gray-500">訓練時數: ${hours} 小時</p>`;
-        }
-        contentHTML += `</div>`;
-        
-        const actionsHTML = `<div class="space-x-2 flex-shrink-0 ml-4"><button data-modal-type="${type}" data-index="${index}" class="modal-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button data-type="${type}" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`;
-        return `<div class="${baseClasses}">${contentHTML}${actionsHTML}</div>`;
-    }
-    
-    // 其他輔助函數 (getModalConfig, openModal, closeModal, etc.) 保持不變
-    function getModalConfig(type, data = {}) {
-        const configs = { '業務職掌': { title: '業務職掌', content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border rounded">${data['內容'] || ''}</textarea><div><label class="block text-sm">開始時間</label><input type="date" id="duty-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'工作經歷': { title: '工作經歷', content: `<input type="text" id="exp-name" placeholder="經歷名稱" value="${data['經歷名稱'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">開始日期</label><input type="date" id="exp-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="exp-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'專案成果': { title: '專案成果', content: `<input type="text" id="project-name" placeholder="專案名稱" value="${data['專案名稱'] || ''}" class="w-full px-3 py-2 border rounded"><textarea id="project-desc" placeholder="專案描述" class="w-full px-3 py-2 border rounded h-24">${data['專案描述'] || ''}</textarea><div><label class="block text-sm">專案狀態</label><select id="project-status" class="w-full px-3 py-2 border rounded"><option value="預備中" ${data['狀態'] === '預備中' ? 'selected' : ''}>預備中</option><option value="進行中" ${data['狀態'] === '進行中' ? 'selected' : ''}>進行中</option><option value="已完成" ${data['狀態'] === '已完成' ? 'selected' : ''}>已完成</option></select></div><div><label class="block text-sm">開始日期</label><input type="date" id="project-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="project-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'榮譽事蹟': { title: '榮譽事蹟', content: `<input type="text" id="honor-name" placeholder="榮譽名稱" value="${data['榮譽名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="honor-org" placeholder="頒發機構" value="${data['頒發機構'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">獲獎日期</label><input type="date" id="honor-date" value="${data['獲獎日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'教育訓練': { title: '教育訓練', content: `<input type="text" id="training-name" placeholder="訓練名稱" value="${data['訓練名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="training-org" placeholder="訓練機構" value="${data['訓練機構'] || ''}" class="w-full px-3 py-2 border rounded"><div class="mt-4"><label class="block text-sm">訓練時數</label><input type="number" id="training-hours" placeholder="請輸入數字" value="${data['時數'] || ''}" class="w-full px-3 py-2 border rounded"></div><div class="mt-4"><label class="block text-sm">訓練日期</label><input type="date" id="training-date" value="${data['訓練日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`}};
-        return configs[type];
-    }
+    // ===== 頁面互動邏輯 (大部分保持不變) =====
+    function getCategoryInfo(type) { const map = { '業務職掌': { listName: '業務職掌', listId: 'duties-list'},'工作經歷': { listName: '工作經歷', listId: 'experience-list'},'專案成果': { listName: '專案成果', listId: 'projects-list'},'榮譽事蹟': { listName: '榮譽事蹟', listId: 'honors-list'},'教育訓練': { listName: '教育訓練', listId: 'training-list'}}; return map[type]; }
+    function renderList(type) { const categoryInfo = getCategoryInfo(type); if (!categoryInfo) return; const { listName, listId } = categoryInfo; const listContainer = document.getElementById(listId); const dataArray = profileData[listName] || []; if (dataArray.length === 0) { listContainer.innerHTML = `<p class="text-gray-500 text-sm">尚未新增任何資料</p>`; } else { listContainer.innerHTML = dataArray.map((item, index) => getListItemHTML(type, item, index)).join(''); } }
+    function saveModalData() { const categoryInfo = getCategoryInfo(currentModalType); if (!categoryInfo) return; let data = {}; let isValid = true; const { listName } = categoryInfo; switch (currentModalType) { case '業務職掌': data = { '內容': document.getElementById('duty-content').value, '開始日期': document.getElementById('duty-start-date').value, '結束日期': document.getElementById('duty-end-date').value }; if (!data['內容'] || !data['開始日期']) isValid = false; break; case '工作經歷': data = { '經歷名稱': document.getElementById('exp-name').value, '開始日期': document.getElementById('exp-start-date').value, '結束日期': document.getElementById('exp-end-date').value }; if (!data['經歷名稱']) isValid = false; break; case '專案成果': data = { '專案名稱': document.getElementById('project-name').value, '專案描述': document.getElementById('project-desc').value, '狀態': document.getElementById('project-status').value, '開始日期': document.getElementById('project-start-date').value, '結束日期': document.getElementById('project-end-date').value }; if (!data['專案名稱'] || !data['開始日期']) isValid = false; break; case '榮譽事蹟': data = { '榮譽名稱': document.getElementById('honor-name').value, '頒發機構': document.getElementById('honor-org').value, '獲獎日期': document.getElementById('honor-date').value }; if (!data['榮譽名稱'] || !data['獲獎日期']) isValid = false; break; case '教育訓練': data = { '訓練名稱': document.getElementById('training-name').value, '訓練機構': document.getElementById('training-org').value, '時數': Number(document.getElementById('training-hours').value) || 0, '訓練日期': document.getElementById('training-date').value }; if (!data['訓練名稱'] || !data['訓練日期']) isValid = false; break; } if (!isValid) { showToast('請填寫所有必要欄位', 'error'); return; } if (!Array.isArray(profileData[listName])) { profileData[listName] = []; } if (editingIndex !== null) { profileData[listName][editingIndex] = data; } else { profileData[listName].push(data); } renderList(currentModalType); closeModal(); showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success'); }
+    function clearForm() { document.getElementById('profile-name').value = ''; document.getElementById('profile-title').value = ''; document.getElementById('onboard-date').value = ''; document.getElementById('select-person').value = ''; profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] }; Object.keys(profileData).forEach(type => renderList(type)); }
+    function getListItemHTML(type, item, index) { const baseClasses = "bg-white border border-gray-200 p-3 rounded-lg flex justify-between items-start"; let contentHTML = ''; switch (type) { case '業務職掌': contentHTML = `<div class="flex-grow"><p class="text-sm">${item['內容']}</p><p class="text-xs text-gray-500 mt-1">${formatDate(item['開始日期'])} - ${item['結束日期'] ? formatDate(item['結束日期']) : '至今'}</p></div>`; break; case '工作經歷': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item['經歷名稱']}</p><p class="text-xs text-gray-500 mt-1">${formatDate(item['開始日期'])} - ${item['結束日期'] ? formatDate(item['結束日期']) : '至今'}</p></div>`; break; case '專案成果': const statusBadge = `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${item['狀態'] === '已完成' ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'}">${item['狀態']}</span>`; contentHTML = `<div class="flex-grow"><div class="flex justify-between items-center mb-1"><p class="font-medium text-sm">${item['專案名稱']}</p>${statusBadge}</div><p class="text-sm text-gray-600">${item['專案描述']}</p><p class="text-xs text-gray-500 mt-1">${formatDate(item['開始日期'])} - ${item['結束日期'] ? formatDate(item['結束日期']) : '至今'}</p></div>`; break; case '榮譽事蹟': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item['榮譽名稱']}</p><p class="text-sm text-gray-600">${item['頒發機構']}</p><p class="text-xs text-gray-500">${formatDate(item['獲獎日期'])}</p></div>`; break; case '教育訓練': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item['訓練名稱']}</p><p class="text-sm text-gray-600">${item['訓練機構']}</p><p class="text-xs text-gray-500 mt-1">訓練時間: ${formatDate(item['訓練日期'])}</p><p class="text-xs text-gray-500">訓練時數: ${item['時數'] || 0} 小時</p></div>`; break; } const actionsHTML = `<div class="space-x-2 flex-shrink-0 ml-4"><button data-modal-type="${type}" data-index="${index}" class="modal-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button data-type="${type}" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`; return `<div class="${baseClasses}">${contentHTML}${actionsHTML}</div>`; }
+    function getModalConfig(type, data = {}) { const configs = { '業務職掌': { title: '業務職掌', content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border rounded">${data['內容'] || ''}</textarea><div><label class="block text-sm">開始時間</label><input type="date" id="duty-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'工作經歷': { title: '工作經歷', content: `<input type="text" id="exp-name" placeholder="經歷名稱" value="${data['經歷名稱'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">開始日期</label><input type="date" id="exp-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="exp-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'專案成果': { title: '專案成果', content: `<input type="text" id="project-name" placeholder="專案名稱" value="${data['專案名稱'] || ''}" class="w-full px-3 py-2 border rounded"><textarea id="project-desc" placeholder="專案描述" class="w-full px-3 py-2 border rounded h-24">${data['專案描述'] || ''}</textarea><div><label class="block text-sm">專案狀態</label><select id="project-status" class="w-full px-3 py-2 border rounded"><option value="預備中" ${data['狀態'] === '預備中' ? 'selected' : ''}>預備中</option><option value="進行中" ${data['狀態'] === '進行中' ? 'selected' : ''}>進行中</option><option value="已完成" ${data['狀態'] === '已完成' ? 'selected' : ''}>已完成</option></select></div><div><label class="block text-sm">開始日期</label><input type="date" id="project-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="project-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'榮譽事蹟': { title: '榮譽事蹟', content: `<input type="text" id="honor-name" placeholder="榮譽名稱" value="${data['榮譽名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="honor-org" placeholder="頒發機構" value="${data['頒發機構'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">獲獎日期</label><input type="date" id="honor-date" value="${data['獲獎日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'教育訓練': { title: '教育訓練', content: `<input type="text" id="training-name" placeholder="訓練名稱" value="${data['訓練名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="training-org" placeholder="訓練機構" value="${data['訓練機構'] || ''}" class="w-full px-3 py-2 border rounded"><div class="mt-4"><label class="block text-sm">訓練時數</label><input type="number" id="training-hours" placeholder="請輸入數字" value="${data['時數'] || ''}" class="w-full px-3 py-2 border rounded"></div><div class="mt-4"><label class="block text-sm">訓練日期</label><input type="date" id="training-date" value="${data['訓練日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`}}; return configs[type]; }
     function openModal(type, index = null) { currentModalType = type; editingIndex = index; const modal = document.getElementById('modal'); const modalTitle = document.getElementById('modal-title'); const modalContent = document.getElementById('modal-content'); const categoryInfo = getCategoryInfo(type); const dataArray = profileData[categoryInfo.listName] || []; const data = index !== null ? dataArray[index] : {};  const config = getModalConfig(type, data); if (!config) { console.error(`找不到 ${type} 的模態框設定`); return; } modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; modalContent.innerHTML = config.content; modal.classList.remove('hidden'); modal.classList.add('flex'); }
     function closeModal() { const modal = document.getElementById('modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); editingIndex = null; }
     function formatDate(dateString) { if (!dateString) return ''; return String(dateString).replace(/-/g, '/'); }
@@ -313,29 +202,11 @@
     
     // ===== 事件監聽綁定 =====
     document.addEventListener('DOMContentLoaded', async () => {
-        // 頁面載入時，獲取所有人員資料並填充下拉選單
         await loadAllProfiles();
-        
-        // 監聽下拉選單的變更
-        document.getElementById('select-person').addEventListener('change', (e) => {
-            loadProfileForEdit(e.target.value);
-        });
-
+        document.getElementById('select-person').addEventListener('change', (e) => { loadProfileForEdit(e.target.value); });
         document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
         document.querySelectorAll('.modal-open-btn').forEach(btn => btn.addEventListener('click', (e) => openModal(e.target.dataset.modalType)));
-        document.querySelectorAll('.data-list').forEach(list => {
-            list.addEventListener('click', 
-            (e) => {
-                const button = e.target.closest('button');
-                if (!button) return;
-                const { modalType, index, type } = button.dataset;
-                if (button.classList.contains('modal-edit-btn')) {
-                    openModal(modalType, parseInt(index, 10));
-                } else if (button.classList.contains('delete-item-btn')) {
-                    deleteItem(type, parseInt(index, 10));
-                }
-            });
-        });
+        document.querySelectorAll('.data-list').forEach(list => { list.addEventListener('click', (e) => { const button = e.target.closest('button'); if (!button) return; const { modalType, index, type } = button.dataset; if (button.classList.contains('modal-edit-btn')) { openModal(modalType, parseInt(index, 10)); } else if (button.classList.contains('delete-item-btn')) { deleteItem(type, parseInt(index, 10)); } }); });
         document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
         document.getElementById('modal-save-btn').addEventListener('click', saveModalData);
         document.getElementById('confirm-modal-cancel').addEventListener('click', () => document.getElementById('confirm-modal').classList.add('hidden'));
