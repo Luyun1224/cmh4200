@@ -71,31 +71,31 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
 
     <script>
-    // ===== 全域變數 =====
     let currentModalType = '';
     let editingIndex = null;
     let localProfilesData = {};
     let profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
 
-    // !!! 請務必將此處的網址替換成您重新部署後產生的新網址 !!!
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwuyexzoeTbOihWoZnBLYUbXK9f5EA7OL5sJgpFVa7e2A_4bI29dLk4ph6ghVqxSV_7/exec";
-
-    // ===== 核心功能 =====
 
     async function loadAllProfiles() {
         const selectElement = document.getElementById('select-person');
         try {
+            // =======================================================
+            // === 修正點：使用 POST 請求來獲取人員列表 ===
+            // =======================================================
             const payload = { action: 'getAllProfiles' };
             const response = await fetch(GOOGLE_SHEET_API_URL, {
                 method: 'POST',
                 mode: 'cors',
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' } // 繞過 CORS 預檢
             });
 
             if (!response.ok) throw new Error('無法從後端獲取人員列表');
             
             const result = await response.json();
-            if (result.status !== 'success') throw new Error(result.message);
+            if (result.status !== 'success') throw new Error(result.message || result.data.message);
 
             localProfilesData = result.data;
             
@@ -120,25 +120,19 @@
             clearForm();
             return;
         }
-
         const data = localProfilesData[name];
         if (!data) {
             showToast('找不到該人員的資料', 'error');
             return;
         }
-        
         document.getElementById('profile-name').value = data.name || '';
         document.getElementById('profile-title').value = data.title || '';
         document.getElementById('onboard-date').value = data.onboardDate || '';
-
         profileData = {
-            '業務職掌': data.duties || [],
-            '工作經歷': data.experiences || [],
-            '專案成果': data.projects || [],
-            '榮譽事蹟': data.honors || [],
+            '業務職掌': data.duties || [], '工作經歷': data.experiences || [],
+            '專案成果': data.projects || [], '榮譽事蹟': data.honors || [],
             '教育訓練': data.trainings || []
         };
-        
         Object.keys(profileData).forEach(type => renderList(type));
         showToast(`已載入 ${name} 的資料`, 'success');
     }
@@ -146,39 +140,27 @@
     async function saveProfile() {
         const name = document.getElementById('profile-name').value.trim();
         if (!name) {
-            showToast('「姓名」為必填欄位！', 'error');
-            return;
+            showToast('「姓名」為必填欄位！', 'error'); return;
         }
-
         profileData['姓名'] = name;
         profileData['職稱'] = document.getElementById('profile-title').value || '';
         profileData['入職日期'] = document.getElementById('onboard-date').value || '';
-        
-        const payload = {
-            action: 'saveProfile',
-            data: { [name]: profileData }
-        };
-
+        const payload = { action: 'saveProfile', data: { [name]: profileData } };
         const saveButton = document.getElementById('save-profile-btn');
         saveButton.disabled = true;
         saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>儲存中...`;
-        
         try {
             const response = await fetch(GOOGLE_SHEET_API_URL, {
                 method: 'POST',
                 mode: 'cors',
                 body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
-
             const result = await response.json();
-            if (result.status !== 'success') {
-                throw new Error(result.message || '伺服器發生未知錯誤');
-            }
-
-            showToast(result.data.message || '資料已成功儲存至雲端！', 'success');
+            if (result.status !== 'success') throw new Error(result.message || '伺服器發生未知錯誤');
+            showToast(result.data.message || '資料已成功儲存！', 'success');
             clearForm();
             await loadAllProfiles();
-            
         } catch (error) {
             showToast('儲存失敗: ' + error.message, 'error');
         } finally {
@@ -187,7 +169,6 @@
         }
     }
     
-    // ===== 頁面互動邏輯 (大部分保持不變) =====
     function getCategoryInfo(type) { const map = { '業務職掌': { listName: '業務職掌', listId: 'duties-list'},'工作經歷': { listName: '工作經歷', listId: 'experience-list'},'專案成果': { listName: '專案成果', listId: 'projects-list'},'榮譽事蹟': { listName: '榮譽事蹟', listId: 'honors-list'},'教育訓練': { listName: '教育訓練', listId: 'training-list'}}; return map[type]; }
     function renderList(type) { const categoryInfo = getCategoryInfo(type); if (!categoryInfo) return; const { listName, listId } = categoryInfo; const listContainer = document.getElementById(listId); const dataArray = profileData[listName] || []; if (dataArray.length === 0) { listContainer.innerHTML = `<p class="text-gray-500 text-sm">尚未新增任何資料</p>`; } else { listContainer.innerHTML = dataArray.map((item, index) => getListItemHTML(type, item, index)).join(''); } }
     function saveModalData() { const categoryInfo = getCategoryInfo(currentModalType); if (!categoryInfo) return; let data = {}; let isValid = true; const { listName } = categoryInfo; switch (currentModalType) { case '業務職掌': data = { '內容': document.getElementById('duty-content').value, '開始日期': document.getElementById('duty-start-date').value, '結束日期': document.getElementById('duty-end-date').value }; if (!data['內容'] || !data['開始日期']) isValid = false; break; case '工作經歷': data = { '經歷名稱': document.getElementById('exp-name').value, '開始日期': document.getElementById('exp-start-date').value, '結束日期': document.getElementById('exp-end-date').value }; if (!data['經歷名稱']) isValid = false; break; case '專案成果': data = { '專案名稱': document.getElementById('project-name').value, '專案描述': document.getElementById('project-desc').value, '狀態': document.getElementById('project-status').value, '開始日期': document.getElementById('project-start-date').value, '結束日期': document.getElementById('project-end-date').value }; if (!data['專案名稱'] || !data['開始日期']) isValid = false; break; case '榮譽事蹟': data = { '榮譽名稱': document.getElementById('honor-name').value, '頒發機構': document.getElementById('honor-org').value, '獲獎日期': document.getElementById('honor-date').value }; if (!data['榮譽名稱'] || !data['獲獎日期']) isValid = false; break; case '教育訓練': data = { '訓練名稱': document.getElementById('training-name').value, '訓練機構': document.getElementById('training-org').value, '時數': Number(document.getElementById('training-hours').value) || 0, '訓練日期': document.getElementById('training-date').value }; if (!data['訓練名稱'] || !data['訓練日期']) isValid = false; break; } if (!isValid) { showToast('請填寫所有必要欄位', 'error'); return; } if (!Array.isArray(profileData[listName])) { profileData[listName] = []; } if (editingIndex !== null) { profileData[listName][editingIndex] = data; } else { profileData[listName].push(data); } renderList(currentModalType); closeModal(); showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success'); }
@@ -200,7 +181,6 @@
     function deleteItem(type, index) { const confirmModal = document.getElementById('confirm-modal'); document.getElementById('confirm-modal-title').textContent = `確認刪除`; document.getElementById('confirm-modal-body').textContent = `您確定要刪除這筆資料嗎？`; confirmModal.classList.remove('hidden'); confirmModal.classList.add('flex'); document.getElementById('confirm-modal-ok').onclick = () => { const { listName } = getCategoryInfo(type); profileData[listName].splice(index, 1); renderList(type); showToast('資料已暫存刪除', 'success'); confirmModal.classList.add('hidden'); }; document.getElementById('confirm-modal-cancel').onclick = () => confirmModal.classList.add('hidden'); }
     function showToast(message, type = 'success') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500'; toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`; toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 5000); }
     
-    // ===== 事件監聽綁定 =====
     document.addEventListener('DOMContentLoaded', async () => {
         await loadAllProfiles();
         document.getElementById('select-person').addEventListener('change', (e) => { loadProfileForEdit(e.target.value); });
