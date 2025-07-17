@@ -44,7 +44,7 @@
         <header class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 pt-16 sm:pt-0">
             <h1 class="text-3xl font-bold text-slate-900 mb-2 sm:mb-0">個人歷程</h1>
             <div class="flex items-center space-x-4">
-                <!-- ===== 新增的年度篩選器 ===== -->
+                <!-- ===== 年度篩選器 ===== -->
                 <div id="year-filter-container" class="hidden">
                     <label for="year-filter" class="text-sm font-medium text-gray-700">篩選年度:</label>
                     <select id="year-filter" class="ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
@@ -86,7 +86,6 @@
             </div>
         </section>
 
-        <!-- ===== 全新二欄式排版 ===== -->
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-1 space-y-8">
                 <div class="bg-white p-6 rounded-2xl shadow-xl">
@@ -120,7 +119,7 @@
 
         const params = new URLSearchParams(window.location.search);
         const staffName = params.get('name') || '未命名';
-        let fullUserData = {}; // 儲存完整的、未經過濾的資料
+        let fullUserData = {}; 
 
         window.onload = async () => {
             document.getElementById('profile-name').textContent = `正在從雲端載入 ${staffName} 的資料...`;
@@ -146,7 +145,7 @@
                 };
                 
                 populateYearFilter(fullUserData);
-                renderPage(fullUserData); // 初始載入時顯示所有資料
+                renderPage(fullUserData); 
 
                 document.getElementById('year-filter').addEventListener('change', (e) => {
                     filterAndRenderData(e.target.value);
@@ -166,13 +165,40 @@
             }
 
             const year = parseInt(selectedYear, 10);
+            
+            // =======================================================
+            // === 修正點：篩選邏輯更新，以處理跨年度的項目 ===
+            // =======================================================
+            const filterByYear = (item, dateKey, endDateKey) => {
+                const startDate = new Date(item[dateKey]);
+                if (isNaN(startDate.getTime())) return false;
+
+                const startYear = startDate.getFullYear();
+
+                // 對於有開始和結束日期的項目 (業務職掌, 工作經歷, 專案)
+                if (endDateKey) {
+                    const isOngoing = !item[endDateKey];
+                    // 如果沒有結束日期 (迄今)，則只要開始年份 <= 篩選年份，就顯示
+                    if (isOngoing) {
+                        return startYear <= year;
+                    }
+                    // 如果有結束日期，則判斷篩選年份是否在區間內
+                    const endDate = new Date(item[endDateKey]);
+                    const endYear = isNaN(endDate.getTime()) ? Infinity : endDate.getFullYear();
+                    return startYear <= year && year <= endYear;
+                } else {
+                    // 對於只有單一發生日期的項目 (榮譽, 訓練)
+                    return startYear === year;
+                }
+            };
+
             const filteredData = {
                 ...fullUserData,
-                duties: fullUserData.duties.filter(item => new Date(item['開始日期']).getFullYear() === year),
-                experiences: fullUserData.experiences.filter(item => new Date(item['開始日期']).getFullYear() === year),
-                projects: fullUserData.projects.filter(item => new Date(item['開始日期']).getFullYear() === year),
-                honors: fullUserData.honors.filter(item => new Date(item['獲獎日期']).getFullYear() === year),
-                trainings: fullUserData.trainings.filter(item => new Date(item['訓練日期']).getFullYear() === year)
+                duties: fullUserData.duties.filter(item => filterByYear(item, '開始日期', '結束日期')),
+                experiences: fullUserData.experiences.filter(item => filterByYear(item, '開始日期', '結束日期')),
+                projects: fullUserData.projects.filter(item => filterByYear(item, '開始日期', '結束日期')),
+                honors: fullUserData.honors.filter(item => filterByYear(item, '獲獎日期')),
+                trainings: fullUserData.trainings.filter(item => filterByYear(item, '訓練日期'))
             };
             renderPage(filteredData);
         }
