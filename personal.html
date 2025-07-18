@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人歷程</title>
+    <title>個人歷程 (AI 增強版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 載入 Chart.js 圖表庫 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,7 +32,15 @@
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
         .modal-content { transition: transform 0.3s ease-in-out; }
         /* AI 建議報告的樣式 */
-        .ai-report h4 { font-weight: 700; font-size: 1.125rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #1e293b; border-left: 3px solid #8b5cf6; padding-left: 0.75rem; }
+        .ai-report h4 {
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* icon 和文字的間距 */
+        }
         .ai-report ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
         .ai-report li { margin-bottom: 0.5rem; }
         .ai-report strong { color: #4f46e5; }
@@ -371,12 +379,40 @@
         // =======================================================
 
         function formatAIResponse(text) {
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
-                .replace(/###\s(.*?)\n/g, '<h4>$1</h4>')
-                .replace(/\*\s(.*?)\n/g, '<ul><li>$1</li></ul>') 
+            const headerStyles = {
+                "溫暖的開場白": {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
+                    color: "text-pink-500"
+                },
+                "總體評述": {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>`,
+                    color: "text-blue-500"
+                },
+                "優勢與閃光點分析": {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>`,
+                    color: "text-yellow-500"
+                },
+                "未來發展的溫馨建議": {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>`,
+                    color: "text-green-500"
+                },
+                "結語": {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4l4 4m0 0l4-4m-4 4v5m0-5H5" /></svg>`,
+                    color: "text-indigo-500"
+                }
+            };
+
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/###\s(.*?)\n/g, (match, title) => {
+                    const style = headerStyles[title.trim()] || { icon: '', color: 'text-slate-800' };
+                    return `<h4 class="${style.color}">${style.icon}<span>${title.trim()}</span></h4>`;
+                })
+                .replace(/\*\s(.*?)\n/g, '<ul><li>$1</li></ul>')
                 .replace(/<\/ul>\n<ul>/g, '')
                 .replace(/\n/g, '<br>');
+            
+            return html;
         }
         
         function renderCharts(charts) {
@@ -413,29 +449,28 @@
                                 angleLines: { color: '#d1d5db' },
                                 grid: { color: '#e5e7eb' },
                                 pointLabels: { font: { size: 14, family: "'Noto Sans TC', sans-serif" }, color: '#334155' },
-                                ticks: { backdropColor: '#f8fafc', color: '#64748b' }
+                                ticks: { backdropColor: '#f8fafc', color: '#64748b', stepSize: 20 }
                             }
                         },
                         plugins: {
                             legend: { display: false }
                         }
                     };
-                } else if (chartData.type === 'scatter') {
-                    options = {
+                } else if (chartData.type === 'bar') {
+                     options = {
                         responsive: true,
                         maintainAspectRatio: true,
+                        indexAxis: 'y', // 讓長條圖橫向顯示，更易閱讀
                         scales: {
                             x: {
-                                type: 'time',
-                                time: { unit: 'month', tooltipFormat: 'yyyy-MM-dd' },
+                                beginAtZero: true,
+                                title: { display: true, text: '總學習時數 (小時)', color: '#334155' },
                                 grid: { color: '#e5e7eb' },
                                 ticks: { color: '#64748b' }
                             },
                             y: {
-                                beginAtZero: true,
-                                title: { display: true, text: '學習時數 (小時)', color: '#334155' },
-                                grid: { color: '#e5e7eb' },
-                                ticks: { color: '#64748b' }
+                                grid: { display: false },
+                                ticks: { color: '#334155', font: { size: 14 } }
                             }
                         },
                         plugins: {
@@ -443,8 +478,7 @@
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        const point = context.raw;
-                                        return `${point.skill}: ${point.y} 小時`;
+                                        return ` ${context.raw} 小時`;
                                     }
                                 }
                             }
@@ -454,7 +488,7 @@
                 
                 // 設置通用數據集樣式
                 chartData.data.datasets.forEach(dataset => {
-                    dataset.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                    dataset.backgroundColor = 'rgba(139, 92, 246, 0.5)';
                     dataset.borderColor = 'rgba(139, 92, 246, 1)';
                     dataset.pointBackgroundColor = 'rgba(139, 92, 246, 1)';
                     dataset.pointBorderColor = '#fff';
@@ -526,15 +560,13 @@
       }
     },
     {
-      "type": "scatter",
-      "title": "學習歷程時間軸",
+      "type": "bar",
+      "title": "技能學習時數分佈",
       "data": {
+        "labels": ["AI 與數據", "教學相關", "簡報技巧"],
         "datasets": [{
-          "label": "學習紀錄",
-          "data": [
-            { "x": "2024-12-27", "y": 20, "skill": "Power BI 指標視覺化" },
-            { "x": "2025-07-15", "y": 16, "skill": "AI 生成與研究" }
-          ]
+          "label": "學習時數",
+          "data": [40, 22, 10]
         }]
       }
     }
@@ -545,6 +577,7 @@
 **報告生成指南:**
 
 1.  **reportText (文字報告):**
+    * **標題**: 必須包含以下五個標題: "溫暖的開場白", "總體評述", "優勢與閃光點分析", "未來發展的溫馨建議", "結語"。
     * **溫暖的開場白**: 直接以「${firstName}」稱呼，肯定他/她過去的努力。
     * **總體評述**: 總結專業形象與職涯軌跡，讚美其跨域勇氣。
     * **優勢與閃光點分析**: 用「閃光點」來形容其主要優勢。
@@ -555,11 +588,9 @@
     * **技能雷達圖 (radar)**:
         * 根據所有履歷資料，歸納出 5-6 項核心技能作為 'labels'。
         * 為每項技能評估一個 0-100 的分數作為 'data'。分數應反映其經歷的深度與廣度。
-    * **學習歷程時間軸 (scatter)**:
-        * 從 "教育訓練" 資料中提取數據。
-        * 'x' 軸為訓練日期 (格式必須為 'YYYY-MM-DD')。
-        * 'y' 軸為時數 (必須為數字)。
-        * 'skill' 為訓練名稱。
+    * **技能學習時數分佈 (bar)**:
+        * 從 "教育訓練" 資料中，將課程**分類**成 3-5 個主要技能領域 (例如: "AI 與數據", "教學相關", "簡報技巧") 作為 'labels'。
+        * **加總**每個分類的總學習時數，作為 'data'。
         * 如果訓練時數為空，可以估算一個合理的數字(例如 8)。
 
 **使用者的資料如下：**
