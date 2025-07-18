@@ -118,7 +118,8 @@
 
         const params = new URLSearchParams(window.location.search);
         const staffName = params.get('name') || '未命名';
-        let fullUserData = {}; 
+        const localProfileImages = { '盧英云': 'Lulu.JPG' };
+        let fullUserData = {};
 
         window.onload = async () => {
             document.getElementById('profile-name').textContent = `正在從雲端載入 ${staffName} 的資料...`;
@@ -234,7 +235,8 @@
 
             document.getElementById('profile-name').textContent = userData.name || staffName;
             document.getElementById('profile-title').textContent = userData.title || '';
-            document.getElementById('profile-photo').src = userData.profileImg || 'https://placehold.co/200x200/cccccc/ffffff?text=頭像';
+            const photoSrc = localProfileImages[staffName] || userData.profileImg || 'https://placehold.co/200x200/cccccc/ffffff?text=頭像';
+            document.getElementById('profile-photo').src = photoSrc;
             document.getElementById('onboarding-date').textContent = userData.onboardDate ? `入職日期：${formatDate(userData.onboardDate)}` : '入職日期：-';
             
             const sortedDuties = (userData.duties || []).sort((a, b) => new Date(b['開始日期']) - new Date(a['開始日期']));
