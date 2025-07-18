@@ -85,7 +85,7 @@
                      </div>
                      <div><p class="text-sm text-slate-500">榮譽獎項</p><p id="dashboard-honors-count" class="text-2xl font-bold text-slate-800">0 項</p></div>
                 </div>
-                <!-- 總學習時數 (加回來) -->
+                <!-- 總學習時數 -->
                 <div class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4">
                     <div class="bg-rose-100 text-rose-600 p-4 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -333,18 +333,19 @@
         }
 
         // =======================================================
-        // ================== AI 分析功能 ==================
+        // ================== AI 分析功能 (已更新) ==================
         // =======================================================
 
         function formatAIResponse(text) {
+            // 將 Markdown 的特定語法轉換為 HTML
             return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/####\s(.*?)\n/g, '<h4 class="!mt-4">$1</h4>')
-                .replace(/###\s(.*?)\n/g, '<h4>$1</h4>')
-                .replace(/##\s(.*?)\n/g, '<h4>$1</h4>')
-                .replace(/\*\s(.*?)\n/g, '<ul><li>$1</li></ul>')
-                .replace(/<\/ul>\n<ul>/g, '')
-                .replace(/\n/g, '<br>');
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **Bold** -> <strong>Bold</strong>
+                .replace(/####\s(.*?)\n/g, '<h4 class="!mt-4">$1</h4>') // #### Heading -> <h4>
+                .replace(/###\s(.*?)\n/g, '<h4>$1</h4>')   // ### Heading -> <h4>
+                .replace(/##\s(.*?)\n/g, '<h4>$1</h4>')    // ## Heading -> <h4>
+                .replace(/\*\s(.*?)\n/g, '<ul><li>$1</li></ul>') // * Item -> <li>Item</li>
+                .replace(/<\/ul>\n<ul>/g, '') // 合併連續的 ul
+                .replace(/\n/g, '<br>'); // Newline -> <br>
         }
 
         async function getAISuggestion() {
@@ -354,6 +355,24 @@
             }
 
             openModal('AI 職涯分析報告', '<div class="text-center p-8"><p class="font-semibold">正在為您生成 AI 建議，請稍候...</p><div class="animate-pulse mt-4 text-violet-500">分析中...</div></div>');
+            
+            // =================================================================
+            // API 金鑰已為您貼上
+            // =================================================================
+            const apiKey = "AIzaSyAgBl48TEiLzVljKNl6UrOoUJ3NURK3GEM"; 
+            // =================================================================
+
+            // 如果 apiKey 尚未填寫，則顯示提示訊息並停止執行
+            if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
+                const errorHtml = `<div class="text-red-600 bg-red-100 p-4 rounded-lg">
+                    <p class="font-bold">設定錯誤</p>
+                    <p class="text-sm mt-2">您尚未設定 Google AI API 金鑰。請編輯 HTML 檔案，在 getAISuggestion 函式中填入您自己的 API 金鑰才能使用此功能。</p>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-sm mt-2 text-blue-600 hover:underline">點此前往 Google AI Studio 取得金鑰</a>
+                </div>`;
+                document.getElementById('modal-body').innerHTML = errorHtml;
+                return;
+            }
+
 
             const dataForAI = {
                 "姓名": fullUserData.name,
@@ -397,7 +416,6 @@ ${JSON.stringify(dataForAI, null, 2)}
             try {
                 const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
                 const payload = { contents: chatHistory };
-                const apiKey = ""; // 將由環境自動提供
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 
                 const response = await fetch(apiUrl, {
@@ -426,7 +444,7 @@ ${JSON.stringify(dataForAI, null, 2)}
                 const errorHtml = `<div class="text-red-600 bg-red-100 p-4 rounded-lg">
                     <p class="font-bold">抱歉，AI 分析失敗了</p>
                     <p class="text-sm mt-2">${error.message}</p>
-                    <p class="text-sm mt-2">請稍後再試，或檢查瀏覽器控制台是否有更詳細的錯誤訊息。</p>
+                    <p class="text-sm mt-2">請稍後再試，或檢查您的 API 金鑰是否正確以及網路連線是否正常。</p>
                 </div>`;
                 document.getElementById('modal-body').innerHTML = errorHtml;
             }
