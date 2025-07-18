@@ -28,6 +28,11 @@
         }
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
         .modal-content { transition: transform 0.3s ease-in-out; }
+        /* AI 建議報告的樣式 */
+        .ai-report h4 { font-weight: 700; font-size: 1.125rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #1e293b; border-left: 3px solid #8b5cf6; padding-left: 0.75rem; }
+        .ai-report ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+        .ai-report li { margin-bottom: 0.5rem; }
+        .ai-report strong { color: #4f46e5; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -56,31 +61,46 @@
             </div>
         </header>
 
+        <!-- Dashboard 儀表板 -->
         <section id="dashboard" class="mb-8">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                <!-- 工作年資 -->
                 <div class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4">
                      <div class="bg-cyan-100 text-cyan-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    </div>
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                     </div>
                      <div><p class="text-sm text-slate-500">工作年資</p><p id="work-seniority" class="text-2xl font-bold text-slate-800">計算中...</p></div>
                 </div>
+                <!-- 完成專案 -->
                 <div id="projects-card" class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
-                    <div class="bg-green-100 text-green-600 p-4 rounded-xl">
+                     <div class="bg-green-100 text-green-600 p-4 rounded-xl">
                          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div><p class="text-sm text-slate-500">完成專案</p><p id="dashboard-projects-count" class="text-2xl font-bold text-slate-800">0 個</p></div>
+                     </div>
+                     <div><p class="text-sm text-slate-500">完成專案</p><p id="dashboard-projects-count" class="text-2xl font-bold text-slate-800">0 個</p></div>
                 </div>
+                <!-- 榮譽獎項 -->
                 <div id="honors-card" class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
-                    <div class="bg-amber-100 text-amber-600 p-4 rounded-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                    </div>
-                    <div><p class="text-sm text-slate-500">榮譽獎項</p><p id="dashboard-honors-count" class="text-2xl font-bold text-slate-800">0 項</p></div>
+                     <div class="bg-amber-100 text-amber-600 p-4 rounded-xl">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                     </div>
+                     <div><p class="text-sm text-slate-500">榮譽獎項</p><p id="dashboard-honors-count" class="text-2xl font-bold text-slate-800">0 項</p></div>
                 </div>
+                <!-- 總學習時數 (加回來) -->
                 <div class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4">
                     <div class="bg-rose-100 text-rose-600 p-4 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <div><p class="text-sm text-slate-500">總學習時數</p><p id="dashboard-hours-count" class="text-2xl font-bold text-slate-800">0 小時</p></div>
+                </div>
+                <!-- AI 職涯分析 -->
+                <div id="ai-suggestion-card" class="bg-white p-5 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
+                    <div class="bg-violet-100 text-violet-600 p-4 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 16.663c.52-1.261 1.23-2.437 2.097-3.516C12.68 12.02 13.5 10.93 13.5 9.5c0-1.076-.43-2.062-1.174-2.763C11.586 6.002 10.826 5.5 10 5.5c-.825 0-1.586.502-2.326 1.237C7.043 7.438 6.61 8.424 6.61 9.5c0 1.43 1.02 3.483 3.053 7.163z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V3m0 18v-3m3.357-5.643l2.829-2.829m-12.728 0l2.829 2.829M5.643 12H3m18 0h-2.643M15 19.36l-3-5.196-3 5.196" />
+                        </svg>
+                    </div>
+                    <div><p class="text-sm text-slate-500">AI 職涯分析</p><p class="text-xl font-bold text-violet-600">獲取建議</p></div>
                 </div>
             </div>
         </section>
@@ -111,6 +131,7 @@
         </main>
     </div>
 
+    <!-- Modal 彈出視窗 -->
     <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center hidden"><div id="modal-overlay" class="modal-overlay absolute inset-0 bg-black bg-opacity-50 opacity-0"></div><div id="modal-content" class="modal-content bg-white rounded-2xl shadow-2xl p-6 w-11/12 md:max-w-2xl mx-auto z-10 transform scale-95"><div class="flex justify-between items-center mb-4"><h3 id="modal-title" class="text-xl font-bold text-slate-800"></h3><button id="modal-close-btn" class="text-slate-500 hover:text-slate-800"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div id="modal-body" class="max-h-[60vh] overflow-y-auto pr-2"></div></div></div>
 
     <script>
@@ -150,6 +171,8 @@
                 document.getElementById('year-filter').addEventListener('change', (e) => {
                     filterAndRenderData(e.target.value);
                 });
+
+                document.getElementById('ai-suggestion-card').addEventListener('click', getAISuggestion);
 
             } catch (error) {
                 console.error("讀取雲端資料失敗:", error);
@@ -216,6 +239,7 @@
             const selectElement = document.getElementById('year-filter');
             
             if (years.size > 0) {
+                selectElement.innerHTML = '<option value="all">全部</option>';
                 const sortedYears = Array.from(years).sort((a, b) => b - a);
                 sortedYears.forEach(year => {
                     const option = document.createElement('option');
@@ -263,10 +287,10 @@
             populateTimeline(document.getElementById('training-timeline'), trainData, trainingIcon, 'bg-orange-500');
 
             calculateSeniority(userData.onboardDate);
+            const totalHours = (userData.trainings || []).reduce((sum, item) => sum + (Number(item['時數']) || 0), 0);
             const completedProjects = (userData.projects || []).filter(p => p['狀態'] === '已完成');
             document.getElementById('dashboard-projects-count').textContent = `${completedProjects.length} 個`;
             document.getElementById('dashboard-honors-count').textContent = `${(userData.honors || []).length} 項`;
-            const totalHours = (userData.trainings || []).reduce((sum, item) => sum + (Number(item['時數']) || 0), 0);
             document.getElementById('dashboard-hours-count').textContent = `${totalHours} 小時`;
 
             document.getElementById('projects-card').addEventListener('click', () => openModal('專案列表', createModalList(userData.projects, '專案名稱', '專案描述', '狀態')));
@@ -282,9 +306,6 @@
         function openModal(title, contentHtml) { const modal = document.getElementById('modal'); const modalTitle = document.getElementById('modal-title'); const modalBody = document.getElementById('modal-body'); const modalOverlay = document.getElementById('modal-overlay'); const modalContent = document.getElementById('modal-content'); modalTitle.textContent = title; modalBody.innerHTML = contentHtml; modal.classList.remove('hidden'); setTimeout(() => { modalOverlay.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10); }
         function closeModal() { const modal = document.getElementById('modal'); const modalOverlay = document.getElementById('modal-overlay'); const modalContent = document.getElementById('modal-content'); modalOverlay.classList.add('opacity-0'); modalContent.classList.add('scale-95'); setTimeout(() => { modal.classList.add('hidden'); }, 300); }
         
-        // =======================================================
-        // === 修正點：升級 createModalList 函式以顯示狀態 ===
-        // =======================================================
         function createModalList(items, titleKey, descKey, statusKey) {
             if (!items || !Array.isArray(items) || items.length === 0) return '<p class="text-slate-500">尚無紀錄。</p>';
             
@@ -309,6 +330,106 @@
                             <p class="text-sm text-slate-500 mt-1">${item[descKey] || ''}</p>
                         </li>`;
             }).join('')}</ul>`;
+        }
+
+        // =======================================================
+        // ================== AI 分析功能 ==================
+        // =======================================================
+
+        function formatAIResponse(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/####\s(.*?)\n/g, '<h4 class="!mt-4">$1</h4>')
+                .replace(/###\s(.*?)\n/g, '<h4>$1</h4>')
+                .replace(/##\s(.*?)\n/g, '<h4>$1</h4>')
+                .replace(/\*\s(.*?)\n/g, '<ul><li>$1</li></ul>')
+                .replace(/<\/ul>\n<ul>/g, '')
+                .replace(/\n/g, '<br>');
+        }
+
+        async function getAISuggestion() {
+            if (!fullUserData || !fullUserData.name) {
+                openModal('錯誤', '無法獲取使用者資料，請先確保資料已成功載入。');
+                return;
+            }
+
+            openModal('AI 職涯分析報告', '<div class="text-center p-8"><p class="font-semibold">正在為您生成 AI 建議，請稍候...</p><div class="animate-pulse mt-4 text-violet-500">分析中...</div></div>');
+
+            const dataForAI = {
+                "姓名": fullUserData.name,
+                "職稱": fullUserData.title,
+                "入職日期": fullUserData.onboardDate,
+                "工作經歷": fullUserData.experiences.map(i => ({ "期間": `${formatDate(i['開始日期'])} - ${i['結束日期'] ? formatDate(i['結束日期']) : '迄今'}`, "職位": i['經歷名稱'] })),
+                "專案成果": fullUserData.projects.map(i => ({ "期間": `${formatDate(i['開始日期'])} - ${i['結束日期'] ? formatDate(i['結束日期']) : '迄今'}`, "名稱": i['專案名稱'], "描述": i['專案描述'], "狀態": i['狀態'] })),
+                "榮譽事蹟": fullUserData.honors.map(i => ({ "日期": formatDate(i['獲獎日期']), "名稱": i['榮譽名稱'], "頒發機構": i['頒發機構'] })),
+                "教育訓練": fullUserData.trainings.map(i => ({ "日期": formatDate(i['訓練日期']), "名稱": i['訓練名稱'], "時數": i['時數'] }))
+            };
+
+            const prompt = `
+您是一位專業的職涯發展顧問與數據分析師。請根據以下 JSON 格式的個人履歷資料，為這位使用者提供一份詳細、正面、且具建設性的職涯發展建議報告。
+
+使用者的資料如下：
+\`\`\`json
+${JSON.stringify(dataForAI, null, 2)}
+\`\`\`
+
+請在您的報告中包含以下幾個部分，並使用 Markdown 格式化，標題請用 '###'：
+
+### 總體評述
+根據現有經歷，總結使用者的專業形象、核心專長與職涯軌跡。特別點出從「教學行政管理」到接觸「AI講師」的轉變。
+
+### 優勢與潛力分析
+指出使用者在過往經歷中展現出的主要優勢（例如：教學、行政、AI導入經驗），以及尚未完全發揮的潛力。
+
+### 未來發展建議
+- **技能深化**: 建議可以進一步深化的現有技能（例如：從 Power BI 視覺化到更進階的數據分析）。
+- **新領域探索**: 根據其背景，建議可以學習或涉獵的新技能或知識領域（例如：專案管理方法論、更深入的 AI 技術、教育科技等）。
+- **專案方向**: 建議未來可以挑戰的專案類型，以整合其教學與技術背景。
+
+### 學習路徑分析
+- 分析使用者過去的「教育訓練」與其工作內容的關聯性與成效。
+- 評價其學習軌跡的連貫性與廣度，並給予鼓勵。
+- 建議未來的學習方向，以支持其職涯目標。
+
+請以專業、友善且鼓勵的語氣撰寫。
+`;
+
+            try {
+                const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // 將由環境自動提供
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(`AI 服務錯誤: ${errorBody.error.message}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0) {
+                    const aiText = result.candidates[0].content.parts[0].text;
+                    const formattedHtml = `<div class="ai-report">${formatAIResponse(aiText)}</div>`;
+                    document.getElementById('modal-body').innerHTML = formattedHtml;
+                } else {
+                    throw new Error("AI 未能生成有效的建議。");
+                }
+
+            } catch (error) {
+                console.error("AI建議生成失敗:", error);
+                const errorHtml = `<div class="text-red-600 bg-red-100 p-4 rounded-lg">
+                    <p class="font-bold">抱歉，AI 分析失敗了</p>
+                    <p class="text-sm mt-2">${error.message}</p>
+                    <p class="text-sm mt-2">請稍後再試，或檢查瀏覽器控制台是否有更詳細的錯誤訊息。</p>
+                </div>`;
+                document.getElementById('modal-body').innerHTML = errorHtml;
+            }
         }
     </script>
 </body>
