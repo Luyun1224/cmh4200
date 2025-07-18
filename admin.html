@@ -48,11 +48,10 @@
                     <label for="onboard-date" class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
                     <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg">
                 </div>
-                <!-- ===== 升級後的大頭照區塊 ===== -->
                 <div class="mt-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">大頭照</label>
                     <div class="flex items-center space-x-4">
-                        <img id="profile-img-preview" src="https://placehold.co/100x100/e2e8f0/94a3b8?text=預覽" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200 bg-gray-100">
+                        <img id="profile-img-preview" src="https://placehold.co/100x100/e2e8f0/94a3b8?text=預覽" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200 bg-gray-100" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=連結失效'">
                         <label for="profile-img-upload" class="cursor-pointer bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm">
                             選擇照片
                         </label>
@@ -60,7 +59,6 @@
                         <input type="hidden" id="profile-img-data">
                     </div>
                 </div>
-                <!-- ========================== -->
             </div>
         </div>
         
@@ -196,9 +194,8 @@
         document.getElementById('onboard-date').value = ''; 
         document.getElementById('select-person').value = ''; 
         document.getElementById('profile-img-data').value = '';
-        document.getElementById('profile-img-upload').value = ''; // 清空檔案選擇
+        document.getElementById('profile-img-upload').value = '';
         document.getElementById('profile-img-preview').src = 'https://placehold.co/100x100/e2e8f0/94a3b8?text=預覽';
-
         profileData = { 'profileImg': '', '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] }; 
         Object.keys(profileData).forEach(type => {
             if(type !== 'profileImg') renderList(type)
@@ -208,21 +205,54 @@
     function handleImageUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = (e) => {
             document.getElementById('profile-img-preview').src = e.target.result;
-            document.getElementById('profile-img-data').value = e.target.result; // 將 Base64 存入隱藏欄位
+            document.getElementById('profile-img-data').value = e.target.result;
         };
         reader.readAsDataURL(file);
     }
 
-    // ===== 以下為頁面互動邏輯 (大部分保持不變) =====
+    // ===== 頁面互動邏輯 (大部分保持不變) =====
     function getCategoryInfo(type) { const map = { '業務職掌': { listName: '業務職掌', listId: 'duties-list'},'工作經歷': { listName: '工作經歷', listId: 'experience-list'},'專案成果': { listName: '專案成果', listId: 'projects-list'},'榮譽事蹟': { listName: '榮譽事蹟', listId: 'honors-list'},'教育訓練': { listName: '教育訓練', listId: 'training-list'}}; return map[type]; }
     function renderList(type) { const categoryInfo = getCategoryInfo(type); if (!categoryInfo) return; const { listName, listId } = categoryInfo; const listContainer = document.getElementById(listId); const dataArray = profileData[listName] || []; if (dataArray.length === 0) { listContainer.innerHTML = `<p class="text-gray-500 text-sm">尚未新增任何資料</p>`; } else { listContainer.innerHTML = dataArray.map((item, index) => getListItemHTML(type, item, index)).join(''); } }
-    function saveModalData() { const categoryInfo = getCategoryInfo(currentModalType); if (!categoryInfo) return; let data = {}; let isValid = true; const { listName } = categoryInfo; switch (currentModalType) { case '業務職掌': data = { '內容': document.getElementById('duty-content').value, '開始日期': document.getElementById('duty-start-date').value, '結束日期': document.getElementById('duty-end-date').value }; if (!data['內容'] || !data['開始日期']) isValid = false; break; case '工作經歷': data = { '經歷名稱': document.getElementById('exp-name').value, '開始日期': document.getElementById('exp-start-date').value, '結束日期': document.getElementById('exp-end-date').value }; if (!data['經歷名稱']) isValid = false; break; case '專案成果': data = { '專案名稱': document.getElementById('project-name').value, '專案描述': document.getElementById('project-desc').value, '狀態': document.getElementById('project-status').value, '開始日期': document.getElementById('project-start-date').value, '結束日期': document.getElementById('project-end-date').value }; if (!data['專案名稱'] || !data['開始日期']) isValid = false; break; case '榮譽事蹟': data = { '榮譽名稱': document.getElementById('honor-name').value, '頒發機構': document.getElementById('honor-org').value, '獲獎日期': document.getElementById('honor-date').value }; if (!data['榮譽名稱'] || !data['獲獎日期']) isValid = false; break; case '教育訓練': data = { '訓練名稱': document.getElementById('training-name').value, '訓練機構': document.getElementById('training-org').value, '時數': Number(document.getElementById('training-hours').value) || 0, '訓練日期': document.getElementById('training-date').value }; if (!data['訓練名稱'] || !data['訓練日期']) isValid = false; break; } if (!isValid) { showToast('請填寫所有必要欄位', 'error'); return; } if (!Array.isArray(profileData[listName])) { profileData[listName] = []; } if (editingIndex !== null) { profileData[listName][editingIndex] = data; } else { profileData[listName].push(data); } renderList(currentModalType); closeModal(); showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success'); }
+    
+    // === 修正點：更新 saveModalData 以處理技能標籤 ===
+    function saveModalData() {
+        const categoryInfo = getCategoryInfo(currentModalType);
+        if (!categoryInfo) return;
+        let data = {};
+        let isValid = true;
+        const { listName } = categoryInfo;
+        switch (currentModalType) {
+            case '業務職掌': data = { '內容': document.getElementById('duty-content').value, '開始日期': document.getElementById('duty-start-date').value, '結束日期': document.getElementById('duty-end-date').value }; if (!data['內容'] || !data['開始日期']) isValid = false; break;
+            case '工作經歷': data = { '經歷名稱': document.getElementById('exp-name').value, '開始日期': document.getElementById('exp-start-date').value, '結束日期': document.getElementById('exp-end-date').value }; if (!data['經歷名稱']) isValid = false; break;
+            case '專案成果': data = { '專案名稱': document.getElementById('project-name').value, '專案描述': document.getElementById('project-desc').value, '狀態': document.getElementById('project-status').value, '開始日期': document.getElementById('project-start-date').value, '結束日期': document.getElementById('project-end-date').value, '技能': document.getElementById('project-skills').value }; if (!data['專案名稱'] || !data['開始日期']) isValid = false; break;
+            case '榮譽事蹟': data = { '榮譽名稱': document.getElementById('honor-name').value, '頒發機構': document.getElementById('honor-org').value, '獲獎日期': document.getElementById('honor-date').value }; if (!data['榮譽名稱'] || !data['獲獎日期']) isValid = false; break;
+            case '教育訓練': data = { '訓練名稱': document.getElementById('training-name').value, '訓練機構': document.getElementById('training-org').value, '時數': Number(document.getElementById('training-hours').value) || 0, '訓練日期': document.getElementById('training-date').value, '技能': document.getElementById('training-skills').value }; if (!data['訓練名稱'] || !data['訓練日期']) isValid = false; break;
+        }
+        if (!isValid) { showToast('請填寫所有必要欄位', 'error'); return; }
+        if (!Array.isArray(profileData[listName])) { profileData[listName] = []; }
+        if (editingIndex !== null) { profileData[listName][editingIndex] = data; } else { profileData[listName].push(data); }
+        renderList(currentModalType);
+        closeModal();
+        showToast('資料已暫存 (請記得點擊最下方的儲存按鈕)', 'success');
+    }
+
     function getListItemHTML(type, item, index) { const baseClasses = "bg-white border border-gray-200 p-3 rounded-lg flex justify-between items-start"; let contentHTML = ''; switch (type) { case '業務職掌': contentHTML = `<div class="flex-grow"><p class="text-sm">${item['內容']}</p><p class="text-xs text-gray-500 mt-1">${formatDate(item['開始日期'])} - ${item['結束日期'] ? formatDate(item['結束日期']) : '至今'}</p></div>`; break; case '工作經歷': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item['經歷名稱']}</p><p class="text-xs text-gray-500 mt-1">${formatDate(item['開始日期'])} - ${item['結束日期'] ? formatDate(item['結束日期']) : '至今'}</p></div>`; break; case '專案成果': const statusBadge = `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${item['狀態'] === '已完成' ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'}">${item['狀態']}</span>`; contentHTML = `<div class="flex-grow"><div class="flex justify-between items-center mb-1"><p class="font-medium text-sm">${item['專案名稱']}</p>${statusBadge}</div><p class="text-sm text-gray-600">${item['專案描述']}</p><p class="text-xs text-gray-500 mt-1">${formatDate(item['開始日期'])} - ${item['結束日期'] ? formatDate(item['結束日期']) : '至今'}</p></div>`; break; case '榮譽事蹟': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item['榮譽名稱']}</p><p class="text-sm text-gray-600">${item['頒發機構']}</p><p class="text-xs text-gray-500">${formatDate(item['獲獎日期'])}</p></div>`; break; case '教育訓練': contentHTML = `<div class="flex-grow"><p class="font-medium text-sm">${item['訓練名稱']}</p><p class="text-sm text-gray-600">${item['訓練機構']}</p><p class="text-xs text-gray-500 mt-1">訓練時間: ${formatDate(item['訓練日期'])}</p><p class="text-xs text-gray-500">訓練時數: ${item['時數'] || 0} 小時</p></div>`; break; } const actionsHTML = `<div class="space-x-2 flex-shrink-0 ml-4"><button data-modal-type="${type}" data-index="${index}" class="modal-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button data-type="${type}" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`; return `<div class="${baseClasses}">${contentHTML}${actionsHTML}</div>`; }
-    function getModalConfig(type, data = {}) { const configs = { '業務職掌': { title: '業務職掌', content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border rounded">${data['內容'] || ''}</textarea><div><label class="block text-sm">開始時間</label><input type="date" id="duty-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'工作經歷': { title: '工作經歷', content: `<input type="text" id="exp-name" placeholder="經歷名稱" value="${data['經歷名稱'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">開始日期</label><input type="date" id="exp-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="exp-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'專案成果': { title: '專案成果', content: `<input type="text" id="project-name" placeholder="專案名稱" value="${data['專案名稱'] || ''}" class="w-full px-3 py-2 border rounded"><textarea id="project-desc" placeholder="專案描述" class="w-full px-3 py-2 border rounded h-24">${data['專案描述'] || ''}</textarea><div><label class="block text-sm">專案狀態</label><select id="project-status" class="w-full px-3 py-2 border rounded"><option value="預備中" ${data['狀態'] === '預備中' ? 'selected' : ''}>預備中</option><option value="進行中" ${data['狀態'] === '進行中' ? 'selected' : ''}>進行中</option><option value="已完成" ${data['狀態'] === '已完成' ? 'selected' : ''}>已完成</option></select></div><div><label class="block text-sm">開始日期</label><input type="date" id="project-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="project-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'榮譽事蹟': { title: '榮譽事蹟', content: `<input type="text" id="honor-name" placeholder="榮譽名稱" value="${data['榮譽名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="honor-org" placeholder="頒發機構" value="${data['頒發機構'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">獲獎日期</label><input type="date" id="honor-date" value="${data['獲獎日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},'教育訓練': { title: '教育訓練', content: `<input type="text" id="training-name" placeholder="訓練名稱" value="${data['訓練名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="training-org" placeholder="訓練機構" value="${data['訓練機構'] || ''}" class="w-full px-3 py-2 border rounded"><div class="mt-4"><label class="block text-sm">訓練時數</label><input type="number" id="training-hours" placeholder="請輸入數字" value="${data['時數'] || ''}" class="w-full px-3 py-2 border rounded"></div><div class="mt-4"><label class="block text-sm">訓練日期</label><input type="date" id="training-date" value="${data['訓練日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`}}; return configs[type]; }
+    
+    // === 修正點：更新 getModalConfig 以加入技能標籤輸入框 ===
+    function getModalConfig(type, data = {}) {
+        const configs = {
+            '業務職掌': { title: '業務職掌', content: `<textarea id="duty-content" placeholder="請輸入職掌內容" class="w-full px-3 py-2 border rounded">${data['內容'] || ''}</textarea><div><label class="block text-sm">開始時間</label><input type="date" id="duty-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束時間 (若無則不填)</label><input type="date" id="duty-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},
+            '工作經歷': { title: '工作經歷', content: `<input type="text" id="exp-name" placeholder="經歷名稱" value="${data['經歷名稱'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">開始日期</label><input type="date" id="exp-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="exp-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},
+            '專案成果': { title: '專案成果', content: `<input type="text" id="project-name" placeholder="專案名稱" value="${data['專案名稱'] || ''}" class="w-full px-3 py-2 border rounded"><textarea id="project-desc" placeholder="專案描述" class="w-full px-3 py-2 border rounded h-24">${data['專案描述'] || ''}</textarea><div><label class="block text-sm">專案狀態</label><select id="project-status" class="w-full px-3 py-2 border rounded"><option value="預備中" ${data['狀態'] === '預備中' ? 'selected' : ''}>預備中</option><option value="進行中" ${data['狀態'] === '進行中' ? 'selected' : ''}>進行中</option><option value="已完成" ${data['狀態'] === '已完成' ? 'selected' : ''}>已完成</option></select></div><div><label class="block text-sm">技能標籤 (以逗號分隔)</label><input type="text" id="project-skills" placeholder="例如: AI, 專案管理, OSCE" value="${data['技能'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">開始日期</label><input type="date" id="project-start-date" value="${data['開始日期'] || ''}" class="w-full px-3 py-2 border rounded"></div><div><label class="block text-sm">結束日期</label><input type="date" id="project-end-date" value="${data['結束日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},
+            '榮譽事蹟': { title: '榮譽事蹟', content: `<input type="text" id="honor-name" placeholder="榮譽名稱" value="${data['榮譽名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="honor-org" placeholder="頒發機構" value="${data['頒發機構'] || ''}" class="w-full px-3 py-2 border rounded"><div><label class="block text-sm">獲獎日期</label><input type="date" id="honor-date" value="${data['獲獎日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`},
+            '教育訓練': { title: '教育訓練', content: `<input type="text" id="training-name" placeholder="訓練名稱" value="${data['訓練名稱'] || ''}" class="w-full px-3 py-2 border rounded"><input type="text" id="training-org" placeholder="訓練機構" value="${data['訓練機構'] || ''}" class="w-full px-3 py-2 border rounded"><div class="mt-4"><label class="block text-sm">訓練時數</label><input type="number" id="training-hours" placeholder="請輸入數字" value="${data['時數'] || ''}" class="w-full px-3 py-2 border rounded"></div><div class="mt-4"><label class="block text-sm">技能標籤 (以逗號分隔)</label><input type="text" id="training-skills" placeholder="例如: 簡報技巧, AI" value="${data['技能'] || ''}" class="w-full px-3 py-2 border rounded"></div><div class="mt-4"><label class="block text-sm">訓練日期</label><input type="date" id="training-date" value="${data['訓練日期'] || ''}" class="w-full px-3 py-2 border rounded"></div>`}
+        };
+        return configs[type];
+    }
+    
     function openModal(type, index = null) { currentModalType = type; editingIndex = index; const modal = document.getElementById('modal'); const modalTitle = document.getElementById('modal-title'); const modalContent = document.getElementById('modal-content'); const categoryInfo = getCategoryInfo(type); const dataArray = profileData[categoryInfo.listName] || []; const data = index !== null ? dataArray[index] : {};  const config = getModalConfig(type, data); if (!config) { console.error(`找不到 ${type} 的模態框設定`); return; } modalTitle.textContent = (index !== null ? '編輯' : '新增') + config.title; modalContent.innerHTML = config.content; modal.classList.remove('hidden'); modal.classList.add('flex'); }
     function closeModal() { const modal = document.getElementById('modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); editingIndex = null; }
     function formatDate(dateString) { if (!dateString) return ''; return String(dateString).replace(/-/g, '/'); }
