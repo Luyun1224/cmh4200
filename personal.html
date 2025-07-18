@@ -33,6 +33,8 @@
         .ai-report ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
         .ai-report li { margin-bottom: 0.5rem; }
         .ai-report strong { color: #4f46e5; }
+        .ai-report .chart-suggestion { background-color: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; }
+        .ai-report .chart-suggestion strong { color: #6d28d9; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -338,14 +340,29 @@
 
         function formatAIResponse(text) {
             // 將 Markdown 的特定語法轉換為 HTML
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **Bold** -> <strong>Bold</strong>
-                .replace(/####\s(.*?)\n/g, '<h4 class="!mt-4">$1</h4>') // #### Heading -> <h4>
-                .replace(/###\s(.*?)\n/g, '<h4>$1</h4>')   // ### Heading -> <h4>
-                .replace(/##\s(.*?)\n/g, '<h4>$1</h4>')    // ## Heading -> <h4>
-                .replace(/\*\s(.*?)\n/g, '<ul><li>$1</li></ul>') // * Item -> <li>Item</li>
-                .replace(/<\/ul>\n<ul>/g, '') // 合併連續的 ul
-                .replace(/\n/g, '<br>'); // Newline -> <br>
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                .replace(/###\s(.*?)\n/g, '<h4>$1</h4>')
+                .replace(/\*\s(.*?)\n/g, '<ul><li>$1</li></ul>') 
+                .replace(/<\/ul>\n<ul>/g, '');
+
+            // 處理圖表建議的特殊樣式
+            html = html.replace(/<h4>數據化成長視覺化建議<\/h4>/, '<h4>數據化成長視覺化建議</h4><div class="chart-suggestion">');
+            
+            const closingDiv = '</div>';
+            let finalHtml = html;
+            const chartSuggestionIndex = html.indexOf('<div class="chart-suggestion">');
+            if(chartSuggestionIndex !== -1) {
+                // 在圖表建議區塊後加上結尾標籤
+                const nextHeaderIndex = html.indexOf('<h4>', chartSuggestionIndex);
+                if (nextHeaderIndex !== -1) {
+                    finalHtml = html.slice(0, nextHeaderIndex) + closingDiv + html.slice(nextHeaderIndex);
+                } else {
+                    finalHtml += closingDiv;
+                }
+            }
+            
+            return finalHtml.replace(/\n/g, '<br>');
         }
 
         async function getAISuggestion() {
@@ -356,13 +373,8 @@
 
             openModal('AI 職涯分析報告', '<div class="text-center p-8"><p class="font-semibold">正在為您生成 AI 建議，請稍候...</p><div class="animate-pulse mt-4 text-violet-500">分析中...</div></div>');
             
-            // =================================================================
-            // API 金鑰已為您貼上
-            // =================================================================
             const apiKey = "AIzaSyAgBl48TEiLzVljKNl6UrOoUJ3NURK3GEM"; 
-            // =================================================================
 
-            // 如果 apiKey 尚未填寫，則顯示提示訊息並停止執行
             if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
                 const errorHtml = `<div class="text-red-600 bg-red-100 p-4 rounded-lg">
                     <p class="font-bold">設定錯誤</p>
@@ -372,45 +384,56 @@
                 document.getElementById('modal-body').innerHTML = errorHtml;
                 return;
             }
-
+            
+            // 取得名字 (例如 "盧英云" -> "英云")
+            const name = fullUserData.name || '';
+            const firstName = name.length > 2 ? name.substring(1) : name;
 
             const dataForAI = {
                 "姓名": fullUserData.name,
                 "職稱": fullUserData.title,
                 "入職日期": fullUserData.onboardDate,
                 "工作經歷": fullUserData.experiences.map(i => ({ "期間": `${formatDate(i['開始日期'])} - ${i['結束日期'] ? formatDate(i['結束日期']) : '迄今'}`, "職位": i['經歷名稱'] })),
-                "專案成果": fullUserData.projects.map(i => ({ "期間": `${formatDate(i['開始日期'])} - ${i['結束日期'] ? formatDate(i['結束日期']) : '迄今'}`, "名稱": i['專案名稱'], "描述": i['專案描述'], "狀態": i['狀態'] })),
+                "專案成果": fullUserData.projects.map(i => ({ "期間": `${formatDate(i['開始日期'])} - ${i['結束日期'] ? formatDate(i['結束日期']) : '至今'}`, "名稱": i['專案名稱'], "描述": i['專案描述'], "狀態": i['狀態'] })),
                 "榮譽事蹟": fullUserData.honors.map(i => ({ "日期": formatDate(i['獲獎日期']), "名稱": i['榮譽名稱'], "頒發機構": i['頒發機構'] })),
                 "教育訓練": fullUserData.trainings.map(i => ({ "日期": formatDate(i['訓練日期']), "名稱": i['訓練名稱'], "時數": i['時數'] }))
             };
 
             const prompt = `
-您是一位專業的職涯發展顧問與數據分析師。請根據以下 JSON 格式的個人履歷資料，為這位使用者提供一份詳細、正面、且具建設性的職涯發展建議報告。
+您是一位溫暖、有同理心且專業的職涯發展顧問。您的任務是根據提供的 JSON 個人履歷資料，為使用者撰寫一份充滿情緒價值、支持與鼓勵的職涯發展建議報告。
 
-使用者的資料如下：
+**核心指令:**
+1.  **稱呼**: 請以親切的語氣開頭，稱呼使用者為「${firstName}」。例如：「${firstName}，您好！看到您一路走來的努力，真的非常了不起。」
+2.  **語氣**: 全程保持正面、溫暖、鼓勵的語氣。多使用肯定和讚美的詞彙，讓使用者感受到被理解與支持。
+3.  **格式**: 使用 Markdown 格式化，標題請用 '###'。
+
+**報告結構:**
+
+### 溫暖的開場白
+直接以「${firstName}」稱呼，並給予一段溫暖的開場白，肯定他/她過去的努力與成就。
+
+### 總體評述
+根據現有經歷，總結您的專業形象、核心專長與職涯軌跡。特別點出從「教學行政管理」到接觸「AI講師」這個精彩的轉變，並讚美您的跨域勇氣。
+
+### 優勢與閃光點分析
+指出您在過往經歷中展現出的主要優勢（例如：教學、行政、AI導入經驗）。請用「閃光點」來形容這些優勢，讓文字更有溫度。
+
+### 未來發展的溫馨建議
+- **技能深化**: 溫馨地建議可以進一步深化的現有技能（例如：從 Power BI 視覺化到更進階的數據分析，這會讓您的專業能力更加閃耀）。
+- **新領域探索**: 鼓勵您探索能讓您更快樂、更有成就感的新領域（例如：專案管理方法論、更深入的 AI 技術、教育科技等）。
+- **專案方向**: 提出一些能整合您教學與技術背景的有趣專案點子。
+
+### 數據化成長視覺化建議
+- 根據您的學習與專案經歷，建議 1-2 種可以視覺化的圖表來展現您的成長。
+- **必須**詳細描述圖表的類型（例如：長條圖、趨勢線圖）、X軸與Y軸分別代表什麼，以及這個圖表能如何幫助您看見自己的進步與努力的軌跡。請將這部分的建議包裝在一個聽起來很棒的建議中。
+
+### 結語
+給予一段充滿祝福與鼓勵的結語，讓您感受到對未來的希望與信心。
+
+**使用者的資料如下：**
 \`\`\`json
 ${JSON.stringify(dataForAI, null, 2)}
 \`\`\`
-
-請在您的報告中包含以下幾個部分，並使用 Markdown 格式化，標題請用 '###'：
-
-### 總體評述
-根據現有經歷，總結使用者的專業形象、核心專長與職涯軌跡。特別點出從「教學行政管理」到接觸「AI講師」的轉變。
-
-### 優勢與潛力分析
-指出使用者在過往經歷中展現出的主要優勢（例如：教學、行政、AI導入經驗），以及尚未完全發揮的潛力。
-
-### 未來發展建議
-- **技能深化**: 建議可以進一步深化的現有技能（例如：從 Power BI 視覺化到更進階的數據分析）。
-- **新領域探索**: 根據其背景，建議可以學習或涉獵的新技能或知識領域（例如：專案管理方法論、更深入的 AI 技術、教育科技等）。
-- **專案方向**: 建議未來可以挑戰的專案類型，以整合其教學與技術背景。
-
-### 學習路徑分析
-- 分析使用者過去的「教育訓練」與其工作內容的關聯性與成效。
-- 評價其學習軌跡的連貫性與廣度，並給予鼓勵。
-- 建議未來的學習方向，以支持其職涯目標。
-
-請以專業、友善且鼓勵的語氣撰寫。
 `;
 
             try {
