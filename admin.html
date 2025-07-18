@@ -48,18 +48,7 @@
                     <label for="onboard-date" class="block text-sm font-medium text-gray-700 mb-2">入職日期</label>
                     <input type="date" id="onboard-date" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg">
                 </div>
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">大頭照</label>
-                    <div class="flex items-center space-x-4">
-                        <img id="profile-img-preview" src="https://placehold.co/100x100/e2e8f0/94a3b8?text=預覽" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200 bg-gray-100" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=連結失效'">
-                        <label for="profile-img-upload" class="cursor-pointer bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm">
-                            選擇照片
-                        </label>
-                        <input type="file" id="profile-img-upload" class="hidden" accept="image/png, image/jpeg, image/gif">
-                        <input type="hidden" id="profile-img-data">
-                    </div>
                 </div>
-            </div>
         </div>
         
         <div id="details-area">
@@ -85,7 +74,8 @@
     let currentModalType = '';
     let editingIndex = null;
     let localProfilesData = {};
-    let profileData = { 'profileImg': '', '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
+    // 'profileImg' 已從此物件移除
+    let profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] };
 
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwuyexzoeTbOihWoZnBLYUbXK9f5EA7OL5sJgpFVa7e2A_4bI29dLk4ph6ghVqxSV_7/exec";
 
@@ -137,19 +127,16 @@
         document.getElementById('profile-title').value = data.title || '';
         document.getElementById('onboard-date').value = data.onboardDate ? formatDateForInput(data.onboardDate) : '';
         
-        const imgDataInput = document.getElementById('profile-img-data');
-        const imgPreview = document.getElementById('profile-img-preview');
-        imgDataInput.value = data.profileImg || '';
-        imgPreview.src = data.profileImg || 'https://placehold.co/100x100/e2e8f0/94a3b8?text=預覽';
+        // 大頭照相關的JS已移除
 
         profileData = {
-            'profileImg': data.profileImg || '',
+            // 'profileImg' 已從此物件移除
             '業務職掌': data.duties || [], '工作經歷': data.experiences || [],
             '專案成果': data.projects || [], '榮譽事蹟': data.honors || [],
             '教育訓練': data.trainings || []
         };
         Object.keys(profileData).forEach(type => {
-            if(type !== 'profileImg') renderList(type)
+            renderList(type);
         });
         showToast(`已載入 ${name} 的資料`, 'success');
     }
@@ -162,7 +149,7 @@
         profileData['姓名'] = name;
         profileData['職稱'] = document.getElementById('profile-title').value || '';
         profileData['入職日期'] = document.getElementById('onboard-date').value || '';
-        profileData['profileImg'] = document.getElementById('profile-img-data').value || '';
+        // 讀取大頭照的JS已移除
 
         const payload = { action: 'saveProfile', data: { [name]: profileData } };
         const saveButton = document.getElementById('save-profile-btn');
@@ -193,25 +180,14 @@
         document.getElementById('profile-title').value = ''; 
         document.getElementById('onboard-date').value = ''; 
         document.getElementById('select-person').value = ''; 
-        document.getElementById('profile-img-data').value = '';
-        document.getElementById('profile-img-upload').value = '';
-        document.getElementById('profile-img-preview').src = 'https://placehold.co/100x100/e2e8f0/94a3b8?text=預覽';
-        profileData = { 'profileImg': '', '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] }; 
+        // 大頭照相關的JS已移除
+        profileData = { '業務職掌': [], '工作經歷': [], '專案成果': [], '榮譽事蹟': [], '教育訓練': [] }; 
         Object.keys(profileData).forEach(type => {
-            if(type !== 'profileImg') renderList(type)
+            renderList(type)
         }); 
     }
 
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            document.getElementById('profile-img-preview').src = e.target.result;
-            document.getElementById('profile-img-data').value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
+    // handleImageUpload 函式已移除
 
     function getCategoryInfo(type) { const map = { '業務職掌': { listName: '業務職掌', listId: 'duties-list'},'工作經歷': { listName: '工作經歷', listId: 'experience-list'},'專案成果': { listName: '專案成果', listId: 'projects-list'},'榮譽事蹟': { listName: '榮譽事蹟', listId: 'honors-list'},'教育訓練': { listName: '教育訓練', listId: 'training-list'}}; return map[type]; }
     function renderList(type) { const categoryInfo = getCategoryInfo(type); if (!categoryInfo) return; const { listName, listId } = categoryInfo; const listContainer = document.getElementById(listId); const dataArray = profileData[listName] || []; if (dataArray.length === 0) { listContainer.innerHTML = `<p class="text-gray-500 text-sm">尚未新增任何資料</p>`; } else { listContainer.innerHTML = dataArray.map((item, index) => getListItemHTML(type, item, index)).join(''); } }
@@ -266,7 +242,7 @@
         await loadAllProfiles();
         document.getElementById('select-person').addEventListener('change', (e) => { loadProfileForEdit(e.target.value); });
         
-        document.getElementById('profile-img-upload').addEventListener('change', handleImageUpload);
+        // 大頭照的事件監聽器已移除
 
         document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
         document.querySelectorAll('.modal-open-btn').forEach(btn => btn.addEventListener('click', (e) => openModal(e.target.dataset.modalType)));
