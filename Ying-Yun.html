@@ -51,15 +51,25 @@
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl relative">
         
-        <!-- 返回首頁的連結 -->
-        <a href="index.html" class="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 bg-white text-gray-800 font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition-colors duration-300 flex items-center z-10">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            返回首頁
-        </a>
+        <!-- 左上角按鈕區塊 -->
+        <div class="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10 flex flex-wrap gap-4">
+            <!-- 返回首頁的連結 -->
+            <a href="index.html" class="bg-white text-gray-800 font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition-colors duration-300 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                返回首頁
+            </a>
+            <!-- 醫學教育職涯發展規劃報告書連結 -->
+            <a href="https://qpig0218.github.io/Ying-Yun/" target="_blank" rel="noopener noreferrer" class="bg-white text-gray-800 font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition-colors duration-300 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                醫學教育職涯發展規劃報告書
+            </a>
+        </div>
 
-        <header class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 pt-16 sm:pt-0">
+        <header class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 pt-24 sm:pt-0">
             <h1 class="text-3xl font-bold text-slate-900 mb-2 sm:mb-0">個人歷程</h1>
             <div class="flex items-center space-x-4">
                 <div id="year-filter-container" class="hidden">
@@ -536,10 +546,10 @@
             const dataForAI = {
                 "姓名": fullUserData.name,
                 "職稱": fullUserData.title,
-                "工作經歷": fullUserData.experiences.map(i => ({ "職位": i['經歷名稱'] })),
-                "專案成果": fullUserData.projects.map(i => ({ "名稱": i['專案名稱'], "描述": i['專案描述'] })),
-                "榮譽事蹟": fullUserData.honors.map(i => ({ "名稱": i['榮譽名稱'] })),
-                "教育訓練": fullUserData.trainings.map(i => ({ "日期": i['訓練日期'], "名稱": i['訓練名稱'], "時數": i['時數'] }))
+                "工作經歷": (Array.isArray(fullUserData.experiences) ? fullUserData.experiences : []).map(i => ({ "職位": i['經歷名稱'] })),
+                "專案成果": (Array.isArray(fullUserData.projects) ? fullUserData.projects : []).map(i => ({ "名稱": i['專案名稱'], "描述": i['專案描述'] })),
+                "榮譽事蹟": (Array.isArray(fullUserData.honors) ? fullUserData.honors : []).map(i => ({ "名稱": i['榮譽名稱'] })),
+                "教育訓練": (Array.isArray(fullUserData.trainings) ? fullUserData.trainings : []).map(i => ({ "日期": i['訓練日期'], "名稱": i['訓練名稱'], "時數": i['時數'] }))
             };
 
             const prompt = `
