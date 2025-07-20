@@ -213,8 +213,7 @@
                 loginMessage.className = 'text-center mb-4 font-medium text-green-500';
                 setTimeout(() => {
                     loginModal.classList.add('hidden');
-                    // In a real app, you would redirect or unlock admin features here.
-                    // For example: window.location.href = 'admin.html';
+                    window.location.href = 'admin.html';
                 }, 1500);
             } else {
                 loginMessage.textContent = '帳號或密碼錯誤。';
