@@ -9,274 +9,169 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
         body {
             font-family: 'Noto Sans TC', sans-serif;
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f8fafc; /* bg-slate-50 */
         }
         .card-hover {
             transition: all 0.3s ease;
         }
         .card-hover:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .tab-button {
              transition: all 0.3s ease;
         }
         .tab-active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: #e0f2fe; /* bg-sky-100 */
+            color: #0369a1; /* text-sky-700 */
+        }
+        #loginModal {
+            z-index: 50;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h2 class="text-2xl font-bold text-center text-slate-900 mb-6">管理者登入</h2>
+            <div id="login-message" class="text-center mb-4 font-medium"></div>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-slate-700 mb-2">帳號</label>
+                    <input type="text" id="username" name="username" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" required>
+                </div>
+                <div class="mb-6">
+                     <label for="password" class="block text-slate-700 mb-2">密碼</label>
+                    <input type="password" id="password" name="password" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" required>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <button type="button" id="closeModalBtn" class="w-full bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors duration-300">關閉</button>
+                    <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors duration-300">登入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Header -->
-    <header class="gradient-bg text-white py-8">
-        <div class="container mx-auto px-6">
-            <div class="text-center">
-                <h1 class="text-4xl font-bold mb-2">奇美醫院教學中心</h1>
-                <p class="text-xl opacity-90">同仁個人歷程展示平台</p>
+    <header class="bg-white border-b border-slate-200">
+        <div class="container mx-auto px-6 py-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">奇美醫院教學中心</h1>
+                <p class="text-md text-slate-500">同仁個人歷程展示平台</p>
             </div>
+            <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:bg-slate-900 transition-colors duration-300">
+                管理者登入
+            </button>
         </div>
     </header>
 
     <!-- Navigation Tabs -->
-    <div class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="bg-white shadow-sm sticky top-0 z-40">
         <div class="container mx-auto px-6">
             <div class="flex flex-wrap justify-center space-x-2 py-4">
-                <button onclick="showGroup('all')" id="tab-all" class="tab-button tab-active px-4 py-2 rounded-full font-medium mb-2">全部</button>
-                <button onclick="showGroup('teaching-center')" id="tab-teaching-center" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">教學中心</button>
-                <button onclick="showGroup('pgy')" id="tab-pgy" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">PGY訓練組</button>
-                <button onclick="showGroup('clerk')" id="tab-clerk" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">實習醫學生組</button>
-                <button onclick="showGroup('resident')" id="tab-resident" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">住院醫師組</button>
-                <button onclick="showGroup('csc')" id="tab-csc" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">臨床技能中心</button>
-                <button onclick="showGroup('fdc')" id="tab-fdc" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">教師培育中心</button>
-                <button onclick="showGroup('allied-health')" id="tab-allied-health" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">醫事人員組</button>
-                <button onclick="showGroup('lecture')" id="tab-lecture" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">全院演講</button>
-                <button onclick="showGroup('chart-review')" id="tab-chart-review" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-gray-100 hover:bg-gray-200">病歷審查組</button>
+                <button onclick="showGroup('all')" id="tab-all" class="tab-button px-4 py-2 rounded-full font-medium mb-2">全部</button>
+                <button onclick="showGroup('teaching-center')" id="tab-teaching-center" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">教學中心</button>
+                <button onclick="showGroup('pgy')" id="tab-pgy" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">PGY訓練組</button>
+                <button onclick="showGroup('clerk')" id="tab-clerk" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">實習醫學生組</button>
+                <button onclick="showGroup('resident')" id="tab-resident" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">住院醫師組</button>
+                <button onclick="showGroup('csc')" id="tab-csc" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">臨床技能中心</button>
+                <button onclick="showGroup('fdc')" id="tab-fdc" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">教師培育中心</button>
+                <button onclick="showGroup('allied-health')" id="tab-allied-health" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">醫事人員組</button>
+                <button onclick="showGroup('lecture')" id="tab-lecture" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">全院演講</button>
+                <button onclick="showGroup('chart-review')" id="tab-chart-review" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">病歷審查組</button>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
     <main class="container mx-auto px-6 py-8">
-        <!-- Staff Cards Grid -->
         <div id="staff-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             
-            <!-- Card: 廖家德 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="teaching-center">
-                <div class="bg-gradient-to-r from-red-400 to-red-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">🏆</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">廖家德</h3>
-                    <p class="text-red-600 font-medium">教學中心</p>
-                    <a href="Ader.html" class="w-full inline-block mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-            
-            <!-- Card: 劉雯 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="teaching-center">
-                <div class="bg-gradient-to-r from-red-400 to-red-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">🏆</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">劉雯</h3>
-                    <p class="text-red-600 font-medium">教學中心</p>
-                    <a href="Liu-Wen.html" class="w-full inline-block mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 楊依玲 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="teaching-center">
-                <div class="bg-gradient-to-r from-red-400 to-red-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">🏆</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">楊依玲</h3>
-                    <p class="text-red-600 font-medium">教學中心</p>
-                    <a href="I-Ling.html" class="w-full inline-block mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 吳曉琪 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="pgy">
-                <div class="bg-gradient-to-r from-cyan-400 to-cyan-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">👥</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">吳曉琪</h3>
-                    <p class="text-cyan-600 font-medium">畢業後一般醫學訓練組</p>
-                    <a href="Hsiao-Chi.html" class="w-full inline-block mt-4 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 王嬿茹 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="pgy">
-                <div class="bg-gradient-to-r from-cyan-400 to-cyan-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">👥</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">王嬿茹</h3>
-                    <p class="text-cyan-600 font-medium">畢業後一般醫學訓練組</p>
-                    <a href="Yen-Ju.html" class="w-full inline-block mt-4 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 許淑怡 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="clerk">
-                <div class="bg-gradient-to-r from-teal-400 to-teal-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">🎓</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">許淑怡</h3>
-                    <p class="text-teal-600 font-medium">實習醫學生訓練組</p>
-                    <a href="Shu-Yi.html" class="w-full inline-block mt-4 bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 侯昱瑾 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="clerk">
-                 <div class="bg-gradient-to-r from-teal-400 to-teal-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">🎓</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">侯昱瑾</h3>
-                    <p class="text-teal-600 font-medium">實習醫學生訓練組</p>
-                    <a href="Yu-Jin.html" class="w-full inline-block mt-4 bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 林淑雅 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="resident">
-                <div class="bg-gradient-to-r from-pink-400 to-pink-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">❤️</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">林淑雅</h3>
-                    <p class="text-pink-600 font-medium">住院醫師訓練組</p>
-                    <a href="Shu-Ya.html" class="w-full inline-block mt-4 bg-pink-500 hover:bg-pink-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 盧英云 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="csc">
-                <div class="bg-gradient-to-r from-blue-400 to-blue-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">🏥</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">盧英云</h3>
-                    <p class="text-blue-600 font-medium">臨床技能中心</p>
-                    <a href="Ying-Yun.html" class="w-full inline-block mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 黃惠津 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="csc">
-                <div class="bg-gradient-to-r from-blue-400 to-blue-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">🏥</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">黃惠津</h3>
-                    <p class="text-blue-600 font-medium">臨床技能中心</p>
-                    <a href="Hei-Gen.html" class="w-full inline-block mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 林汶秀 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="fdc">
-                 <div class="bg-gradient-to-r from-indigo-400 to-indigo-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">👨‍🏫</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">林汶秀</h3>
-                    <p class="text-indigo-600 font-medium">教師培育中心</p>
-                    <a href="Wen-Hsiu.html" class="w-full inline-block mt-4 bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 楊宜婷 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="allied-health">
-                <div class="bg-gradient-to-r from-purple-400 to-purple-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">✨</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">楊宜婷</h3>
-                    <p class="text-purple-600 font-medium">醫事人員訓練組</p>
-                    <a href="Yi-Ting.html" class="w-full inline-block mt-4 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 陳詩芸 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="allied-health">
-                <div class="bg-gradient-to-r from-purple-400 to-purple-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">✨</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">陳詩芸</h3>
-                    <p class="text-purple-600 font-medium">醫事人員訓練組</p>
-                    <a href="Shi-Yun.html" class="w-full inline-block mt-4 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-            
-            <!-- Card: 高瑞穗 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="lecture">
-                <div class="bg-gradient-to-r from-yellow-400 to-yellow-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">📹</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">高瑞穗</h3>
-                    <p class="text-yellow-600 font-medium">全院演講/教職</p>
-                    <a href="JUI-SUI.html" class="w-full inline-block mt-4 bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 李迎真 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="chart-review">
-                <div class="bg-gradient-to-r from-orange-400 to-orange-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">📋</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">李迎真</h3>
-                    <p class="text-orange-600 font-medium">病歷審查組</p>
-                    <a href="Ying-Jen.html" class="w-full inline-block mt-4 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
-
-            <!-- Card: 林盟淦 -->
-            <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="chart-review">
-                <div class="bg-gradient-to-r from-orange-400 to-orange-500 h-28 relative flex items-center justify-center">
-                    <div class="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">📋</div>
-                </div>
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-1">林盟淦</h3>
-                    <p class="text-orange-600 font-medium">病歷審查組</p>
-                    <a href="Meng-Gann.html" class="w-full inline-block mt-4 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                </div>
-            </div>
+            <!-- Card Template Function will generate cards here -->
 
         </div>
     </main>
 
     <script>
+        const staffData = [
+            { name: '廖家德', group: 'teaching-center', page: 'Ader.html', color: 'blue', icon: '🏆' },
+            { name: '劉雯', group: 'teaching-center', page: 'Liu-Wen.html', color: 'blue', icon: '🏆' },
+            { name: '楊依玲', group: 'teaching-center', page: 'I-Ling.html', color: 'blue', icon: '🏆' },
+            { name: '吳曉琪', group: 'pgy', title: '畢業後一般醫學訓練組', page: 'Hsiao-Chi.html', color: 'green', icon: '👥' },
+            { name: '王嬿茹', group: 'pgy', title: '畢業後一般醫學訓練組', page: 'Yen-Ju.html', color: 'green', icon: '👥' },
+            { name: '許淑怡', group: 'clerk', title: '實習醫學生訓練組', page: 'Shu-Yi.html', color: 'yellow', icon: '🎓' },
+            { name: '侯昱瑾', group: 'clerk', title: '實習醫學生訓練組', page: 'Yu-Jin.html', color: 'yellow', icon: '🎓' },
+            { name: '林淑雅', group: 'resident', title: '住院醫師訓練組', page: 'Shu-Ya.html', color: 'red', icon: '❤️' },
+            { name: '盧英云', group: 'csc', title: '臨床技能中心', page: 'Ying-Yun.html', color: 'sky', icon: '🏥' },
+            { name: '黃惠津', group: 'csc', title: '臨床技能中心', page: 'Hei-Gen.html', color: 'sky', icon: '🏥' },
+            { name: '林汶秀', group: 'fdc', title: '教師培育中心', page: 'Wen-Hsiu.html', color: 'purple', icon: '👨‍🏫' },
+            { name: '楊宜婷', group: 'allied-health', title: '醫事人員訓練組', page: 'Yi-Ting.html', color: 'fuchsia', icon: '✨' },
+            { name: '陳詩芸', group: 'allied-health', title: '醫事人員訓練組', page: 'Shi-Yun.html', color: 'fuchsia', icon: '✨' },
+            { name: '高瑞穗', group: 'lecture', title: '全院演講/教職', page: 'JUI-SUI.html', color: 'amber', icon: '📹' },
+            { name: '李迎真', group: 'chart-review', title: '病歷審查組', page: 'Ying-Jen.html', color: 'orange', icon: '📋' },
+            { name: '林盟淦', group: 'chart-review', title: '病歷審查組', page: 'Meng-Gann.html', color: 'orange', icon: '📋' },
+        ];
+
+        const groupTitles = {
+            'teaching-center': '教學中心',
+            'pgy': '畢業後一般醫學訓練組',
+            'clerk': '實習醫學生訓練組',
+            'resident': '住院醫師訓練組',
+            'csc': '臨床技能中心',
+            'fdc': '教師培育中心',
+            'allied-health': '醫事人員訓練組',
+            'lecture': '全院演講/教職',
+            'chart-review': '病歷審查組'
+        };
+
+        const colorPalette = {
+            blue: { bg: 'bg-blue-100', text: 'text-blue-700', button: 'bg-blue-500', hover: 'hover:bg-blue-600' },
+            green: { bg: 'bg-green-100', text: 'text-green-700', button: 'bg-green-500', hover: 'hover:bg-green-600' },
+            yellow: { bg: 'bg-yellow-100', text: 'text-yellow-700', button: 'bg-yellow-500', hover: 'hover:bg-yellow-600' },
+            red: { bg: 'bg-red-100', text: 'text-red-700', button: 'bg-red-500', hover: 'hover:bg-red-600' },
+            sky: { bg: 'bg-sky-100', text: 'text-sky-700', button: 'bg-sky-500', hover: 'hover:bg-sky-600' },
+            purple: { bg: 'bg-purple-100', text: 'text-purple-700', button: 'bg-purple-500', hover: 'hover:bg-purple-600' },
+            fuchsia: { bg: 'bg-fuchsia-100', text: 'text-fuchsia-700', button: 'bg-fuchsia-500', hover: 'hover:bg-fuchsia-600' },
+            amber: { bg: 'bg-amber-100', text: 'text-amber-700', button: 'bg-amber-500', hover: 'hover:bg-amber-600' },
+            orange: { bg: 'bg-orange-100', text: 'text-orange-700', button: 'bg-orange-500', hover: 'hover:bg-orange-600' },
+        };
+
+        function createStaffCard(staff) {
+            const colors = colorPalette[staff.color] || colorPalette.blue;
+            const title = groupTitles[staff.group] || '教學中心';
+            return `
+                <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="${staff.group}">
+                    <div class="${colors.bg} h-28 relative flex items-center justify-center">
+                        <div class="w-20 h-20 bg-white/50 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">${staff.icon}</div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-1">${staff.name}</h3>
+                        <p class="${colors.text} font-medium">${title}</p>
+                        <a href="${staff.page}" class="w-full inline-block mt-4 ${colors.button} ${colors.hover} text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCards() {
+            const grid = document.getElementById('staff-grid');
+            grid.innerHTML = staffData.map(createStaffCard).join('');
+        }
+        
         function showGroup(group) {
             const cards = document.querySelectorAll('.staff-card');
             const tabs = document.querySelectorAll('.tab-button');
             
-            // Reset all tabs styles
             tabs.forEach(tab => {
-                tab.classList.remove('tab-active');
-                tab.classList.add('bg-gray-100', 'hover:bg-gray-200');
-                tab.classList.remove('text-white');
+                tab.classList.remove('tab-active', 'bg-sky-100', 'text-sky-700');
+                tab.classList.add('bg-slate-100', 'hover:bg-slate-200');
             });
             
-            // Activate the selected tab
             const activeTab = document.getElementById(`tab-${group}`);
             activeTab.classList.add('tab-active');
-            activeTab.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+            activeTab.classList.remove('bg-slate-100', 'hover:bg-slate-200');
             
-            // Show or hide cards based on the selected group
             cards.forEach(card => {
                 if (group === 'all' || card.dataset.group === group) {
                     card.style.display = 'block';
@@ -287,7 +182,47 @@
             });
         }
 
-        // Add a simple fade-in animation for the cards
+        // --- Login Modal Logic ---
+        const loginBtn = document.getElementById('loginBtn');
+        const loginModal = document.getElementById('loginModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const loginForm = document.getElementById('loginForm');
+        const loginMessage = document.getElementById('login-message');
+
+        loginBtn.addEventListener('click', () => {
+            loginModal.classList.remove('hidden');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            loginModal.classList.add('hidden');
+        });
+
+        loginModal.addEventListener('click', (event) => {
+            if (event.target === loginModal) {
+                loginModal.classList.add('hidden');
+            }
+        });
+
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const username = event.target.username.value;
+            const password = event.target.password.value;
+
+            if (username === '4200' && password === '4200') {
+                loginMessage.textContent = '登入成功！';
+                loginMessage.className = 'text-center mb-4 font-medium text-green-500';
+                setTimeout(() => {
+                    loginModal.classList.add('hidden');
+                    // In a real app, you would redirect or unlock admin features here.
+                    // For example: window.location.href = 'admin.html';
+                }, 1500);
+            } else {
+                loginMessage.textContent = '帳號或密碼錯誤。';
+                loginMessage.className = 'text-center mb-4 font-medium text-red-500';
+            }
+        });
+
+        // --- Initial Load ---
         const style = document.createElement('style');
         style.textContent = `
             @keyframes fadeIn {
@@ -297,8 +232,8 @@
         `;
         document.head.appendChild(style);
         
-        // Ensure the "all" tab is active on page load
         window.onload = () => {
+            renderCards();
             showGroup('all');
         };
     </script>
