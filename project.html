@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教學中心小組儀表板</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js is no longer needed for progress bars -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; }
@@ -128,19 +128,9 @@
     </div>
 
     <script>
-        // --- Data ---
-        const activities = [
-            { id: 1, name: 'PGY訓練計畫書撰寫', type: 'project', assignee: '吳曉琪', status: 'active', progress: 75, deadline: '2025-07-30', priority: 'high' },
-            { id: 2, name: '臨床技能中心設備盤點', type: 'task', assignee: '盧英云', status: 'active', progress: 90, deadline: '2025-08-15', priority: 'medium' },
-            { id: 3, name: '教師培育課程規劃', type: 'project', assignee: '林汶秀', status: 'overdue', progress: 45, deadline: '2025-07-15', priority: 'high' },
-            { id: 4, name: '實習醫學生滿意度調查', type: 'task', assignee: '許淑怡', status: 'completed', progress: 100, deadline: '2025-07-10', priority: 'medium' },
-            { id: 5, name: '住院醫師教學查房安排', type: 'task', assignee: '林淑雅', status: 'active', progress: 30, deadline: '2025-08-20', priority: 'low' },
-            { id: 6, name: '病歷審查品質報告', type: 'project', assignee: '李迎真', status: 'overdue', progress: 60, deadline: '2025-07-18', priority: 'high' },
-            { id: 7, name: '醫事人員訓練時數統計', type: 'task', assignee: '楊宜婷', status: 'active', progress: 20, deadline: '2025-08-25', priority: 'medium' },
-            { id: 8, name: '教學中心網站內容更新', type: 'project', assignee: '廖家德', status: 'active', progress: 50, deadline: '2025-08-05', priority: 'medium' },
-            { id: 9, name: '新進人員教學手冊編修', type: 'task', assignee: '王嬿茹', status: 'completed', progress: 100, deadline: '2025-06-30', priority: 'low' },
-            { id: 10, name: 'OSCE考官培訓', type: 'task', assignee: '黃惠津', status: 'active', progress: 65, deadline: '2025-08-10', priority: 'high' },
-        ];
+        // --- Configuration ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
+        let allActivities = []; // This will hold all data from the server
 
         const staffData = [
             { name: '廖家德', group: 'teaching-center' }, { name: '劉雯', group: 'teaching-center' }, { name: '楊依玲', group: 'teaching-center' }, { name: '高瑞穗', group: 'teaching-center' },
@@ -167,7 +157,26 @@
         const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期' }[status] || '未知');
         const getPriorityColor = (priority) => ({ high: 'text-red-600 bg-red-50', medium: 'text-yellow-600 bg-yellow-50', low: 'text-green-600 bg-green-50' }[priority] || 'text-gray-600 bg-gray-50');
         const getPriorityText = (priority) => ({ high: '高', medium: '中', low: '低' }[priority] || '未知');
-        const formatDate = (dateString) => new Date(dateString).toLocaleDateString('zh-TW');
+        const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : 'N/A';
+
+        // --- API Communication ---
+        async function fetchAllItems() {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify({ action: 'getAllItems' }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+                return result.data;
+            } catch (error) {
+                console.error("Failed to fetch items:", error);
+                // You might want to show an error to the user here
+                return [];
+            }
+        }
 
         // --- Rendering Functions ---
         function renderGroupTabs() {
@@ -193,7 +202,7 @@
             itemsList.innerHTML = filteredItems.map(item => `
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-3">
-                        <div class="flex-1"><h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></h4><p class="text-sm text-gray-600">負責人: ${item.assignee}</p></div>
+                        <div class="flex-1"><h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></h4><p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p></div>
                         <div class="flex items-center space-x-2"><span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(item.priority)}">${getPriorityText(item.priority)}</span><span class="flex items-center text-sm"><span class="status-dot ${getStatusColor(item.status)}"></span>${getStatusText(item.status)}</span></div>
                     </div>
                     <div class="mb-3"><div class="flex justify-between text-sm mb-1"><span>進度</span><span>${item.progress}%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div class="progress-bar h-2 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div></div>
@@ -201,7 +210,7 @@
                 </div>`).join('');
         }
         
-        function renderTeamMembers(members, allActivities) {
+        function renderTeamMembers(members, allItems) {
             const teamMembersDiv = document.getElementById('teamMembers');
             if (members.length === 0) {
                 teamMembersDiv.innerHTML = `<p class="text-center text-gray-500 py-4">此小組無成員</p>`;
@@ -209,7 +218,7 @@
             }
 
             teamMembersDiv.innerHTML = members.map(name => {
-                const memberTasks = allActivities.filter(t => t.assignee === name);
+                const memberTasks = allItems.filter(t => t.assignees.includes(name) || t.collaborators.includes(name));
                 const overdueCount = memberTasks.filter(t => t.status === 'overdue').length;
                 let workload = 'low';
                 if (memberTasks.length > 0) workload = 'normal';
@@ -248,10 +257,10 @@
             currentGroupFilter = groupFilter;
             
             const membersInGroup = groupFilter === 'all' ? staffData.map(s => s.name) : staffData.filter(s => s.group === groupFilter).map(s => s.name);
-            const itemsForGroup = groupFilter === 'all' ? activities : activities.filter(t => membersInGroup.includes(t.assignee));
+            const itemsForGroup = groupFilter === 'all' ? allActivities : allActivities.filter(item => item.group === groupFilter);
 
             updateStats(itemsForGroup);
-            renderTeamMembers(membersInGroup, activities);
+            renderTeamMembers(membersInGroup, allActivities);
             renderItems(itemsForGroup, currentStatusFilter);
             updateProgressBars(itemsForGroup);
 
@@ -265,7 +274,7 @@
         function filterByGroup(groupKey) {
             currentStatusFilter = 'all'; // Reset status filter when changing group
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-blue-100', 'text-blue-700'));
-            document.querySelector('.filter-btn').classList.add('active', 'bg-blue-100', 'text-blue-700');
+            document.querySelector('.filter-btn[onclick*="\'all\'"]').classList.add('active', 'bg-blue-100', 'text-blue-700');
             renderDashboard(groupKey);
         }
 
@@ -278,22 +287,21 @@
             event.target.classList.add('active', 'bg-blue-100', 'text-blue-700');
             event.target.classList.remove('bg-gray-100', 'text-gray-700');
             
-            const membersInGroup = currentGroupFilter === 'all' ? staffData.map(s => s.name) : staffData.filter(s => s.group === currentGroupFilter).map(s => s.name);
-            const itemsForGroup = currentGroupFilter === 'all' ? activities : activities.filter(t => membersInGroup.includes(t.assignee));
+            const itemsForGroup = currentGroupFilter === 'all' ? allActivities : allActivities.filter(item => item.group === currentGroupFilter);
             renderItems(itemsForGroup, statusFilter);
         }
 
-        function refreshData() {
+        async function refreshData() {
             const button = document.querySelector('button[onclick="refreshData()"]');
             button.innerHTML = '🔄 更新中...';
             button.disabled = true;
             
-            setTimeout(() => {
-                document.getElementById('lastUpdate').textContent = new Date().toLocaleString('zh-TW');
-                renderDashboard(currentGroupFilter);
-                button.innerHTML = '🔄 重新整理';
-                button.disabled = false;
-            }, 1000);
+            allActivities = await fetchAllItems(); // Fetch latest data
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('zh-TW');
+            renderDashboard(currentGroupFilter); // Re-render with the new data
+            
+            button.innerHTML = '🔄 重新整理';
+            button.disabled = false;
         }
 
         // --- Login Modal Logic ---
@@ -327,7 +335,7 @@
                     loginMessage.textContent = '登入成功！';
                     loginMessage.className = 'text-center mb-4 font-medium text-green-500';
                     setTimeout(() => {
-                        window.location.href = 'admin.html';
+                        window.location.href = 'dashboard_admin.html'; // Changed to dashboard_admin.html
                     }, 1500);
                 } else {
                     loginMessage.textContent = '帳號或密碼錯誤。';
@@ -337,10 +345,10 @@
         }
 
         // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             renderGroupTabs();
-            renderDashboard('all');
             setupLoginModal();
+            await refreshData(); // Initial data load
         });
     </script>
 </body>
