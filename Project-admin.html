@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儀表板後台管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .toast { transition: transform 0.5s, opacity 0.5s; transform: translateY(100%); opacity: 0; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        /* Improve styling for multi-select */
+        select[multiple] {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="text-center mb-8 relative">
+             <a href="dashboard.html" class="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium">
+                <i class="fas fa-chart-bar mr-2"></i>返回儀表板
+            </a>
+            <h1 class="text-3xl font-bold text-gray-800">儀表板項目管理</h1>
+            <p class="text-gray-600 mt-2">在此新增、編輯或刪除專案與任務。</p>
+        </div>
+
+        <!-- Form for Adding/Editing Items -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 id="form-title" class="text-xl font-semibold text-gray-800 mb-6">新增項目</h2>
+            <form id="item-form" class="space-y-6">
+                <input type="hidden" id="item-id">
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label for="item-name" class="block text-sm font-medium text-gray-700 mb-2">項目名稱 (必填)</label>
+                        <input type="text" id="item-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                     <div>
+                        <label for="item-group" class="block text-sm font-medium text-gray-700 mb-2">所屬小組 (必填)</label>
+                        <select id="item-group" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            <!-- Group options will be populated by JS -->
+                        </select>
+                        <div id="other-group-wrapper" class="mt-2 hidden">
+                             <input type="text" id="other-group-name" placeholder="請輸入新的小組名稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="item-type" class="block text-sm font-medium text-gray-700 mb-2">類型 (必填)</label>
+                        <select id="item-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            <option value="task">任務</option>
+                            <option value="project">專案</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                     <div>
+                        <label for="item-assignees" class="block text-sm font-medium text-gray-700 mb-2">主要負責人 (可複選)</label>
+                        <select id="item-assignees" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5" required>
+                            <!-- Assignee options will be populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="item-collaborators" class="block text-sm font-medium text-gray-700 mb-2">協同人員 (可複選)</label>
+                        <select id="item-collaborators" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5">
+                            <!-- Collaborator options will be populated by JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                     <div>
+                        <label for="item-status" class="block text-sm font-medium text-gray-700 mb-2">狀態 (必填)</label>
+                        <select id="item-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            <option value="active">進行中</option>
+                            <option value="completed">已完成</option>
+                            <option value="overdue">逾期</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="item-priority" class="block text-sm font-medium text-gray-700 mb-2">優先級 (必填)</label>
+                        <select id="item-priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            <option value="low">低</option>
+                            <option value="medium">中</option>
+                            <option value="high">高</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="item-deadline" class="block text-sm font-medium text-gray-700 mb-2">截止日期 (必填)</label>
+                        <input type="date" id="item-deadline" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                </div>
+                 <div class="pt-2">
+                    <label for="item-progress" class="block text-sm font-medium text-gray-700">進度 (%)</label>
+                    <input type="range" id="item-progress" min="0" max="100" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <div class="text-center text-sm text-gray-600 mt-1"><span id="progress-value">0</span>%</div>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" id="cancel-edit-btn" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors hidden">取消編輯</button>
+                    <button type="submit" id="save-item-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-plus mr-2"></i>新增項目
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Items List -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+             <h2 class="text-xl font-semibold text-gray-800 mb-4">現有項目列表</h2>
+             <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">項目名稱</th>
+                            <th scope="col" class="px-6 py-3">所屬小組</th>
+                            <th scope="col" class="px-6 py-3">主要負責人</th>
+                            <th scope="col" class="px-6 py-3">協同人員</th>
+                            <th scope="col" class="px-6 py-3">狀態</th>
+                            <th scope="col" class="px-6 py-3 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-table-body">
+                        <!-- Table rows will be populated by JS -->
+                    </tbody>
+                </table>
+             </div>
+        </div>
+    </div>
+    
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4"><div class="bg-white rounded-xl p-6 w-full max-w-sm mx-auto"><h3 class="text-lg font-semibold mb-4">確認刪除</h3><p class="text-gray-600 mb-6">您確定要刪除這個項目嗎？此操作無法復原。</p><div class="flex justify-end space-x-3"><button id="confirm-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button><button id="confirm-modal-ok" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">確認刪除</button></div></div></div>
+
+    <script>
+        // --- Data (Should be fetched from a backend in a real application) ---
+        let activities = [
+            { id: 1, name: 'PGY訓練計畫書撰寫', type: 'project', group: 'pgy', assignees: ['吳曉琪', '王嬿茹'], collaborators: ['廖家德'], status: 'active', progress: 75, deadline: '2025-07-30', priority: 'high' },
+            { id: 2, name: '臨床技能中心設備盤點', type: 'task', group: 'csc', assignees: ['盧英云'], collaborators: ['黃惠津'], status: 'active', progress: 90, deadline: '2025-08-15', priority: 'medium' },
+            { id: 3, name: '教師培育課程規劃', type: 'project', group: 'fdc', assignees: ['林汶秀'], collaborators: [], status: 'overdue', progress: 45, deadline: '2025-07-15', priority: 'high' },
+        ];
+
+        const staffData = [
+            { name: '廖家德' }, { name: '劉雯' }, { name: '楊依玲' }, { name: '高瑞穗' },
+            { name: '林汶秀' }, { name: '林淑雅' }, { name: '許淑怡' }, { name: '侯昱瑾' },
+            { name: '吳曉琪' }, { name: '王嬿茹' }, { name: '盧英云' }, { name: '黃惠津' },
+            { name: '楊宜婷' }, { name: '陳詩芸' }, { name: '李迎真' }, { name: '林盟淦' },
+        ];
+        
+        const groupData = {
+            'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
+            'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
+            'allied-health': '醫事人員訓練小組', 'chart-review': '病歷審查小組'
+        };
+
+        // --- DOM Elements ---
+        const form = document.getElementById('item-form');
+        const formTitle = document.getElementById('form-title');
+        const saveBtn = document.getElementById('save-item-btn');
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        const progressSlider = document.getElementById('item-progress');
+        const progressValue = document.getElementById('progress-value');
+        const groupSelect = document.getElementById('item-group');
+        const otherGroupWrapper = document.getElementById('other-group-wrapper');
+        const otherGroupNameInput = document.getElementById('other-group-name');
+        const assigneesSelect = document.getElementById('item-assignees');
+        const collaboratorsSelect = document.getElementById('item-collaborators');
+        const tableBody = document.getElementById('items-table-body');
+
+        // --- Functions ---
+        function populateDropdowns() {
+            groupSelect.innerHTML = '<option value="">-- 請選擇所屬小組 --</option>';
+            for (const [key, value] of Object.entries(groupData)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = value;
+                groupSelect.appendChild(option);
+            }
+            // Add the 'other' option
+            const otherOption = document.createElement('option');
+            otherOption.value = 'other';
+            otherOption.textContent = '-- 其他 (自行輸入) --';
+            groupSelect.appendChild(otherOption);
+
+
+            assigneesSelect.innerHTML = '';
+            collaboratorsSelect.innerHTML = '';
+            staffData.forEach(staff => {
+                const option1 = document.createElement('option');
+                option1.value = staff.name;
+                option1.textContent = staff.name;
+                assigneesSelect.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = staff.name;
+                option2.textContent = staff.name;
+                collaboratorsSelect.appendChild(option2);
+            });
+        }
+
+        function renderTable() {
+            tableBody.innerHTML = activities.map(item => {
+                const groupName = groupData[item.group] || item.group; // Display custom group name if not in predefined list
+                const assigneesText = item.assignees.join(', ') || 'N/A';
+                const collaboratorsText = item.collaborators.join(', ') || '無';
+                return `
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></td>
+                    <td class="px-6 py-4">${groupName}</td>
+                    <td class="px-6 py-4">${assigneesText}</td>
+                    <td class="px-6 py-4">${collaboratorsText}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-800' : item.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${item.status}</span></td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="editItem(${item.id})" class="font-medium text-blue-600 hover:underline mr-4"><i class="fas fa-edit"></i> 編輯</button>
+                        <button onclick="deleteItem(${item.id})" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
+                    </td>
+                </tr>
+            `}).join('');
+             if (activities.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">尚未建立任何項目</td></tr>`;
+            }
+        }
+        
+        function resetForm() {
+            form.reset();
+            progressSlider.value = 0;
+            progressValue.textContent = 0;
+            document.getElementById('item-id').value = '';
+            formTitle.textContent = '新增項目';
+            saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
+            cancelBtn.classList.add('hidden');
+            otherGroupWrapper.classList.add('hidden');
+            otherGroupNameInput.value = '';
+            [...assigneesSelect.options].forEach(opt => opt.selected = false);
+            [...collaboratorsSelect.options].forEach(opt => opt.selected = false);
+        }
+
+        function editItem(id) {
+            const item = activities.find(i => i.id === id);
+            if (!item) return;
+            
+            document.getElementById('item-id').value = item.id;
+            document.getElementById('item-name').value = item.name;
+            
+            // Handle group dropdown
+            if (groupData[item.group]) {
+                groupSelect.value = item.group;
+                otherGroupWrapper.classList.add('hidden');
+                otherGroupNameInput.value = '';
+            } else {
+                groupSelect.value = 'other';
+                otherGroupWrapper.classList.remove('hidden');
+                otherGroupNameInput.value = item.group;
+            }
+
+            document.getElementById('item-type').value = item.type;
+            document.getElementById('item-status').value = item.status;
+            document.getElementById('item-priority').value = item.priority;
+            document.getElementById('item-deadline').value = item.deadline;
+            progressSlider.value = item.progress;
+            progressValue.textContent = item.progress;
+
+            [...assigneesSelect.options].forEach(opt => { opt.selected = item.assignees.includes(opt.value); });
+            [...collaboratorsSelect.options].forEach(opt => { opt.selected = item.collaborators.includes(opt.value); });
+
+            formTitle.textContent = `編輯項目: ${item.name}`;
+            saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
+            cancelBtn.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function deleteItem(id) {
+            const confirmModal = document.getElementById('confirm-modal');
+            confirmModal.classList.remove('hidden');
+            confirmModal.classList.add('flex');
+
+            document.getElementById('confirm-modal-ok').onclick = () => {
+                activities = activities.filter(i => i.id !== id);
+                renderTable();
+                showToast('項目已刪除', 'success');
+                confirmModal.classList.add('hidden');
+            };
+            
+            document.getElementById('confirm-modal-cancel').onclick = () => {
+                confirmModal.classList.add('hidden');
+            };
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
+        }
+
+        function getSelectedOptions(selectElement) {
+            return Array.from(selectElement.options)
+                        .filter(option => option.selected)
+                        .map(option => option.value);
+        }
+
+        // --- Event Listeners ---
+        progressSlider.addEventListener('input', (e) => {
+            progressValue.textContent = e.target.value;
+        });
+
+        groupSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'other') {
+                otherGroupWrapper.classList.remove('hidden');
+            } else {
+                otherGroupWrapper.classList.add('hidden');
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('item-id').value;
+            
+            const selectedAssignees = getSelectedOptions(assigneesSelect);
+            if (selectedAssignees.length === 0) {
+                showToast('「主要負責人」為必填欄位！', 'error');
+                return;
+            }
+
+            let groupValue = groupSelect.value;
+            if (groupValue === 'other') {
+                groupValue = otherGroupNameInput.value.trim();
+                if (!groupValue) {
+                    showToast('請輸入新的小組名稱！', 'error');
+                    return;
+                }
+            }
+
+            const newItem = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('item-name').value,
+                group: groupValue,
+                assignees: selectedAssignees,
+                collaborators: getSelectedOptions(collaboratorsSelect),
+                type: document.getElementById('item-type').value,
+                status: document.getElementById('item-status').value,
+                priority: document.getElementById('item-priority').value,
+                deadline: document.getElementById('item-deadline').value,
+                progress: parseInt(progressSlider.value),
+            };
+
+            if (id) { // Editing existing item
+                activities = activities.map(item => item.id === newItem.id ? newItem : item);
+                showToast('項目已成功更新', 'success');
+            } else { // Adding new item
+                activities.push(newItem);
+                showToast('項目已成功新增', 'success');
+            }
+            
+            renderTable();
+            resetForm();
+        });
+        
+        cancelBtn.addEventListener('click', resetForm);
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            populateDropdowns();
+            renderTable();
+        });
+    </script>
+</body>
+</html>
