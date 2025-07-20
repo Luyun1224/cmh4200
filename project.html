@@ -143,6 +143,8 @@
             { name: '李迎真', group: 'chart-review' }, { name: '林盟淦', group: 'chart-review' },
         ];
 
+        const localProfileImages = { '盧英云': 'Lulu.JPG' };
+
         const groupData = {
             'all': '全部', 'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
             'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
@@ -231,9 +233,13 @@
                 if (memberTasks.length > 1 || overdueCount > 0) workload = 'high';
                 const isActive = name === currentMemberFilter;
 
+                const avatar = localProfileImages[name]
+                    ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover">`
+                    : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div>`;
+
                 return `
                 <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-blue-200' : 'bg-gray-50 hover:bg-gray-100'}">
-                    <div class="flex items-center"><div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div><div class="ml-3"><p class="font-medium text-gray-900">${name}</p><p class="text-sm text-gray-600">${memberTasks.length} 個項目</p></div></div>
+                    <div class="flex items-center">${avatar}<div class="ml-3"><p class="font-medium text-gray-900">${name}</p><p class="text-sm text-gray-600">${memberTasks.length} 個項目</p></div></div>
                     <div class="text-right">${overdueCount > 0 ? `<span class="text-red-600 text-sm font-medium">${overdueCount} 逾期</span>` : '<span class="text-green-600 text-sm">正常</span>'}<div class="text-xs text-gray-500 mt-1">工作量: ${workload === 'high' ? '🔴 高' : workload === 'normal' ? '🟡 中' : '🟢 低'}</div></div>
                 </div>`;
             }).join('');
