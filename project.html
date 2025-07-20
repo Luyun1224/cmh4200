@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>教學中心專案儀表板</title>
+    <title>教學中心小組儀表板</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -47,11 +47,12 @@
             <div class="flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-900">教學中心小組儀表板</h1>
                 <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <label for="yearFilter" class="text-sm font-medium text-gray-600">篩選年度:</label>
+                        <select id="yearFilter" onchange="filterByYear(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5"></select>
+                    </div>
                     <span class="text-sm text-gray-500">最後更新: <span id="lastUpdate"></span></span>
                     <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors hover:bg-slate-900">管理者登入</button>
-                    <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        🔄 重新整理
-                    </button>
                 </div>
             </div>
         </div>
@@ -143,8 +144,6 @@
             { name: '李迎真', group: 'chart-review' }, { name: '林盟淦', group: 'chart-review' },
         ];
 
-        const localProfileImages = { '盧英云': 'Lulu.JPG' };
-
         const groupData = {
             'all': '全部', 'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
             'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
@@ -153,7 +152,8 @@
         
         let currentGroupFilter = 'all';
         let currentStatusFilter = 'all';
-        let currentMemberFilter = 'all'; // New state for member filter
+        let currentMemberFilter = 'all';
+        let currentYearFilter = 'all';
 
         // --- Helper Functions ---
         const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500' }[status] || 'bg-gray-500');
@@ -187,6 +187,13 @@
                 `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === 'all' ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${value}</button>`
             ).join('');
         }
+        
+        function renderYearFilter() {
+            const yearFilterSelect = document.getElementById('yearFilter');
+            const years = ['all', ...new Set(allActivities.map(item => item.deadline ? new Date(item.deadline).getFullYear() : null).filter(Boolean))].sort();
+            yearFilterSelect.innerHTML = years.map(year => `<option value="${year}">${year === 'all' ? '全部年份' : `${year}年`}</option>`).join('');
+            yearFilterSelect.value = currentYearFilter;
+        }
 
         function renderItems(itemsToRender, statusFilter) {
             const itemsList = document.getElementById('itemsList');
@@ -219,13 +226,7 @@
                 return;
             }
 
-            const clearButtonHTML = `
-                <button onclick="filterByMember('all')" class="w-full text-center px-3 py-2 text-sm rounded-lg mb-2 transition-colors ${currentMemberFilter === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'}">
-                    顯示小組全部成員
-                </button>
-            `;
-
-            const membersHTML = members.map(name => {
+            teamMembersDiv.innerHTML = members.map(name => {
                 const memberTasks = allItems.filter(t => t.assignees.includes(name) || t.collaborators.includes(name));
                 const overdueCount = memberTasks.filter(t => t.status === 'overdue').length;
                 let workload = 'low';
@@ -233,18 +234,12 @@
                 if (memberTasks.length > 1 || overdueCount > 0) workload = 'high';
                 const isActive = name === currentMemberFilter;
 
-                const avatar = localProfileImages[name]
-                    ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover">`
-                    : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div>`;
-
                 return `
                 <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-blue-200' : 'bg-gray-50 hover:bg-gray-100'}">
-                    <div class="flex items-center">${avatar}<div class="ml-3"><p class="font-medium text-gray-900">${name}</p><p class="text-sm text-gray-600">${memberTasks.length} 個項目</p></div></div>
+                    <div class="flex items-center"><div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div><div class="ml-3"><p class="font-medium text-gray-900">${name}</p><p class="text-sm text-gray-600">${memberTasks.length} 個項目</p></div></div>
                     <div class="text-right">${overdueCount > 0 ? `<span class="text-red-600 text-sm font-medium">${overdueCount} 逾期</span>` : '<span class="text-green-600 text-sm">正常</span>'}<div class="text-xs text-gray-500 mt-1">工作量: ${workload === 'high' ? '🔴 高' : workload === 'normal' ? '🟡 中' : '🟢 低'}</div></div>
                 </div>`;
             }).join('');
-
-            teamMembersDiv.innerHTML = clearButtonHTML + membersHTML;
         }
 
         function updateStats(itemsToCount) {
@@ -269,11 +264,17 @@
 
         // --- Event Handlers & Main Logic ---
         function renderDashboard() {
-            // 1. Filter by Group
-            const membersInGroup = currentGroupFilter === 'all' ? staffData.map(s => s.name) : staffData.filter(s => s.group === currentGroupFilter).map(s => s.name);
-            const itemsForGroup = currentGroupFilter === 'all' ? allActivities : allActivities.filter(item => item.group === currentGroupFilter);
+            // 1. Filter by Year
+            let itemsForYear = allActivities;
+            if (currentYearFilter !== 'all') {
+                 itemsForYear = allActivities.filter(item => item.deadline && new Date(item.deadline).getFullYear() == currentYearFilter);
+            }
             
-            // 2. Filter by Member
+            // 2. Filter by Group
+            const membersInGroup = currentGroupFilter === 'all' ? staffData.map(s => s.name) : staffData.filter(s => s.group === currentGroupFilter).map(s => s.name);
+            const itemsForGroup = currentGroupFilter === 'all' ? itemsForYear : itemsForYear.filter(item => item.group === currentGroupFilter);
+            
+            // 3. Filter by Member
             let itemsToDisplay = itemsForGroup;
             if (currentMemberFilter !== 'all') {
                 itemsToDisplay = itemsForGroup.filter(item => 
@@ -282,18 +283,23 @@
                 );
             }
 
-            // 3. Render all components with the final filtered data
+            // 4. Render all components with the final filtered data
             updateStats(itemsToDisplay);
-            renderTeamMembers(membersInGroup, allActivities); // Member list always shows all members of the group
+            renderTeamMembers(membersInGroup, itemsForYear); // Member list workload should reflect the selected year
             renderItems(itemsToDisplay, currentStatusFilter);
             updateProgressBars(itemsToDisplay);
 
-            // 4. Update group tab styles
+            // 5. Update group tab styles
             document.querySelectorAll('.group-tab-btn').forEach(btn => {
                 btn.classList.toggle('tab-active', btn.id === `tab-${currentGroupFilter}`);
                 btn.classList.toggle('bg-gray-100', btn.id !== `tab-${currentGroupFilter}`);
                 btn.classList.toggle('hover:bg-gray-200', btn.id !== `tab-${currentGroupFilter}`);
             });
+        }
+        
+        function filterByYear(year) {
+            currentYearFilter = year;
+            renderDashboard();
         }
 
         function filterByGroup(groupKey) {
@@ -306,7 +312,12 @@
         }
         
         function filterByMember(memberName) {
-            currentMemberFilter = memberName;
+            // Toggle functionality: if clicking the same member, clear the filter
+            if (currentMemberFilter === memberName) {
+                currentMemberFilter = 'all';
+            } else {
+                currentMemberFilter = memberName;
+            }
             renderDashboard();
         }
 
@@ -323,16 +334,10 @@
         }
 
         async function refreshData() {
-            const button = document.querySelector('button[onclick="refreshData()"]');
-            button.innerHTML = '🔄 更新中...';
-            button.disabled = true;
-            
-            allActivities = await fetchAllItems(); // Fetch latest data
+            allActivities = await fetchAllItems();
             document.getElementById('lastUpdate').textContent = new Date().toLocaleString('zh-TW');
-            renderDashboard(); // Re-render with the new data
-            
-            button.innerHTML = '🔄 重新整理';
-            button.disabled = false;
+            renderYearFilter();
+            renderDashboard();
         }
 
         // --- Login Modal Logic ---
