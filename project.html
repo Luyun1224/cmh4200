@@ -15,8 +15,8 @@
             background-color: #3b82f6; /* bg-blue-600 */
             color: white;
         }
-        #loginModal, #aiModal { z-index: 50; }
-        .ai-content h3 { font-size: 1.125rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
+        #loginModal, #aiModal, #activityModal { z-index: 50; }
+        .ai-content h3, .activity-content h3 { font-size: 1.125rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
         .ai-content p { margin-bottom: 0.5rem; }
     </style>
 </head>
@@ -50,9 +50,18 @@
                 <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-brain text-blue-500 mr-3"></i>AI 判讀與決策建議</h2>
                 <button id="closeAiModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
-            <div id="ai-suggestion-content" class="overflow-y-auto text-gray-700 leading-relaxed ai-content">
-                <!-- AI content will be loaded here -->
+            <div id="ai-suggestion-content" class="overflow-y-auto text-gray-700 leading-relaxed ai-content"></div>
+        </div>
+    </div>
+
+    <!-- Activity Overview Modal -->
+    <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-calendar-alt text-green-500 mr-3"></i>活動概覽</h2>
+                <button id="closeActivityModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
+            <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content"></div>
         </div>
     </div>
 
@@ -65,6 +74,12 @@
                     <p class="text-sm text-gray-500 mt-1">即時追蹤所有進行中的專案與任務</p>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="search" id="searchInput" oninput="filterBySearch(this.value)" placeholder="搜尋項目..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 pl-8">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
                     <div class="flex items-center space-x-2">
                         <label for="yearFilter" class="text-sm font-medium text-gray-600">篩選年度:</label>
                         <select id="yearFilter" onchange="filterByYear(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5"></select>
@@ -107,11 +122,12 @@
             <!-- Right Panel: Dashboard Content -->
             <div class="lg:col-span-3 space-y-8">
                 <!-- Statistics Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">📊</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">進行中</p><p class="text-3xl font-bold text-blue-600" id="activeTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">⚡</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">逾期項目</p><p class="text-3xl font-bold text-red-600" id="overdueTasks">0</p></div><div class="bg-red-100 p-3 rounded-lg"><span class="text-2xl">⚠️</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">已完成</p><p class="text-3xl font-bold text-green-600" id="completedTasks">0</p></div><div class="bg-green-100 p-3 rounded-lg"><span class="text-2xl">✅</span></div></div></div>
+                    <div onclick="openActivityModal()" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動概覽</p><p class="text-3xl font-bold text-green-600" id="activityCount">0</p></div><div class="bg-green-100 p-3 rounded-lg"><span class="text-2xl">📅</span></div></div></div>
                 </div>
                 
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -186,6 +202,7 @@
         let currentStatusFilter = 'all';
         let currentMemberFilter = 'all';
         let currentYearFilter = 'all';
+        let currentSearchTerm = '';
 
         // --- Helper Functions ---
         const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500', 'not-started': 'bg-gray-400' }[status] || 'bg-gray-500');
@@ -293,6 +310,7 @@
             document.getElementById('activeTasks').textContent = itemsToCount.filter(t => t.status === 'active').length;
             document.getElementById('overdueTasks').textContent = itemsToCount.filter(t => t.status === 'overdue').length;
             document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
+            document.getElementById('activityCount').textContent = itemsToCount.length;
         }
 
         function updateProgressBars(itemsForBars) {
@@ -318,9 +336,18 @@
             
             // 2. Filter by Group
             const membersInGroup = currentGroupFilter === 'all' ? staffData.map(s => s.name) : staffData.filter(s => s.group === currentGroupFilter).map(s => s.name);
-            const itemsForGroup = currentGroupFilter === 'all' ? itemsForYear : itemsForYear.filter(item => item.group === currentGroupFilter);
+            let itemsForGroup = currentGroupFilter === 'all' ? itemsForYear : itemsForYear.filter(item => item.group === currentGroupFilter);
             
-            // 3. Filter by Member
+            // 3. Filter by Search Term
+            if (currentSearchTerm) {
+                const lowerCaseTerm = currentSearchTerm.toLowerCase();
+                itemsForGroup = itemsForGroup.filter(item => 
+                    item.name.toLowerCase().includes(lowerCaseTerm) ||
+                    (item.description && item.description.toLowerCase().includes(lowerCaseTerm))
+                );
+            }
+
+            // 4. Filter by Member
             let itemsToDisplay = itemsForGroup;
             if (currentMemberFilter !== 'all') {
                 itemsToDisplay = itemsForGroup.filter(item => 
@@ -329,13 +356,13 @@
                 );
             }
 
-            // 4. Render all components with the final filtered data
+            // 5. Render all components
             updateStats(itemsToDisplay);
-            renderTeamMembers(membersInGroup, itemsForYear); // Member list workload should reflect the selected year
+            renderTeamMembers(membersInGroup, itemsForYear);
             renderItems(itemsToDisplay, currentStatusFilter);
             updateProgressBars(itemsToDisplay);
 
-            // 5. Update group tab styles
+            // 6. Update group tab styles
             document.querySelectorAll('.group-tab-btn').forEach(btn => {
                 btn.classList.toggle('tab-active', btn.id === `tab-${currentGroupFilter}`);
                 btn.classList.toggle('bg-gray-100', btn.id !== `tab-${currentGroupFilter}`);
@@ -343,6 +370,11 @@
             });
         }
         
+        function filterBySearch(term) {
+            currentSearchTerm = term;
+            renderDashboard();
+        }
+
         function filterByYear(year) {
             currentYearFilter = year;
             renderDashboard();
@@ -350,15 +382,16 @@
 
         function filterByGroup(groupKey) {
             currentGroupFilter = groupKey;
-            currentMemberFilter = 'all'; // Reset member filter when changing group
-            currentStatusFilter = 'all'; // Reset status filter
+            currentMemberFilter = 'all';
+            currentStatusFilter = 'all';
+            document.getElementById('searchInput').value = '';
+            currentSearchTerm = '';
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'bg-gray-200', 'text-gray-800', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700'));
             document.querySelector('.filter-btn[onclick*="\'all\'"]').classList.add('active', 'bg-blue-100', 'text-blue-700');
             renderDashboard();
         }
         
         function filterByMember(memberName) {
-            // Toggle functionality: if clicking the same member, clear the filter
             if (currentMemberFilter === memberName) {
                 currentMemberFilter = 'all';
             } else {
@@ -502,12 +535,66 @@
                 aiDataDate.classList.add('hidden');
             });
         }
+        
+        function openActivityModal() {
+            const modal = document.getElementById('activityModal');
+            const content = document.getElementById('activity-content');
+            
+            const itemsForDisplay = allActivities.filter(item => {
+                const yearMatch = currentYearFilter === 'all' || (item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
+                const groupMatch = currentGroupFilter === 'all' || item.group === currentGroupFilter;
+                return yearMatch && groupMatch;
+            });
+
+            if(itemsForDisplay.length === 0) {
+                content.innerHTML = `<p class="text-center text-gray-500">目前篩選範圍內沒有活動。</p>`;
+                modal.classList.remove('hidden');
+                return;
+            }
+
+            const groupedByMonth = itemsForDisplay.reduce((acc, item) => {
+                if(item.startDate) {
+                    const month = new Date(item.startDate).toLocaleString('zh-TW', { year: 'numeric', month: 'long' });
+                    if (!acc[month]) {
+                        acc[month] = [];
+                    }
+                    acc[month].push(item);
+                }
+                return acc;
+            }, {});
+
+            const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => new Date(a.replace('年 ', '/')) - new Date(b.replace('年 ', '/')));
+
+            let html = '';
+            sortedMonths.forEach(month => {
+                html += `<h3>${month}</h3>`;
+                html += '<ul class="space-y-3">';
+                groupedByMonth[month].sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).forEach(item => {
+                    html += `<li class="border-l-4 pl-4 ${item.type === 'project' ? 'border-blue-500' : 'border-green-500'}">
+                                <p class="font-semibold">${item.name}</p>
+                                <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</p>
+                                <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                             </li>`;
+                });
+                html += '</ul>';
+            });
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        function setupActivityModal() {
+            const modal = document.getElementById('activityModal');
+            const closeBtn = document.getElementById('closeActivityModalBtn');
+            closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+        }
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', async function() {
             renderGroupTabs();
             setupLoginModal();
             setupAiModal();
+            setupActivityModal();
             await refreshData(); // Initial data load
         });
     </script>
