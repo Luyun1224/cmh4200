@@ -21,8 +21,8 @@
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-8 relative">
              <a href="https://luyun1224.github.io/cmh4200/project.html" class="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium">
-                <i class="fas fa-chart-bar mr-2"></i>返回儀表板
-            </a>
+                 <i class="fas fa-chart-bar mr-2"></i>返回儀表板
+             </a>
             <h1 class="text-3xl font-bold text-gray-800">儀表板項目管理</h1>
             <p class="text-gray-600 mt-2">在此新增、編輯或刪除專案與任務。</p>
         </div>
@@ -211,6 +211,30 @@
         }
 
         // --- Functions ---
+        
+        /**
+         * Formats a date string into YYYY-MM-DD for date input fields.
+         * @param {string} dateString The date string from the data source.
+         * @returns {string} A formatted date string or an empty string.
+         */
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                // Check if the date is valid
+                if (isNaN(date.getTime())) {
+                    return '';
+                }
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            } catch (e) {
+                console.error("Could not format date:", dateString, e);
+                return '';
+            }
+        }
+
         function populateDropdowns() {
             groupSelect.innerHTML = '<option value="">-- 請選擇所屬小組 --</option>';
             for (const [key, value] of Object.entries(groupData)) {
@@ -323,8 +347,9 @@
             document.getElementById('item-type').value = item.type;
             document.getElementById('item-status').value = item.status;
             document.getElementById('item-priority').value = item.priority;
-            document.getElementById('item-start-date').value = item.startDate || '';
-            document.getElementById('item-deadline').value = item.deadline || '';
+            // Use the new formatting function for dates
+            document.getElementById('item-start-date').value = formatDateForInput(item.startDate);
+            document.getElementById('item-deadline').value = formatDateForInput(item.deadline);
             progressSlider.value = item.progress;
             progressValue.textContent = item.progress;
 
@@ -339,20 +364,35 @@
 
         function deleteItem(id) {
             const confirmModal = document.getElementById('confirm-modal');
+            const confirmOkBtn = document.getElementById('confirm-modal-ok');
+            const confirmCancelBtn = document.getElementById('confirm-modal-cancel');
+            const originalBtnText = '確認刪除';
+
             confirmModal.classList.remove('hidden');
             confirmModal.classList.add('flex');
 
-            document.getElementById('confirm-modal-ok').onclick = async () => {
+            confirmOkBtn.onclick = async () => {
+                // Provide immediate feedback
+                confirmOkBtn.disabled = true;
+                confirmOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
+
                 const result = await handleApiRequest('deleteItem', { id });
                 if (result) {
                     showToast('項目已刪除', 'success');
                     await loadItems();
                 }
+
+                // Hide modal and reset button state after operation
                 confirmModal.classList.add('hidden');
+                confirmOkBtn.disabled = false;
+                confirmOkBtn.innerHTML = originalBtnText;
             };
             
-            document.getElementById('confirm-modal-cancel').onclick = () => {
+            confirmCancelBtn.onclick = () => {
                 confirmModal.classList.add('hidden');
+                // Reset button in case it was somehow left in a loading state
+                confirmOkBtn.disabled = false;
+                confirmOkBtn.innerHTML = originalBtnText;
             };
         }
 
@@ -427,12 +467,12 @@
                 resetForm();
                 await loadItems();
             } else {
-                 // Reset button text on failure
-                 if(id) {
-                    saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
-                 } else {
-                    saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
-                 }
+               // Reset button text on failure
+               if(id) {
+                   saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
+               } else {
+                   saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
+               }
             }
         });
         
