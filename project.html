@@ -543,6 +543,38 @@
         }
         
         // --- AI Suggestion Logic ---
+        function generateLocalAiSummary() {
+            const overdueItems = allActivities.filter(item => item.status === 'overdue');
+            const highRiskItems = allActivities.filter(item =>
+                new Date(item.deadline) > new Date() &&
+                new Date(item.deadline) < new Date(new Date().setDate(new Date().getDate() + 14)) &&
+                item.progress < 50
+            );
+
+            const total = allActivities.length;
+            const activeCount = allActivities.filter(i => i.status === 'active').length;
+            const completedCount = allActivities.filter(i => i.status === 'completed').length;
+            const overdueCount = overdueItems.length;
+
+            const overdueRatio = total > 0 ? overdueCount / total : 0;
+            const ragStatus = overdueRatio > 0.2 ? '🔴 紅色警戒' :
+                              overdueRatio > 0.1 ? '🟠 黃色觀察' : '🟢 綠色正常';
+
+            const overdueList = overdueItems.map(i => i.name).join(', ') || '無';
+            const highRiskList = highRiskItems.map(i => `${i.name} - ${i.progress}%`).join(', ') || '無';
+
+            return `
+                <h3>1. 專案組合健康度速覽 (RAG 分析)</h3>
+                <p>整體狀態：${ragStatus}</p>
+                <p>總項目數：${total}，進行中：${activeCount}，已完成：${completedCount}，逾期：${overdueCount}</p>
+                <h3>2. 風險評估與進度落後預警</h3>
+                <p>逾期項目：${overdueList}</p>
+                <p>高風險項目 (14天內到期且進度低於50%)：${highRiskList}</p>
+                <h3>3. 高階經理人決策建議</h3>
+                <p>建議優先處理逾期與高風險項目，必要時重新分配資源或召開專案檢討會議以確保進度。</p>
+            `;
+        }
+
         async function getAiSuggestions() {
             const aiModal = document.getElementById('aiModal');
             const aiContent = document.getElementById('ai-suggestion-content');
@@ -574,29 +606,30 @@
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                 const payload = { contents: chatHistory };
                 const apiKey = "";
+                if (!apiKey) {
+                    aiContent.innerHTML = generateLocalAiSummary();
+                    return;
+                }
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
                     const text = result.candidates[0].content.parts[0].text;
                     aiContent.innerHTML = text.replace(/### (.*?)\n/g, '<h3>$1</h3>').replace(/\n/g, '<br>');
                 } else {
                     console.error("AI API Response Error:", JSON.stringify(result, null, 2));
-                    let errorMessage = "AI 未能回傳有效的建議。";
-                    if (result.candidates && result.candidates[0].finishReason === 'SAFETY') {
-                        errorMessage = "由於安全設定，AI 無法生成建議內容。";
-                    }
-                    throw new Error(errorMessage);
+                    aiContent.innerHTML = generateLocalAiSummary();
                 }
             } catch (error) {
-                aiContent.innerHTML = `<p class="text-red-500">無法獲取 AI 建議，請稍後再試。錯誤訊息: ${error.message}</p>`;
+                console.error('AI Suggestion Error:', error);
+                aiContent.innerHTML = generateLocalAiSummary();
             } finally {
                 aiBtn.disabled = false;
             }
