@@ -15,12 +15,37 @@
             background-color: #3b82f6; /* bg-blue-600 */
             color: white;
         }
-        #loginModal, #aiModal, #activityModal { z-index: 50; }
-        .ai-content h3, .activity-content h3 { font-size: 1.125rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
+        #loginModal, #aiModal, #activityModal, #loadingOverlay { z-index: 50; }
+        .ai-content h3, .activity-content h3 { 
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700; /* font-bold */
+            margin-top: 1.5rem; /* mt-6 */
+            margin-bottom: 1rem; /* mb-4 */
+            border-bottom: 1px solid #e5e7eb; /* border-b */
+            padding-bottom: 0.5rem; /* pb-2 */
+            color: #4b5563; /* text-gray-600 */
+        }
         .ai-content p { margin-bottom: 0.5rem; }
+        .filter-btn.active {
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center hidden">
+        <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+        <p class="mt-4 text-lg text-gray-700 font-medium">正在載入儀表板數據...</p>
+    </div>
+
+    <!-- Error Display -->
+    <div id="errorDisplay" class="hidden fixed inset-x-0 top-0 p-4">
+        <div class="max-w-2xl mx-auto bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg shadow-lg" role="alert">
+            <p class="font-bold">資料載入失敗</p>
+            <p id="errorMessage">無法從伺服器獲取專案數據，請檢查您的網路連線或稍後再試。</p>
+        </div>
+    </div>
+
     <!-- Login Modal -->
     <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
@@ -123,7 +148,7 @@
             <div class="lg:col-span-3 space-y-8">
                 <!-- Statistics Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">總項目數 (專案/任務)</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">📊</span></div></div></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600" title="專案/任務">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">📊</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">進行中</p><p class="text-3xl font-bold text-blue-600" id="activeTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">⚡</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">逾期項目</p><p class="text-3xl font-bold text-red-600" id="overdueTasks">0</p></div><div class="bg-red-100 p-3 rounded-lg"><span class="text-2xl">⚠️</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">已完成</p><p class="text-3xl font-bold text-green-600" id="completedTasks">0</p></div><div class="bg-green-100 p-3 rounded-lg"><span class="text-2xl">✅</span></div></div></div>
@@ -137,11 +162,11 @@
                             <div class="flex justify-between items-center">
                                 <h2 class="text-xl font-semibold text-gray-900">項目概覽</h2>
                                 <div class="flex flex-wrap gap-2">
-                                    <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg">全部</button>
-                                    <button onclick="filterItemsByStatus('not-started', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">未開始</button>
-                                    <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">進行中</button>
-                                    <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">已完成</button>
-                                    <button onclick="filterItemsByStatus('overdue', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">逾期</button>
+                                    <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700">全部</button>
+                                    <button onclick="filterItemsByStatus('not-started', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">未開始</button>
+                                    <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">進行中</button>
+                                    <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">已完成</button>
+                                    <button onclick="filterItemsByStatus('overdue', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">逾期</button>
                                 </div>
                             </div>
                         </div>
@@ -198,6 +223,7 @@
             'allied-health': '醫事人員訓練小組', 'chart-review': '病歷審查小組'
         };
         
+        // --- State Variables ---
         let currentGroupFilter = 'all';
         let currentStatusFilter = 'all';
         let currentMemberFilter = 'all';
@@ -229,13 +255,17 @@
                     body: JSON.stringify({ action: 'getAllItems' }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
                 // Add 'not-started' status based on progress
                 return result.data.map(item => ({...item, status: (item.progress === 0 && item.status === 'active') ? 'not-started' : item.status}));
             } catch (error) {
                 console.error("Failed to fetch items:", error);
-                return [];
+                // Re-throw the error to be caught by the caller
+                throw error;
             }
         }
 
@@ -254,12 +284,12 @@
             yearFilterSelect.value = currentYearFilter;
         }
 
-        function renderItems(itemsToRender, statusFilter) {
+        function renderItems(itemsToRender) {
             const itemsList = document.getElementById('itemsList');
             let filteredItems = itemsToRender;
 
-            if (statusFilter !== 'all') {
-                filteredItems = itemsToRender.filter(p => p.status === statusFilter);
+            if (currentStatusFilter !== 'all') {
+                filteredItems = itemsToRender.filter(p => p.status === currentStatusFilter);
             }
 
             if (filteredItems.length === 0) {
@@ -307,7 +337,7 @@
                 const isActive = name === currentMemberFilter;
 
                 return `
-                <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-blue-200' : 'bg-gray-50 hover:bg-gray-100'}">
+                <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-blue-100' : 'hover:bg-gray-50'}">
                     <div class="flex items-center"><div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div><div class="ml-3"><p class="font-medium text-gray-900">${name}</p><p class="text-sm text-gray-600">${memberTasks.length} 個項目</p></div></div>
                     <div class="text-right">${overdueCount > 0 ? `<span class="text-red-600 text-sm font-medium">${overdueCount} 逾期</span>` : '<span class="text-green-600 text-sm">正常</span>'}<div class="text-xs text-gray-500 mt-1">工作量: ${workload === 'high' ? '🔴 高' : workload === 'normal' ? '🟡 中' : '🟢 低'}</div></div>
                 </div>`;
@@ -371,7 +401,7 @@
             // 5. Render all components
             updateStats(itemsToDisplay);
             renderTeamMembers(membersInGroup, itemsForYear);
-            renderItems(itemsToDisplay, currentStatusFilter);
+            renderItems(itemsToDisplay);
             updateProgressBars(itemsToDisplay);
 
             // 6. Update group tab styles
@@ -398,7 +428,11 @@
             currentStatusFilter = 'all';
             document.getElementById('searchInput').value = '';
             currentSearchTerm = '';
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'bg-gray-200', 'text-gray-800', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700'));
+            // Reset status filter UI
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'bg-gray-200', 'text-gray-800', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
             document.querySelector('.filter-btn[onclick*="\'all\'"]').classList.add('active', 'bg-blue-100', 'text-blue-700');
             renderDashboard();
         }
@@ -433,10 +467,6 @@
 
         async function refreshData() {
             allActivities = await fetchAllItems();
-            const lastUpdateEl = document.getElementById('lastUpdate');
-            if(lastUpdateEl) {
-                lastUpdateEl.textContent = new Date().toLocaleString('zh-TW');
-            }
             renderYearFilter();
             renderDashboard();
         }
@@ -581,13 +611,19 @@
             let html = '';
             sortedMonths.forEach(month => {
                 html += `<h3>${month}</h3>`;
-                html += '<ul class="space-y-3">';
+                html += '<ul class="space-y-4">';
                 groupedByMonth[month].sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).forEach(item => {
-                    html += `<li class="border-l-4 pl-4 border-purple-500">
-                                 <p class="font-semibold">${item.name}</p>
-                                 <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</p>
-                                 <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
-                               </li>`;
+                    const day = new Date(item.startDate).getDate();
+                    html += `<li class="flex items-start space-x-4 p-2 rounded-lg hover:bg-gray-50">
+                                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
+                                     <span class="text-xl font-bold text-purple-700">${day}</span>
+                                </div>
+                                <div class="flex-grow pt-1">
+                                     <p class="font-semibold text-gray-800">${item.name}</p>
+                                     <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</p>
+                                     <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                                </div>
+                             </li>`;
                 });
                 html += '</ul>';
             });
@@ -604,11 +640,27 @@
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', async function() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const errorDisplay = document.getElementById('errorDisplay');
+            
+            // Setup static components first
             renderGroupTabs();
             setupLoginModal();
             setupAiModal();
             setupActivityModal();
-            await refreshData(); // Initial data load
+
+            // Show loading indicator and fetch data
+            loadingOverlay.classList.remove('hidden');
+            try {
+                await refreshData(); // Initial data load
+            } catch (error) {
+                // If data fetch fails, show an error message
+                document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
+                errorDisplay.classList.remove('hidden');
+            } finally {
+                // Always hide the loading overlay
+                loadingOverlay.classList.add('hidden');
+            }
         });
     </script>
 </body>
