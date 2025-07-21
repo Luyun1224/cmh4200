@@ -317,7 +317,7 @@
                         <div class="w-full bg-gray-200 rounded-full h-2"><div class="progress-bar h-2 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div>
                     </div>
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</span>
+                        <span class="text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : (item.type === 'activity' ? '迄今 (進行中)' : '迄今')}</span>
                         ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
                     </div>
                 </div>`).join('');
@@ -642,7 +642,7 @@
                                  </div>
                                  <div class="flex-grow pt-1">
                                      <p class="font-semibold text-gray-800">${item.name}</p>
-                                     <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</p>
+                                     <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : (item.type === 'activity' ? '迄今 (進行中)' : '迄今')}</p>
                                      <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
                                  </div>
                              </li>`;
