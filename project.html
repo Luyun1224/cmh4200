@@ -262,8 +262,23 @@
                 }
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
-                // Add 'not-started' status based on progress
-                return result.data.map(item => ({...item, status: (item.progress === 0 && item.status === 'active') ? 'not-started' : item.status}));
+                // Adjust status based on start date and progress
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // ignore time when comparing dates
+                return result.data.map(item => {
+                    const startDate = item.startDate ? new Date(item.startDate) : null;
+                    const isFutureStart = startDate && startDate > today;
+
+                    let status = item.status;
+
+                    if (item.status === 'active' && item.progress === 0) {
+                        status = isFutureStart ? 'not-started' : 'active';
+                    } else if (item.status === 'not-started' && !isFutureStart) {
+                        status = 'active';
+                    }
+
+                    return { ...item, status };
+                });
             } catch (error) {
                 console.error("Failed to fetch items:", error);
                 // Re-throw the error to be caught by the caller
