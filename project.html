@@ -246,7 +246,7 @@
                     <div class="flex justify-between items-start mb-3">
                         <div class="flex-1">
                             <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></h4>
-                            ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2">${item.description}</p>` : ''}
+                            ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
                             <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
                         </div>
                         <div class="flex items-center space-x-2">
