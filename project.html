@@ -163,6 +163,7 @@
                                 <h2 class="text-xl font-semibold text-gray-900 flex-shrink-0">項目概覽</h2>
                                 <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
                                     <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700">全部</button>
+                                    <button onclick="filterItemsByStatus('planning', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">規劃中</button>
                                     <button onclick="filterItemsByStatus('not-started', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">未開始</button>
                                     <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">進行中</button>
                                     <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">已完成</button>
@@ -233,8 +234,8 @@
         let currentSearchTerm = '';
 
         // --- Helper Functions ---
-        const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500', 'not-started': 'bg-gray-400' }[status] || 'bg-gray-500');
-        const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', 'not-started': '未開始' }[status] || '未知');
+        const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500', planning: 'bg-yellow-500', 'not-started': 'bg-gray-400' }[status] || 'bg-gray-500');
+        const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中', 'not-started': '未開始' }[status] || '未知');
         const getPriorityColor = (priority) => ({ high: 'text-red-600 bg-red-50', medium: 'text-yellow-600 bg-yellow-50', low: 'text-green-600 bg-green-50' }[priority] || 'text-gray-600 bg-gray-50');
         const getPriorityText = (priority) => ({ high: '高', medium: '中', low: '低' }[priority] || '未知');
         const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
@@ -481,6 +482,7 @@
             currentStatusFilter = statusFilter;
             const colorMap = {
                 'all': ['bg-blue-100', 'text-blue-700'],
+                'planning': ['bg-yellow-100', 'text-yellow-700'],
                 'not-started': ['bg-gray-200', 'text-gray-800'],
                 'active': ['bg-blue-100', 'text-blue-700'],
                 'completed': ['bg-green-100', 'text-green-700'],
@@ -712,6 +714,12 @@
         document.addEventListener('DOMContentLoaded', async function() {
             const loadingOverlay = document.getElementById('loadingOverlay');
             const errorDisplay = document.getElementById('errorDisplay');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramStatus = urlParams.get('status');
+            if (paramStatus) {
+                currentStatusFilter = paramStatus;
+            }
             
             // Setup static components first
             renderGroupTabs();
@@ -723,6 +731,10 @@
             loadingOverlay.classList.remove('hidden');
             try {
                 await refreshData(); // Initial data load
+                if (paramStatus) {
+                    const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
+                    if (btn) filterItemsByStatus(paramStatus, { target: btn });
+                }
             } catch (error) {
                 // If data fetch fails, show an error message
                 document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
