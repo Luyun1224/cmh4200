@@ -51,6 +51,7 @@
                         <select id="item-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                             <option value="task">任務</option>
                             <option value="project">專案</option>
+                            <option value="activity">活動</option>
                         </select>
                     </div>
                 </div>
@@ -248,15 +249,30 @@
                 collaboratorsSelect.appendChild(option2);
             });
         }
+        
+        function getTypeDisplay(type) {
+            switch(type) {
+                case 'project':
+                    return '<span class="text-xs font-normal text-blue-500">(專案)</span>';
+                case 'task':
+                    return '<span class="text-xs font-normal text-green-500">(任務)</span>';
+                case 'activity':
+                    return '<span class="text-xs font-normal text-purple-500">(活動)</span>';
+                default:
+                    return '';
+            }
+        }
 
         function renderTable() {
             tableBody.innerHTML = activities.map(item => {
                 const groupName = groupData[item.group] || item.group;
                 const assigneesText = item.assignees.join(', ') || 'N/A';
                 const collaboratorsText = item.collaborators.join(', ') || '無';
+                const typeDisplay = getTypeDisplay(item.type);
+
                 return `
                 <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></td>
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${typeDisplay}</td>
                     <td class="px-6 py-4">${groupName}</td>
                     <td class="px-6 py-4">${assigneesText}</td>
                     <td class="px-6 py-4">${collaboratorsText}</td>
