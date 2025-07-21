@@ -192,7 +192,7 @@
         const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', 'not-started': '未開始' }[status] || '未知');
         const getPriorityColor = (priority) => ({ high: 'text-red-600 bg-red-50', medium: 'text-yellow-600 bg-yellow-50', low: 'text-green-600 bg-green-50' }[priority] || 'text-gray-600 bg-gray-50');
         const getPriorityText = (priority) => ({ high: '高', medium: '中', low: '低' }[priority] || '未知');
-        const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : 'N/A';
+        const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
 
         // --- API Communication ---
         async function fetchAllItems() {
@@ -223,7 +223,7 @@
         
         function renderYearFilter() {
             const yearFilterSelect = document.getElementById('yearFilter');
-            const years = ['all', ...new Set(allActivities.map(item => item.deadline ? new Date(item.deadline).getFullYear() : null).filter(Boolean))].sort();
+            const years = ['all', ...new Set(allActivities.map(item => item.startDate ? new Date(item.startDate).getFullYear() : null).filter(Boolean))].sort();
             yearFilterSelect.innerHTML = years.map(year => `<option value="${year}">${year === 'all' ? '全部年份' : `${year}年`}</option>`).join('');
             yearFilterSelect.value = currentYearFilter;
         }
@@ -244,11 +244,24 @@
             itemsList.innerHTML = filteredItems.map(item => `
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-3">
-                        <div class="flex-1"><h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></h4><p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p></div>
-                        <div class="flex items-center space-x-2"><span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(item.priority)}">${getPriorityText(item.priority)}</span><span class="flex items-center text-sm"><span class="status-dot ${getStatusColor(item.status)}"></span>${getStatusText(item.status)}</span></div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></h4>
+                            ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2">${item.description}</p>` : ''}
+                            <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(item.priority)}">${getPriorityText(item.priority)}</span>
+                            <span class="flex items-center text-sm"><span class="status-dot ${getStatusColor(item.status)}"></span>${getStatusText(item.status)}</span>
+                        </div>
                     </div>
-                    <div class="mb-3"><div class="flex justify-between text-sm mb-1"><span>進度</span><span>${item.progress}%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div class="progress-bar h-2 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div></div>
-                    <div class="flex justify-between items-center text-sm"><span class="text-gray-600">截止日期: ${formatDate(item.deadline)}</span>${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1"><span>進度</span><span>${item.progress}%</span></div>
+                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="progress-bar h-2 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</span>
+                        ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
+                    </div>
                 </div>`).join('');
         }
         
@@ -300,7 +313,7 @@
             // 1. Filter by Year
             let itemsForYear = allActivities;
             if (currentYearFilter !== 'all') {
-                 itemsForYear = allActivities.filter(item => item.deadline && new Date(item.deadline).getFullYear() == currentYearFilter);
+                 itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
             }
             
             // 2. Filter by Group
