@@ -682,23 +682,39 @@
                 }
             });
 
-            const buildList = (arr, isExpired = false) => arr.map(item => {
-                const day = new Date(item.startDate).getDate();
-                const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
-                return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">`+
-                       `${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}`+
-                       `<div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">`+
-                       `<span class="text-xl font-bold text-purple-700">${day}</span>`+
-                       `</div>`+
-                       `<div class="flex-grow pt-1">`+
-                       `<p class="font-semibold text-gray-800">${item.name}</p>`+
-                       `<p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>`+
-                       `<p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>`+
-                       `</div>`+
-                       `</li>`;
-            }).join('');
+            const buildList = (arr, isExpired = false) => {
+                const groups = {};
+                arr.forEach(item => {
+                    const d = new Date(item.startDate);
+                    const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(item);
+                });
 
-            content.innerHTML = `<ul class="space-y-4">${buildList(upcoming)}${buildList(expired, true)}</ul>`;
+                const keys = Object.keys(groups).sort((a,b) => new Date(a+"-01") - new Date(b+"-01"));
+                return keys.map(k => {
+                    const [y,m] = k.split('-');
+                    const monthLabel = `${y}年${m}月`;
+                    const itemsHtml = groups[k].map(item => {
+                        const day = new Date(item.startDate).getDate();
+                        const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
+                        return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">`+
+                               `${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}`+
+                               `<div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">`+
+                               `<span class="text-xl font-bold text-purple-700">${day}</span>`+
+                               `</div>`+
+                               `<div class="flex-grow pt-1">`+
+                               `<p class="font-semibold text-gray-800">${item.name}</p>`+
+                               `<p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>`+
+                               `<p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>`+
+                               `</div>`+
+                               `</li>`;
+                    }).join('');
+                    return `<div class="mt-4"><h3 class="text-2xl font-bold text-purple-700 mb-2">${monthLabel}</h3><ul class="space-y-4">${itemsHtml}</ul></div>`;
+                }).join('');
+            };
+
+            content.innerHTML = `<div class="space-y-6">${buildList(upcoming)}${buildList(expired, true)}</div>`;
             modal.classList.remove('hidden');
         }
         function setupActivityModal() {
