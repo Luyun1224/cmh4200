@@ -32,7 +32,7 @@
                     <input type="text" id="username" name="username" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
                 <div class="mb-6">
-                     <label for="password" class="block text-slate-700 mb-2">密碼</label>
+                    <label for="password" class="block text-slate-700 mb-2">密碼</label>
                     <input type="password" id="password" name="password" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
                 <div class="flex items-center justify-between gap-4">
@@ -58,7 +58,7 @@
     <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-calendar-alt text-green-500 mr-3"></i>活動概覽</h2>
+                <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-calendar-alt text-purple-500 mr-3"></i>活動概覽</h2>
                 <button id="closeActivityModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content"></div>
@@ -103,7 +103,7 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 py-8">
+    <main class="max-w-7xl mx-auto px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <!-- Left Panel: Team Members -->
             <div class="lg:col-span-1">
@@ -123,11 +123,11 @@
             <div class="lg:col-span-3 space-y-8">
                 <!-- Statistics Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">📊</span></div></div></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">總項目數 (專案/任務)</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">📊</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">進行中</p><p class="text-3xl font-bold text-blue-600" id="activeTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">⚡</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">逾期項目</p><p class="text-3xl font-bold text-red-600" id="overdueTasks">0</p></div><div class="bg-red-100 p-3 rounded-lg"><span class="text-2xl">⚠️</span></div></div></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">已完成</p><p class="text-3xl font-bold text-green-600" id="completedTasks">0</p></div><div class="bg-green-100 p-3 rounded-lg"><span class="text-2xl">✅</span></div></div></div>
-                    <div onclick="openActivityModal()" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動概覽</p><p class="text-3xl font-bold text-green-600" id="activityCount">0</p></div><div class="bg-green-100 p-3 rounded-lg"><span class="text-2xl">📅</span></div></div></div>
+                    <div onclick="openActivityModal()" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動總數</p><p class="text-3xl font-bold text-purple-600" id="activityCount">0</p></div><div class="bg-purple-100 p-3 rounded-lg"><span class="text-2xl">📅</span></div></div></div>
                 </div>
                 
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -137,11 +137,11 @@
                             <div class="flex justify-between items-center">
                                 <h2 class="text-xl font-semibold text-gray-900">項目概覽</h2>
                                 <div class="flex flex-wrap gap-2">
-                                    <button onclick="filterItemsByStatus('all')" class="filter-btn active px-3 py-1 text-sm rounded-lg">全部</button>
-                                    <button onclick="filterItemsByStatus('not-started')" class="filter-btn px-3 py-1 text-sm rounded-lg">未開始</button>
-                                    <button onclick="filterItemsByStatus('active')" class="filter-btn px-3 py-1 text-sm rounded-lg">進行中</button>
-                                    <button onclick="filterItemsByStatus('completed')" class="filter-btn px-3 py-1 text-sm rounded-lg">已完成</button>
-                                    <button onclick="filterItemsByStatus('overdue')" class="filter-btn px-3 py-1 text-sm rounded-lg">逾期</button>
+                                    <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg">全部</button>
+                                    <button onclick="filterItemsByStatus('not-started', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">未開始</button>
+                                    <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">進行中</button>
+                                    <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">已完成</button>
+                                    <button onclick="filterItemsByStatus('overdue', event)" class="filter-btn px-3 py-1 text-sm rounded-lg">逾期</button>
                                 </div>
                             </div>
                         </div>
@@ -174,7 +174,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
         // --- Configuration ---
@@ -210,6 +210,15 @@
         const getPriorityColor = (priority) => ({ high: 'text-red-600 bg-red-50', medium: 'text-yellow-600 bg-yellow-50', low: 'text-green-600 bg-green-50' }[priority] || 'text-gray-600 bg-gray-50');
         const getPriorityText = (priority) => ({ high: '高', medium: '中', low: '低' }[priority] || '未知');
         const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
+        const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動' }[type] || '項目');
+        const getTypeStyle = (type) => {
+            switch(type) {
+                case 'project': return 'text-blue-500';
+                case 'task': return 'text-green-500';
+                case 'activity': return 'text-purple-500';
+                default: return 'text-gray-500';
+            }
+        };
 
         // --- API Communication ---
         async function fetchAllItems() {
@@ -262,7 +271,7 @@
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-3">
                         <div class="flex-1">
-                            <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${item.type === 'project' ? 'text-blue-500' : 'text-green-500'}">(${item.type === 'project' ? '專案' : '任務'})</span></h4>
+                            <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${getTypeStyle(item.type)}">(${getTypeText(item.type)})</span></h4>
                             ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
                             <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
                         </div>
@@ -306,11 +315,14 @@
         }
 
         function updateStats(itemsToCount) {
-            document.getElementById('totalTasks').textContent = itemsToCount.length;
-            document.getElementById('activeTasks').textContent = itemsToCount.filter(t => t.status === 'active').length;
-            document.getElementById('overdueTasks').textContent = itemsToCount.filter(t => t.status === 'overdue').length;
-            document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
-            document.getElementById('activityCount').textContent = itemsToCount.length;
+            const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
+            const activities = itemsToCount.filter(item => item.type === 'activity');
+
+            document.getElementById('totalTasks').textContent = projectsAndTasks.length;
+            document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
+            document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
+            document.getElementById('completedTasks').textContent = projectsAndTasks.filter(t => t.status === 'completed').length;
+            document.getElementById('activityCount').textContent = activities.length;
         }
 
         function updateProgressBars(itemsForBars) {
@@ -400,7 +412,7 @@
             renderDashboard();
         }
 
-        function filterItemsByStatus(statusFilter) {
+        function filterItemsByStatus(statusFilter, event) {
             currentStatusFilter = statusFilter;
             const colorMap = {
                 'all': ['bg-blue-100', 'text-blue-700'],
@@ -501,7 +513,7 @@
                  chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                  const payload = { contents: chatHistory };
                  const apiKey = "" 
-                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                  const response = await fetch(apiUrl, {
                      method: 'POST',
                      headers: { 'Content-Type': 'application/json' },
@@ -510,10 +522,10 @@
                  const result = await response.json();
                  
                  if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    aiContent.innerHTML = text.replace(/### (.*?)\n/g, '<h3>$1</h3>').replace(/\n/g, '<br>');
+                   const text = result.candidates[0].content.parts[0].text;
+                   aiContent.innerHTML = text.replace(/### (.*?)\n/g, '<h3>$1</h3>').replace(/\n/g, '<br>');
                  } else {
-                    throw new Error("No response from AI.");
+                   throw new Error("AI did not return a valid response.");
                  }
 
             } catch (error) {
@@ -543,7 +555,8 @@
             const itemsForDisplay = allActivities.filter(item => {
                 const yearMatch = currentYearFilter === 'all' || (item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
                 const groupMatch = currentGroupFilter === 'all' || item.group === currentGroupFilter;
-                return yearMatch && groupMatch;
+                const typeMatch = item.type === 'activity'; // Filter for activities
+                return yearMatch && groupMatch && typeMatch;
             });
 
             if(itemsForDisplay.length === 0) {
@@ -570,11 +583,11 @@
                 html += `<h3>${month}</h3>`;
                 html += '<ul class="space-y-3">';
                 groupedByMonth[month].sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).forEach(item => {
-                    html += `<li class="border-l-4 pl-4 ${item.type === 'project' ? 'border-blue-500' : 'border-green-500'}">
-                                <p class="font-semibold">${item.name}</p>
-                                <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</p>
-                                <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
-                             </li>`;
+                    html += `<li class="border-l-4 pl-4 border-purple-500">
+                                 <p class="font-semibold">${item.name}</p>
+                                 <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '迄今'}</p>
+                                 <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                               </li>`;
                 });
                 html += '</ul>';
             });
