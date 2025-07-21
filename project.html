@@ -316,7 +316,7 @@
 
         function updateStats(itemsToCount) {
             const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
-            const activities = itemsToCount.filter(item => item.type === 'activity');
+            const activities = itemsToCount.filter(item => item.type && item.type.toLowerCase() === 'activity');
 
             document.getElementById('totalTasks').textContent = projectsAndTasks.length;
             document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
@@ -555,7 +555,7 @@
             const itemsForDisplay = allActivities.filter(item => {
                 const yearMatch = currentYearFilter === 'all' || (item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
                 const groupMatch = currentGroupFilter === 'all' || item.group === currentGroupFilter;
-                const typeMatch = item.type === 'activity'; // Filter for activities
+                const typeMatch = item.type && item.type.toLowerCase() === 'activity'; // Filter for activities only
                 return yearMatch && groupMatch && typeMatch;
             });
 
