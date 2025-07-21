@@ -649,61 +649,58 @@
                 aiDataDate.classList.add('hidden');
             });
         }
-        
+
         function openActivityModal() {
             const modal = document.getElementById('activityModal');
             const content = document.getElementById('activity-content');
-            
+
             const itemsForDisplay = allActivities.filter(item => {
                 const yearMatch = currentYearFilter === 'all' || (item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
-                const groupMatch = currentGroupFilter === 'all' || item.group === currentGroupFilter;
-                const typeMatch = item.type && item.type.toLowerCase() === 'activity'; // Filter for activities only
+                const groupMatch = currentGroupFilter === 'all' || item.group == currentGroupFilter;
+                const typeMatch = item.type && item.type.toLowerCase() === 'activity';
                 return yearMatch && groupMatch && typeMatch;
             });
 
-            if(itemsForDisplay.length === 0) {
+            if (itemsForDisplay.length === 0) {
                 content.innerHTML = `<p class="text-center text-gray-500">目前篩選範圍內沒有活動。</p>`;
                 modal.classList.remove('hidden');
                 return;
             }
 
-            const groupedByMonth = itemsForDisplay.reduce((acc, item) => {
-                if(item.startDate) {
-                    const month = new Date(item.startDate).toLocaleString('zh-TW', { year: 'numeric', month: 'long' });
-                    if (!acc[month]) {
-                        acc[month] = [];
-                    }
-                    acc[month].push(item);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            const sortedItems = itemsForDisplay.slice().sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+            const upcoming = [];
+            const expired = [];
+            sortedItems.forEach(item => {
+                const endDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate);
+                if (endDate < today) {
+                    expired.push(item);
+                } else {
+                    upcoming.push(item);
                 }
-                return acc;
-            }, {});
-
-            const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => new Date(a.replace('年 ', '/')) - new Date(b.replace('年 ', '/')));
-
-            let html = '';
-            sortedMonths.forEach(month => {
-                html += `<h3>${month}</h3>`;
-                html += '<ul class="space-y-4">';
-                groupedByMonth[month].sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).forEach(item => {
-                    const day = new Date(item.startDate).getDate();
-                    html += `<li class="flex items-start space-x-4 p-2 rounded-lg hover:bg-gray-50">
-                                 <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
-                                     <span class="text-xl font-bold text-purple-700">${day}</span>
-                                 </div>
-                                 <div class="flex-grow pt-1">
-                                     <p class="font-semibold text-gray-800">${item.name}</p>
-                                     <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : (item.type === 'activity' ? '迄今 (進行中)' : '迄今')}</p>
-                                     <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
-                                 </div>
-                             </li>`;
-                });
-                html += '</ul>';
             });
-            
-            content.innerHTML = html;
+
+            const buildList = (arr, isExpired = false) => arr.map(item => {
+                const day = new Date(item.startDate).getDate();
+                const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
+                return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">`+
+                       `${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}`+
+                       `<div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">`+
+                       `<span class="text-xl font-bold text-purple-700">${day}</span>`+
+                       `</div>`+
+                       `<div class="flex-grow pt-1">`+
+                       `<p class="font-semibold text-gray-800">${item.name}</p>`+
+                       `<p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>`+
+                       `<p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>`+
+                       `</div>`+
+                       `</li>`;
+            }).join('');
+
+            content.innerHTML = `<ul class="space-y-4">${buildList(upcoming)}${buildList(expired, true)}</ul>`;
             modal.classList.remove('hidden');
         }
-
         function setupActivityModal() {
             const modal = document.getElementById('activityModal');
             const closeBtn = document.getElementById('closeActivityModalBtn');
