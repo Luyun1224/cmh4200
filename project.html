@@ -217,6 +217,8 @@
             { name: '李迎真', group: 'chart-review' }, { name: '林盟淦', group: 'chart-review' },
         ];
 
+        const localProfileImages = { '盧英云': 'Lulu.JPG' };
+
         const groupData = {
             'all': '全部', 'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
             'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
@@ -331,7 +333,7 @@
             teamMembersDiv.innerHTML = members.map(name => {
                 const memberItems = allItems.filter(t => t.assignees.includes(name) || t.collaborators.includes(name));
                 const overdueCount = memberItems.filter(t => t.status === 'overdue').length;
-                
+
                 const projectCount = memberItems.filter(item => item.type === 'project').length;
                 const taskCount = memberItems.filter(item => item.type === 'task').length;
                 const activityCount = memberItems.filter(item => item.type === 'activity').length;
@@ -341,7 +343,7 @@
                 return `
                 <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-blue-100' : 'hover:bg-gray-50'}">
                     <div class="flex items-center min-w-0">
-                        <div class="w-10 h-10 bg-sky-500 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div>
+                        ${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover flex-shrink-0" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div>`}
                         <div class="ml-3 min-w-0">
                             <p class="font-medium text-gray-900 truncate">${name}</p>
                             <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1">
