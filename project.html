@@ -608,6 +608,7 @@
             const overdueList = overdueItems.map(i => i.name).join(', ') || '無';
             const highRiskList = highRiskItems.map(i => `${i.name} - ${i.progress}%`).join(', ') || '無';
 
+            // Calculate members with heavy workload, if needed for future use
             const overloadMembers = staffData.map(staff => {
                 const items = allActivities.filter(it =>
                     (it.assignees && it.assignees.includes(staff.name)) ||
@@ -631,7 +632,6 @@
                 <h3><strong>2. 風險評估與進度落後預警</strong></h3>
                 <p><span class="text-red-600 font-semibold">逾期項目</span>：${overdueList}</p>
                 <p><span class="text-orange-600 font-semibold">高風險項目</span>：${highRiskList}</p>
-                <p><span class="text-purple-600 font-semibold">可能過勞成員</span>：${overloadList}</p>
                 <h3><strong>3. 高階經理人決策建議</strong></h3>
                 <p>請優先處理逾期與高風險項目，並重新檢視資源分配，避免關鍵成員過勞。</p>
             `;
