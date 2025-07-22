@@ -15,7 +15,7 @@
             background-color: rgb(20, 53, 114); /* 深藍色 */
             color: white;
         }
-        #loginModal, #aiModal, #activityModal, #loadingOverlay { z-index: 50; }
+        #loginModal, #aiModal, #activityModal, #weeklySummaryModal, #loadingOverlay { z-index: 50; }
         .ai-content h3, .activity-content h3 { 
             font-size: 1.25rem; /* text-xl */
             font-weight: 700; /* font-bold */
@@ -139,6 +139,17 @@
             <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content">
                 <!-- Calendar and List will be rendered here -->
             </div>
+        </div>
+    </div>
+
+    <!-- Weekly Summary Modal -->
+    <div id="weeklySummaryModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-clipboard-list text-green-500 mr-3"></i>本週重點</h2>
+                <button id="closeWeeklySummaryBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div id="weekly-summary-content" class="overflow-y-auto text-gray-700 leading-relaxed space-y-2"></div>
         </div>
     </div>
 
@@ -892,6 +903,38 @@ ${summary}
             closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
         }
 
+        function setupWeeklySummaryModal() {
+            const modal = document.getElementById('weeklySummaryModal');
+            const closeBtn = document.getElementById('closeWeeklySummaryBtn');
+            closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+        }
+
+        function showWeeklySummary() {
+            const modal = document.getElementById('weeklySummaryModal');
+            const content = document.getElementById('weekly-summary-content');
+
+            const start = new Date(currentDate);
+            start.setHours(0,0,0,0);
+            const end = new Date(start);
+            end.setDate(end.getDate() + 7);
+
+            const upcoming = allActivities.filter(item => {
+                if (!item.startDate) return false;
+                const d = new Date(item.startDate);
+                return d >= start && d < end;
+            });
+
+            if (upcoming.length === 0) {
+                content.innerHTML = '<p class="text-center text-gray-600">本週沒有排定的項目。</p><p class="text-center mt-4 font-semibold">大家加油！💪</p>';
+            } else {
+                const list = upcoming.map(i => `<li>${i.name} (${getTypeText(i.type)}) - ${formatDate(i.startDate)}</li>`).join('');
+                content.innerHTML = `<ul class="list-disc pl-5 space-y-1">${list}</ul><p class="text-center mt-4 font-semibold">大家加油！💪</p>`;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
         function setupScrollToTop() {
             const scrollToTopBtn = document.getElementById('scrollToTopBtn');
             if (!scrollToTopBtn) return;
@@ -925,12 +968,14 @@ ${summary}
             setupLoginModal();
             setupAiModal();
             setupActivityModal();
+            setupWeeklySummaryModal();
             setupScrollToTop(); // Set up the scroll-to-top button
 
             // Show loading indicator and fetch data
             loadingOverlay.classList.remove('hidden');
             try {
                 await refreshData(); // Initial data load
+                showWeeklySummary();
                 if (paramStatus) {
                     const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
                     if (btn) filterItemsByStatus(paramStatus, { target: btn });
