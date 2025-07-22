@@ -322,6 +322,7 @@
                             <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${getTypeStyle(item.type)}">(${getTypeText(item.type)})</span></h4>
                             ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
                             <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
+                            ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}
                         </div>
                         <div class="flex items-center space-x-2">
                             <span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(item.priority)}">${getPriorityText(item.priority)}</span>
@@ -707,6 +708,7 @@
                                `<p class="font-semibold text-gray-800">${item.name}</p>`+
                                `<p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>`+
                                `<p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>`+
+                               `${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}`+
                                `</div>`+
                                `</li>`;
                     }).join('');
