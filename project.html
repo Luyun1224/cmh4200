@@ -308,15 +308,13 @@
                 return result.data.map(item => {
                     const progress = item.progress;
                     const deadline = item.deadline ? new Date(item.deadline) : null;
-                    const startDate = item.startDate ? new Date(item.startDate) : null;
-                    let finalStatus = 'active'; // Default to active
+
+                    let finalStatus = item.status || 'active';
 
                     if (progress === 100) {
                         finalStatus = 'completed';
-                    } else if (deadline && deadline < today) {
+                    } else if (finalStatus !== 'completed' && deadline && deadline < today) {
                         finalStatus = 'overdue';
-                    } else if (item.status === 'planning' || (startDate && startDate > today)) {
-                        finalStatus = 'planning';
                     }
 
                     return { ...item, status: finalStatus };
@@ -348,6 +346,8 @@
 
             if (currentStatusFilter !== 'all') {
                 filteredItems = itemsToRender.filter(p => p.status === currentStatusFilter);
+            } else {
+                filteredItems = itemsToRender.filter(p => p.status !== 'completed');
             }
 
             if (filteredItems.length === 0) {
