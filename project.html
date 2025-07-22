@@ -20,8 +20,6 @@
             font-size: 1.25rem; /* text-xl */
             font-weight: 700; /* font-bold */
             margin-top: 1.5rem; /* mt-6 */
-           font-weight: 700; /* font-bold */
-            margin-top: 1.5rem; /* mt-6 */
             margin-bottom: 1rem; /* mb-4 */
             border-bottom: 1px solid #e5e7eb; /* border-b */
             padding-bottom: 0.5rem; /* pb-2 */
@@ -243,6 +241,10 @@
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let allActivities = []; // This will hold all data from the server
+        
+        // This constant represents the current date for all calculations.
+        // Set to the user-provided context: July 22, 2025.
+        const currentDate = new Date('2025-07-22T21:21:00+08:00');
 
         const staffData = [
             { name: '廖家德', group: 'teaching-center' }, { name: '劉雯', group: 'teaching-center' }, { name: '楊依玲', group: 'teaching-center' }, { name: '高瑞穗', group: 'teaching-center' },
@@ -255,7 +257,7 @@
             { name: '李迎真', group: 'chart-review' }, { name: '林盟淦', group: 'chart-review' },
         ];
 
-        const localProfileImages = { '盧英云': 'Lulu.JPG' };
+        const localProfileImages = { '盧英云': 'https://raw.githubusercontent.com/luyun1224/cmh4200/main/Lulu.JPG' };
 
         const groupData = {
             'all': '全部', 'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
@@ -269,7 +271,7 @@
         let currentMemberFilter = 'all';
         let currentYearFilter = 'all';
         let currentSearchTerm = '';
-        let calendarDate = new Date(); // State for the activity calendar
+        let calendarDate = new Date(currentDate); // State for the activity calendar, initialized to the current context date
 
         // --- Helper Functions ---
         const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
@@ -302,7 +304,7 @@
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
                 
-                const today = new Date();
+                const today = new Date(currentDate); // Use the fixed current date
                 today.setHours(0, 0, 0, 0); 
 
                 return result.data.map(item => {
@@ -344,9 +346,11 @@
             const itemsList = document.getElementById('itemsList');
             let filteredItems = itemsToRender;
 
+            // Apply status filter. If 'all', show everything except 'completed'.
             if (currentStatusFilter !== 'all') {
                 filteredItems = itemsToRender.filter(p => p.status === currentStatusFilter);
             } else {
+                // By default, the 'all' view hides completed tasks to focus on active work.
                 filteredItems = itemsToRender.filter(p => p.status !== 'completed');
             }
 
@@ -408,7 +412,7 @@
                 return `
                 <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${isActive ? 'bg-blue-100 shadow-sm' : 'hover:bg-gray-50 hover:shadow-sm hover:translate-x-1'}">
                     <div class="flex items-center min-w-0">
-                        ${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover flex-shrink-0" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold">${name.charAt(0)}</div>`}
+                        ${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover flex-shrink-0" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}
                         <div class="ml-3 min-w-0">
                             <p class="font-medium text-gray-900 truncate">${name}</p>
                             <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1">
@@ -589,9 +593,13 @@
             const overdueItems = allActivities.filter(item => item.status === 'overdue');
             const planningItems = allActivities.filter(item => item.status === 'planning');
             const activeItems = allActivities.filter(item => item.status === 'active');
+            
+            const fourteenDaysFromNow = new Date(currentDate);
+            fourteenDaysFromNow.setDate(currentDate.getDate() + 14);
+
             const highRiskItems = allActivities.filter(item =>
-                new Date(item.deadline) > new Date() &&
-                new Date(item.deadline) < new Date(new Date().setDate(new Date().getDate() + 14)) &&
+                new Date(item.deadline) > currentDate &&
+                new Date(item.deadline) < fourteenDaysFromNow &&
                 item.progress < 50
             );
 
@@ -602,38 +610,33 @@
             const planningCount = planningItems.length;
 
             const ragStatus = overdueCount > 0 ? '🔴 紅色警示' :
-                               highRiskItems.length > 0 ? '🟠 黃色觀察' :
-                               planningCount > 0 ? '🔵 藍色規劃' : '🟢 綠色完成';
+                                  highRiskItems.length > 0 ? '🟠 黃色觀察' :
+                                  planningCount > 0 ? '� 藍色規劃' : '🟢 綠色正常';
 
-            const overdueList = overdueItems.map(i => i.name).join(', ') || '無';
-            const highRiskList = highRiskItems.map(i => `${i.name} - ${i.progress}%`).join(', ') || '無';
-
-            // Calculate members with heavy workload, if needed for future use
-            const overloadMembers = staffData.map(staff => {
-                const items = allActivities.filter(it =>
-                    (it.assignees && it.assignees.includes(staff.name)) ||
-                    (it.collaborators && it.collaborators.includes(staff.name))
-                );
-                const load = items.filter(it => ['active', 'planning', 'overdue'].includes(it.status)).length;
-                const overdue = items.filter(it => it.status === 'overdue').length;
-                return { name: staff.name, load, overdue };
-            }).filter(m => m.load >= 5 || m.overdue >= 2);
-            const overloadList = overloadMembers.map(m => `${m.name}(${m.load})`).join(', ') || '無';
+            const overdueList = overdueItems.map(i => i.name).join('、 ') || '無';
+            const highRiskList = highRiskItems.map(i => `${i.name} (進度 ${i.progress}%)`).join('、 ') || '無';
 
             return `
                 <h3><strong>1. 專案組合健康度速覽 (RAG 分析)</strong></h3>
-                <p>整體狀態：${ragStatus}</p>
-                <ul class="list-disc ml-5 space-y-1">
-                    <li><span class="text-red-600 font-semibold">紅色警示</span>：${overdueCount} 項</li>
-                    <li><span class="text-yellow-600 font-semibold">黃色觀察</span>：${activeCount} 項</li>
-                    <li><span class="text-blue-600 font-semibold">藍色規劃</span>：${planningCount} 項</li>
-                    <li><span class="text-green-600 font-semibold">綠色完成</span>：${completedCount} 項</li>
+                <p><strong>整體狀態：</strong>${ragStatus}</p>
+                <p>基於目前的數據，專案組合的健康狀況需要關注。有 ${overdueCount} 個項目已逾期，建議立即採取行動。</p>
+                <ul class="list-disc ml-5 space-y-1 mt-2">
+                    <li><strong class="text-red-600">紅色警示 (已逾期):</strong> ${overdueCount} 項</li>
+                    <li><strong class="text-yellow-600">黃色觀察 (有風險):</strong> ${highRiskItems.length} 項</li>
+                    <li><strong class="text-blue-600">藍色規劃 (規劃中):</strong> ${planningCount} 項</li>
+                    <li><strong class="text-green-600">綠色正常 (進行中/已完成):</strong> ${activeCount + completedCount} 項</li>
                 </ul>
+
                 <h3><strong>2. 風險評估與進度落後預警</strong></h3>
-                <p><span class="text-red-600 font-semibold">逾期項目</span>：${overdueList}</p>
-                <p><span class="text-orange-600 font-semibold">高風險項目</span>：${highRiskList}</p>
+                <p><strong>已逾期項目：</strong><span class="text-red-700 font-semibold">${overdueList}</span>。這些項目已超出預計時程，可能影響後續計畫，需立即檢討。</p>
+                <p><strong>高風險項目 (14天內到期且進度 < 50%)：</strong><span class="text-yellow-700 font-semibold">${highRiskList}</span>。這些項目有極高的延期風險，需密切監控。</p>
+                
                 <h3><strong>3. 高階經理人決策建議</strong></h3>
-                <p>請優先處理逾期與高風險項目，並重新檢視資源分配，避免關鍵成員過勞。</p>
+                <ol class="list-decimal ml-5 space-y-2">
+                    <li><strong>立即行動：</strong>針對「${overdueList}」等逾期項目，建議指派專案負責人召開緊急會議，釐清延誤原因並制定補救計畫。</li>
+                    <li><strong>資源審查：</strong>評估高風險項目「${highRiskList}」的資源是否充足，考慮是否需要重新分配人力或提供額外支援以確保如期完成。</li>
+                    <li><strong>預防措施：</strong>分析本次逾期與高風險項目的共同原因（如：範疇不清、資源不足），作為未來專案規劃的參考，以降低未來風險。</li>
+                </ol>
             `;
         }
 
@@ -643,7 +646,7 @@
             const aiBtn = document.getElementById('aiBtn');
             const aiDataDate = document.getElementById('aiDataDate');
             
-            aiDataDate.textContent = `(數據更新至 ${new Date().toLocaleDateString('zh-TW')})`;
+            aiDataDate.textContent = `(數據更新至 ${currentDate.toLocaleDateString('zh-TW')})`;
             aiDataDate.classList.remove('hidden');
 
             aiContent.innerHTML = `<div class="flex justify-center items-center h-full"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="ml-3">AI 正在分析數據，請稍候...</p></div>`;
@@ -651,8 +654,11 @@
             aiBtn.disabled = true;
 
             try {
+                const fourteenDaysFromNow = new Date(currentDate);
+                fourteenDaysFromNow.setDate(currentDate.getDate() + 14);
+
                 const overdueItems = allActivities.filter(item => item.status === 'overdue');
-                const highRiskItems = allActivities.filter(item => new Date(item.deadline) > new Date() && new Date(item.deadline) < new Date(new Date().setDate(new Date().getDate() + 14)) && item.progress < 50);
+                const highRiskItems = allActivities.filter(item => new Date(item.deadline) > currentDate && new Date(item.deadline) < fourteenDaysFromNow && item.progress < 50);
                 
                 const summary = `
                     - 總項目數: ${allActivities.length}
@@ -680,13 +686,16 @@
 
                 if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
                     const text = result.candidates[0].content.parts[0].text;
+                    // Use regex to format titles and replace newlines with <br> for HTML display.
                     aiContent.innerHTML = text.replace(/### (.*?)\n/g, '<h3>$1</h3>').replace(/\n/g, '<br>');
                 } else {
                     console.error("AI API Response Error:", JSON.stringify(result, null, 2));
+                    // Fallback to local summary if API fails
                     aiContent.innerHTML = generateLocalAiSummary();
                 }
             } catch (error) {
                 console.error('AI Suggestion Error:', error);
+                // Fallback to local summary on network error
                 aiContent.innerHTML = generateLocalAiSummary();
             } finally {
                 aiBtn.disabled = false;
@@ -772,7 +781,7 @@
 
         function openActivityModal(resetDate = true) {
             if (resetDate) {
-                calendarDate = new Date();
+                calendarDate = new Date(currentDate);
             }
             const modal = document.getElementById('activityModal');
             const content = document.getElementById('activity-content');
@@ -792,7 +801,7 @@
                 return;
             }
 
-            const today = new Date();
+            const today = new Date(currentDate);
             today.setHours(0,0,0,0);
 
             const sortedItems = itemsForDisplay.slice().sort((a, b) => {
