@@ -188,7 +188,7 @@
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-full">
                     <div class="p-6 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">小組成員</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">教學中心成員</h3>
                     </div>
                     <div class="p-6">
                         <div id="teamMembers" class="space-y-2">
@@ -426,13 +426,12 @@
         }
 
         function updateStats(itemsToCount) {
-            const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
             const activities = itemsToCount.filter(item => item.type && item.type.toLowerCase() === 'activity');
 
-            document.getElementById('totalTasks').textContent = projectsAndTasks.length;
-            document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
-            document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
-            document.getElementById('completedTasks').textContent = projectsAndTasks.filter(t => t.status === 'completed').length;
+            document.getElementById('totalTasks').textContent = itemsToCount.length;
+            document.getElementById('activeTasks').textContent = itemsToCount.filter(t => t.status === 'active').length;
+            document.getElementById('overdueTasks').textContent = itemsToCount.filter(t => t.status === 'overdue').length;
+            document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
             document.getElementById('activityCount').textContent = activities.length;
         }
 
