@@ -205,49 +205,28 @@
                     <div onclick="openActivityModal()" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動總數</p><p class="text-3xl font-bold text-purple-600" id="activityCount">0</p></div><div class="bg-purple-100 p-3 rounded-lg"><span class="text-2xl">📅</span></div></div></div>
                 </div>
                 
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    <!-- Item List -->
-                    <div class="xl:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div class="p-6 border-b border-gray-100">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <h2 class="text-xl font-semibold text-gray-900 flex-shrink-0">項目概覽</h2>
-                                <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
-                                    <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700">全部</button>
-                                    <button onclick="filterItemsByStatus('planning', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">規劃中</button>
-                                    <button onclick="filterItemsByStatus('not-started', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">未開始</button>
-                                    <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">進行中</button>
-                                    <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">已完成</button>
-                                    <button onclick="filterItemsByStatus('overdue', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">逾期</button>
-                                </div>
+                <!-- Item List -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <h2 class="text-xl font-semibold text-gray-900 flex-shrink-0">項目概覽</h2>
+                            <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
+                                <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700">全部</button>
+                                <button onclick="filterItemsByStatus('planning', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">規劃中</button>
+                                <button onclick="filterItemsByStatus('not-started', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">未開始</button>
+                                <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">進行中</button>
+                                <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">已完成</button>
+                                <button onclick="filterItemsByStatus('overdue', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">逾期</button>
                             </div>
                         </div>
-                        <div class="p-6"><div id="itemsList" class="space-y-4"></div></div>
                     </div>
-                    <!-- Progress Bars -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold text-gray-900">整體進度</h3></div>
-                        <div class="p-6 space-y-8">
-                            <div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <h4 class="text-md font-medium text-gray-700">專案平均進度</h4>
-                                    <span id="projectProgressText" class="font-semibold text-blue-600">0%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-4">
-                                    <div id="projectProgressBar" class="progress-bar h-4 rounded-full bg-blue-600" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <h4 class="text-md font-medium text-gray-700">任務平均進度</h4>
-                                    <span id="taskProgressText" class="font-semibold text-green-600">0%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-4">
-                                    <div id="taskProgressBar" class="progress-bar h-4 rounded-full bg-green-600" style="width: 0%"></div>
-                                </div>
-                            </div>
+                    <div class="p-6">
+                        <div id="itemsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <!-- Items will be generated here -->
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </main>
@@ -313,26 +292,30 @@
                 }
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
-                // Adjust status based on start date and progress
+                
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // ignore time when comparing dates
+                today.setHours(0, 0, 0, 0); 
+
                 return result.data.map(item => {
+                    let status;
+                    const progress = item.progress;
+                    const deadline = item.deadline ? new Date(item.deadline) : null;
                     const startDate = item.startDate ? new Date(item.startDate) : null;
-                    const isFutureStart = startDate && startDate > today;
 
-                    let status = item.status;
-
-                    if (item.status === 'active' && item.progress === 0) {
-                        status = isFutureStart ? 'not-started' : 'active';
-                    } else if (item.status === 'not-started' && !isFutureStart) {
+                    if (progress === 100) {
+                        status = 'completed';
+                    } else if (deadline && deadline < today && progress < 100) {
+                        status = 'overdue';
+                    } else if (startDate && startDate > today) {
+                        status = 'not-started';
+                    } else {
                         status = 'active';
                     }
-
+                    
                     return { ...item, status };
                 });
             } catch (error) {
                 console.error("Failed to fetch items:", error);
-                // Re-throw the error to be caught by the caller
                 throw error;
             }
         }
@@ -361,31 +344,35 @@
             }
 
             if (filteredItems.length === 0) {
-                itemsList.innerHTML = `<p class="text-center text-gray-500 py-4">沒有符合條件的項目</p>`;
+                itemsList.innerHTML = `<p class="text-center text-gray-500 py-4 col-span-full">沒有符合條件的項目</p>`;
                 return;
             }
 
             itemsList.innerHTML = filteredItems.map(item => `
-                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex-1">
-                            <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${getTypeStyle(item.type)}">(${getTypeText(item.type)})</span></h4>
-                            ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
-                            <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
-                            ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(item.priority)}">${getPriorityText(item.priority)}</span>
-                            <span class="flex items-center text-sm"><span class="status-dot ${getStatusColor(item.status)}"></span>${getStatusText(item.status)}</span>
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow flex flex-col h-full">
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${getTypeStyle(item.type)}">(${getTypeText(item.type)})</span></h4>
+                                ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
+                                <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
+                                ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(item.priority)}">${getPriorityText(item.priority)}</span>
+                                <span class="flex items-center text-sm"><span class="status-dot ${getStatusColor(item.status)}"></span>${getStatusText(item.status)}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <div class="flex justify-between text-sm mb-1"><span>進度</span><span>${item.progress}%</span></div>
-                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="progress-bar h-2 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div>
-                    </div>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : (item.type === 'activity' ? '迄今 (進行中)' : '迄今')}</span>
-                        ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
+                    <div>
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1"><span>進度</span><span>${item.progress}%</span></div>
+                            <div class="w-full bg-gray-200 rounded-full h-2"><div class="progress-bar h-2 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : (item.type === 'activity' ? '迄今 (進行中)' : '迄今')}</span>
+                            ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
+                        </div>
                     </div>
                 </div>`).join('');
         }
@@ -438,19 +425,6 @@
             document.getElementById('activityCount').textContent = activities.length;
         }
 
-        function updateProgressBars(itemsForBars) {
-            const projects = itemsForBars.filter(item => item.type === 'project');
-            const tasks = itemsForBars.filter(item => item.type === 'task');
-
-            const avgProjectProgress = projects.length > 0 ? projects.reduce((acc, p) => acc + p.progress, 0) / projects.length : 0;
-            const avgTaskProgress = tasks.length > 0 ? tasks.reduce((acc, t) => acc + t.progress, 0) / tasks.length : 0;
-
-            document.getElementById('projectProgressBar').style.width = `${avgProjectProgress}%`;
-            document.getElementById('projectProgressText').textContent = `${avgProjectProgress.toFixed(1)}%`;
-            document.getElementById('taskProgressBar').style.width = `${avgTaskProgress}%`;
-            document.getElementById('taskProgressText').textContent = `${avgTaskProgress.toFixed(1)}%`;
-        }
-
         // --- Event Handlers & Main Logic ---
         function renderDashboard() {
             // 1. Filter by Year
@@ -481,11 +455,17 @@
                 );
             }
 
+            // ** UPDATED: Sort items chronologically by start date **
+            itemsToDisplay.sort((a, b) => {
+                if (!a.startDate) return 1;  // Move items without a start date to the end
+                if (!b.startDate) return -1; // Move items without a start date to the end
+                return new Date(a.startDate) - new Date(b.startDate); // Sort from oldest to newest
+            });
+
             // 5. Render all components
             updateStats(itemsToDisplay);
             renderTeamMembers(membersInGroup, itemsForYear);
             renderItems(itemsToDisplay);
-            updateProgressBars(itemsToDisplay);
 
             // 6. Update group tab styles
             document.querySelectorAll('.group-tab-btn').forEach(btn => {
@@ -658,12 +638,8 @@
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                 const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyDpehmvN237MFUJvHJTBDkXDNT0n3o0To8";
-                if (!apiKey) {
-                    aiContent.innerHTML = generateLocalAiSummary();
-                    return;
-                }
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const apiKey = ""; // API key is left empty; it will be injected by the environment.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -750,17 +726,17 @@
                         const day = new Date(item.startDate).getDate();
                         const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
                         return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">`+
-                               `${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}`+
-                               `<div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">`+
-                               `<span class="text-xl font-bold text-purple-700">${day}</span>`+
-                               `</div>`+
-                               `<div class="flex-grow pt-1">`+
-                               `<p class="font-semibold text-gray-800">${item.name}</p>`+
-                               `<p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>`+
-                               `<p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>`+
-                               `${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}`+
-                               `</div>`+
-                               `</li>`;
+                                `${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}`+
+                                `<div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">`+
+                                `<span class="text-xl font-bold text-purple-700">${day}</span>`+
+                                `</div>`+
+                                `<div class="flex-grow pt-1">`+
+                                `<p class="font-semibold text-gray-800">${item.name}</p>`+
+                                `<p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>`+
+                                `<p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>`+
+                                `${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}`+
+                                `</div>`+
+                                `</li>`;
                     }).join('');
                     return `<div class="mt-4"><h3 class="text-2xl font-bold text-purple-700 mb-2">${monthLabel}</h3><ul class="space-y-4">${itemsHtml}</ul></div>`;
                 }).join('');
