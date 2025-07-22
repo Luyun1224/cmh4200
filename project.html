@@ -20,6 +20,8 @@
             font-size: 1.25rem; /* text-xl */
             font-weight: 700; /* font-bold */
             margin-top: 1.5rem; /* mt-6 */
+           font-weight: 700; /* font-bold */
+            margin-top: 1.5rem; /* mt-6 */
             margin-bottom: 1rem; /* mb-4 */
             border-bottom: 1px solid #e5e7eb; /* border-b */
             padding-bottom: 0.5rem; /* pb-2 */
@@ -131,12 +133,14 @@
 
     <!-- Activity Overview Modal -->
     <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
                 <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-calendar-alt text-purple-500 mr-3"></i>活動概覽</h2>
                 <button id="closeActivityModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
-            <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content"></div>
+            <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content">
+                <!-- Calendar and List will be rendered here -->
+            </div>
         </div>
     </div>
 
@@ -265,6 +269,7 @@
         let currentMemberFilter = 'all';
         let currentYearFilter = 'all';
         let currentSearchTerm = '';
+        let calendarDate = new Date(); // State for the activity calendar
 
         // --- Helper Functions ---
         const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
@@ -297,7 +302,25 @@
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
                 
-                return result.data.map(item => ({ ...item, status: item.status }));
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); 
+
+                return result.data.map(item => {
+                    const progress = item.progress;
+                    const deadline = item.deadline ? new Date(item.deadline) : null;
+                    const startDate = item.startDate ? new Date(item.startDate) : null;
+                    let finalStatus = 'active'; // Default to active
+
+                    if (progress === 100) {
+                        finalStatus = 'completed';
+                    } else if (deadline && deadline < today) {
+                        finalStatus = 'overdue';
+                    } else if (item.status === 'planning' || (startDate && startDate > today)) {
+                        finalStatus = 'planning';
+                    }
+
+                    return { ...item, status: finalStatus };
+                });
             } catch (error) {
                 console.error("Failed to fetch items:", error);
                 throw error;
@@ -664,7 +687,74 @@
             });
         }
 
-        function openActivityModal() {
+        // --- Activity Modal & Calendar Logic ---
+        function navigateCalendar(offset) {
+            calendarDate.setMonth(calendarDate.getMonth() + offset);
+            openActivityModal(false); // false indicates not to reset the date
+        }
+
+        function generateCalendarHTML(year, month, activities) {
+            const activitiesByDay = {};
+            activities.forEach(item => {
+                if (item.startDate) {
+                    const d = new Date(item.startDate);
+                    if (d.getFullYear() === year && d.getMonth() === month) {
+                        const day = d.getDate();
+                        if (!activitiesByDay[day]) {
+                            activitiesByDay[day] = [];
+                        }
+                        activitiesByDay[day].push(item);
+                    }
+                }
+            });
+
+            const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+            const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let calendarHtml = `<div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="navigateCalendar(-1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt;</button>
+                    <h3 class="text-xl font-bold text-purple-700">${year}年 ${monthNames[month]}</h3>
+                    <button onclick="navigateCalendar(1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&gt;</button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-sm">`;
+            
+            daysOfWeek.forEach(day => {
+                calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`;
+            });
+
+            for (let i = 0; i < firstDay; i++) {
+                calendarHtml += `<div></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const activitiesToday = activitiesByDay[day];
+                if (activitiesToday) {
+                    const tooltipHtml = activitiesToday.map(act => `<li class="truncate">${act.name}</li>`).join('');
+                    calendarHtml += `<div class="relative group flex items-center justify-center">
+                        <div class="mx-auto flex items-center justify-center w-8 h-8 rounded-full border-2 border-purple-400 text-purple-700 font-semibold cursor-pointer">${day}</div>
+                        <span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full">${activitiesToday.length}</span>
+                        <div class="absolute bottom-full mb-2 w-56 p-2 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 transform -translate-x-1/2 left-1/2">
+                            <ul class="space-y-1">${tooltipHtml}</ul>
+                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
+                        </div>
+                    </div>`;
+                } else {
+                    calendarHtml += `<div class="flex items-center justify-center w-8 h-8">${day}</div>`;
+                }
+            }
+
+            calendarHtml += `</div></div>`;
+            return calendarHtml;
+        }
+
+        function openActivityModal(resetDate = true) {
+            if (resetDate) {
+                calendarDate = new Date();
+            }
             const modal = document.getElementById('activityModal');
             const content = document.getElementById('activity-content');
 
@@ -675,8 +765,10 @@
                 return yearMatch && groupMatch && typeMatch;
             });
 
+            const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay);
+
             if (itemsForDisplay.length === 0) {
-                content.innerHTML = `<p class="text-center text-gray-500">目前篩選範圍內沒有活動。</p>`;
+                content.innerHTML = calendarHTML + `<p class="text-center text-gray-500 mt-4">目前篩選範圍內沒有活動。</p>`;
                 modal.classList.remove('hidden');
                 return;
             }
@@ -685,18 +777,8 @@
             today.setHours(0,0,0,0);
 
             const sortedItems = itemsForDisplay.slice().sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
-            const upcoming = [];
-            const expired = [];
-            sortedItems.forEach(item => {
-                const endDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate);
-                if (endDate < today) {
-                    expired.push(item);
-                } else {
-                    upcoming.push(item);
-                }
-            });
-
-            const buildList = (arr, isExpired = false) => {
+            
+            const buildList = (arr) => {
                 const groups = {};
                 arr.forEach(item => {
                     const d = new Date(item.startDate);
@@ -706,12 +788,16 @@
                 });
 
                 const keys = Object.keys(groups).sort((a,b) => new Date(a+"-01") - new Date(b+"-01"));
+                if (keys.length === 0) return '<p class="text-center text-gray-500 mt-4">此月份沒有活動列表。</p>';
+
                 return keys.map(k => {
                     const [y,m] = k.split('-');
                     const monthLabel = `${y}年${m}月`;
                     const itemsHtml = groups[k].map(item => {
                         const day = new Date(item.startDate).getDate();
                         const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
+                        const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
+
                         return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">`+
                                 `${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}`+
                                 `<div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">`+
@@ -729,9 +815,10 @@
                 }).join('');
             };
 
-            content.innerHTML = `<div class="space-y-6">${buildList(upcoming)}${buildList(expired, true)}</div>`;
+            content.innerHTML = calendarHTML + `<hr class="my-6"/>` + `<div class="space-y-6">${buildList(sortedItems)}</div>`;
             modal.classList.remove('hidden');
         }
+
         function setupActivityModal() {
             const modal = document.getElementById('activityModal');
             const closeBtn = document.getElementById('closeActivityModalBtn');
