@@ -297,27 +297,7 @@
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
                 
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); 
-
-                return result.data.map(item => {
-                    let status;
-                    const progress = item.progress;
-                    const deadline = item.deadline ? new Date(item.deadline) : null;
-                    const startDate = item.startDate ? new Date(item.startDate) : null;
-
-                    if (progress === 100) {
-                        status = 'completed';
-                    } else if (deadline && deadline < today && progress < 100) {
-                        status = 'overdue';
-                    } else if (startDate && startDate > today) {
-                        status = 'planning';
-                    } else {
-                        status = 'active';
-                    }
-                    
-                    return { ...item, status };
-                });
+                return result.data.map(item => ({ ...item, status: item.status }));
             } catch (error) {
                 console.error("Failed to fetch items:", error);
                 throw error;
