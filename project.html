@@ -12,7 +12,7 @@
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .progress-bar { transition: width 0.5s ease-in-out; }
         .tab-active {
-            background-color: #3b82f6; /* bg-blue-600 */
+            background-color: rgb(20, 53, 114); /* 深藍色 */
             color: white;
         }
         #loginModal, #aiModal, #activityModal, #loadingOverlay { z-index: 50; }
@@ -29,6 +29,56 @@
         .filter-btn.active {
             font-weight: 600;
         }
+        :root {
+            --deep-blue: rgb(20, 53, 114);
+            --dark-maroon: rgb(165, 35, 38);
+            --orange-yellow: rgb(248, 181, 44);
+            --dark-green: rgb(16, 106, 63);
+            --lime-green: rgb(193, 201, 39);
+            --light-blue: rgb(195, 223, 229);
+            --light-purple: rgb(173, 145, 195);
+            --dark-gray: rgb(62, 58, 56);
+        }
+
+        /* Blue */
+        .text-blue-500, .text-blue-600, .text-blue-700 { color: var(--deep-blue) !important; }
+        .bg-blue-500, .bg-blue-600, .bg-blue-700 { background-color: var(--deep-blue) !important; }
+        .bg-sky-500 { background-color: var(--deep-blue) !important; }
+        .hover\:bg-blue-700:hover { background-color: var(--deep-blue) !important; }
+        .border-blue-500, .border-blue-600 { border-color: var(--deep-blue) !important; }
+        .focus\:ring-blue-500:focus { --tw-ring-color: var(--deep-blue); }
+        .focus\:border-blue-500:focus { border-color: var(--deep-blue); }
+        .bg-blue-100 { background-color: var(--light-blue) !important; }
+
+        /* Red */
+        .text-red-500, .text-red-600, .text-red-700 { color: var(--dark-maroon) !important; }
+        .bg-red-500, .bg-red-600 { background-color: var(--dark-maroon) !important; }
+        .hover\:bg-red-700:hover { background-color: var(--dark-maroon) !important; }
+        .border-red-500, .border-red-600 { border-color: var(--dark-maroon) !important; }
+        .bg-red-100 { background-color: rgba(165, 35, 38, 0.1) !important; }
+
+        /* Yellow */
+        .text-yellow-500, .text-yellow-600, .text-yellow-700 { color: var(--orange-yellow) !important; }
+        .bg-yellow-500, .bg-yellow-600 { background-color: var(--orange-yellow) !important; }
+        .border-yellow-500, .border-yellow-600 { border-color: var(--orange-yellow) !important; }
+        .bg-yellow-100 { background-color: rgba(248, 181, 44, 0.1) !important; }
+
+        /* Green */
+        .text-green-500, .text-green-600, .text-green-700 { color: var(--dark-green) !important; }
+        .bg-green-500, .bg-green-600 { background-color: var(--dark-green) !important; }
+        .hover\:bg-green-700:hover { background-color: var(--dark-green) !important; }
+        .border-green-500, .border-green-600 { border-color: var(--dark-green) !important; }
+        .bg-green-100 { background-color: var(--lime-green) !important; }
+
+        /* Purple */
+        .text-purple-500, .text-purple-600, .text-purple-700 { color: var(--light-purple) !important; }
+        .bg-purple-500, .bg-purple-600, .bg-purple-700 { background-color: var(--light-purple) !important; }
+        .hover\:bg-purple-700:hover { background-color: var(--light-purple) !important; }
+        .bg-purple-100 { background-color: rgba(173, 145, 195, 0.2) !important; }
+
+        /* Gray */
+        .text-gray-800, .text-gray-900,
+        .text-slate-800, .text-slate-900 { color: var(--dark-gray) !important; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
