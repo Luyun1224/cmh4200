@@ -122,6 +122,20 @@
         <!-- Items List -->
         <div class="bg-white rounded-xl shadow-lg p-6">
              <h2 class="text-xl font-semibold text-gray-800 mb-4">現有項目列表</h2>
+             <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <div>
+                    <label for="filter-group" class="block text-sm font-medium text-gray-700 mb-1">所屬小組</label>
+                    <select id="filter-group" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-assignee" class="block text-sm font-medium text-gray-700 mb-1">負責人</label>
+                    <select id="filter-assignee" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+             </div>
              <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-500">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -163,6 +177,9 @@
             'allied-health': '醫事人員訓練小組', 'chart-review': '病歷審查小組'
         };
 
+        let currentGroupFilter = 'all';
+        let currentAssigneeFilter = 'all';
+
         // --- DOM Elements ---
         const form = document.getElementById('item-form');
         const formTitle = document.getElementById('form-title');
@@ -176,6 +193,8 @@
         const assigneesSelect = document.getElementById('item-assignees');
         const collaboratorsSelect = document.getElementById('item-collaborators');
         const tableBody = document.getElementById('items-table-body');
+        const filterGroupSelect = document.getElementById('filter-group');
+        const filterAssigneeSelect = document.getElementById('filter-assignee');
 
         // --- API Communication ---
         async function handleApiRequest(action, payload, buttonElement) {
@@ -252,9 +271,19 @@
             otherOption.textContent = '-- 其他 (自行輸入) --';
             groupSelect.appendChild(otherOption);
 
+            filterGroupSelect.innerHTML = '<option value="all">全部</option>';
+            for (const [key, value] of Object.entries(groupData)) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = value;
+                filterGroupSelect.appendChild(opt);
+            }
+
             assigneesSelect.innerHTML = '';
             collaboratorsSelect.innerHTML = '';
-            
+
+            filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
+
             const allStaffOption1 = document.createElement('option');
             allStaffOption1.value = '全體同仁';
             allStaffOption1.textContent = '全體同仁';
@@ -275,6 +304,11 @@
                 option2.value = staff.name;
                 option2.textContent = staff.name;
                 collaboratorsSelect.appendChild(option2);
+
+                const opt3 = document.createElement('option');
+                opt3.value = staff.name;
+                opt3.textContent = staff.name;
+                filterAssigneeSelect.appendChild(opt3);
             });
         }
         
@@ -291,8 +325,16 @@
             }
         }
 
-        function renderTable() {
-            tableBody.innerHTML = activities.map(item => {
+       function renderTable() {
+            let filtered = activities;
+            if (currentGroupFilter !== 'all') {
+                filtered = filtered.filter(i => i.group === currentGroupFilter);
+            }
+            if (currentAssigneeFilter !== 'all') {
+                filtered = filtered.filter(i => i.assignees.includes(currentAssigneeFilter));
+            }
+
+            tableBody.innerHTML = filtered.map(item => {
                 const groupName = groupData[item.group] || item.group;
                 const assigneesText = item.assignees.join(', ') || 'N/A';
                 const collaboratorsText = item.collaborators.join(', ') || '無';
@@ -311,10 +353,10 @@
                     </td>
                 </tr>
             `}).join('');
-             if (activities.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">尚未建立任何項目</td></tr>`;
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">沒有符合條件的項目</td></tr>`;
             }
-        }
+       }
         
         function resetForm() {
             form.reset();
@@ -428,6 +470,16 @@
             } else {
                 otherGroupWrapper.classList.add('hidden');
             }
+        });
+
+        filterGroupSelect.addEventListener('change', (e) => {
+            currentGroupFilter = e.target.value;
+            renderTable();
+        });
+
+        filterAssigneeSelect.addEventListener('change', (e) => {
+            currentAssigneeFilter = e.target.value;
+            renderTable();
         });
 
         form.addEventListener('submit', async (e) => {
