@@ -587,6 +587,8 @@
         // --- AI Suggestion Logic ---
         function generateLocalAiSummary() {
             const overdueItems = allActivities.filter(item => item.status === 'overdue');
+            const planningItems = allActivities.filter(item => item.status === 'planning');
+            const activeItems = allActivities.filter(item => item.status === 'active');
             const highRiskItems = allActivities.filter(item =>
                 new Date(item.deadline) > new Date() &&
                 new Date(item.deadline) < new Date(new Date().setDate(new Date().getDate() + 14)) &&
@@ -594,26 +596,44 @@
             );
 
             const total = allActivities.length;
-            const activeCount = allActivities.filter(i => i.status === 'active').length;
             const completedCount = allActivities.filter(i => i.status === 'completed').length;
             const overdueCount = overdueItems.length;
+            const activeCount = activeItems.length;
+            const planningCount = planningItems.length;
 
-            const overdueRatio = total > 0 ? overdueCount / total : 0;
-            const ragStatus = overdueRatio > 0.2 ? '🔴 紅色警戒' :
-                              overdueRatio > 0.1 ? '🟠 黃色觀察' : '🟢 綠色正常';
+            const ragStatus = overdueCount > 0 ? '🔴 紅色警示' :
+                               highRiskItems.length > 0 ? '🟠 黃色觀察' :
+                               planningCount > 0 ? '🔵 藍色規劃' : '🟢 綠色完成';
 
             const overdueList = overdueItems.map(i => i.name).join(', ') || '無';
             const highRiskList = highRiskItems.map(i => `${i.name} - ${i.progress}%`).join(', ') || '無';
 
+            const overloadMembers = staffData.map(staff => {
+                const items = allActivities.filter(it =>
+                    (it.assignees && it.assignees.includes(staff.name)) ||
+                    (it.collaborators && it.collaborators.includes(staff.name))
+                );
+                const load = items.filter(it => ['active', 'planning', 'overdue'].includes(it.status)).length;
+                const overdue = items.filter(it => it.status === 'overdue').length;
+                return { name: staff.name, load, overdue };
+            }).filter(m => m.load >= 5 || m.overdue >= 2);
+            const overloadList = overloadMembers.map(m => `${m.name}(${m.load})`).join(', ') || '無';
+
             return `
-                <h3>1. 專案組合健康度速覽 (RAG 分析)</h3>
+                <h3><strong>1. 專案組合健康度速覽 (RAG 分析)</strong></h3>
                 <p>整體狀態：${ragStatus}</p>
-                <p>總項目數：${total}，進行中：${activeCount}，已完成：${completedCount}，逾期：${overdueCount}</p>
-                <h3>2. 風險評估與進度落後預警</h3>
-                <p>逾期項目：${overdueList}</p>
-                <p>高風險項目 (14天內到期且進度低於50%)：${highRiskList}</p>
-                <h3>3. 高階經理人決策建議</h3>
-                <p>建議優先處理逾期與高風險項目，必要時重新分配資源或召開專案檢討會議以確保進度。</p>
+                <ul class="list-disc ml-5 space-y-1">
+                    <li><span class="text-red-600 font-semibold">紅色警示</span>：${overdueCount} 項</li>
+                    <li><span class="text-yellow-600 font-semibold">黃色觀察</span>：${activeCount} 項</li>
+                    <li><span class="text-blue-600 font-semibold">藍色規劃</span>：${planningCount} 項</li>
+                    <li><span class="text-green-600 font-semibold">綠色完成</span>：${completedCount} 項</li>
+                </ul>
+                <h3><strong>2. 風險評估與進度落後預警</strong></h3>
+                <p><span class="text-red-600 font-semibold">逾期項目</span>：${overdueList}</p>
+                <p><span class="text-orange-600 font-semibold">高風險項目</span>：${highRiskList}</p>
+                <p><span class="text-purple-600 font-semibold">可能過勞成員</span>：${overloadList}</p>
+                <h3><strong>3. 高階經理人決策建議</strong></h3>
+                <p>請優先處理逾期與高風險項目，並重新檢視資源分配，避免關鍵成員過勞。</p>
             `;
         }
 
@@ -647,7 +667,7 @@
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                 const payload = { contents: chatHistory };
-                const apiKey = ""; // API key is left empty; it will be injected by the environment.
+                const apiKey = "AIzaSyDpehmvN237MFUJvHJTBDkXDNT0n3o0To8"; // User-provided Gemini API key
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
