@@ -776,7 +776,15 @@
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            const sortedItems = itemsForDisplay.slice().sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+            const sortedItems = itemsForDisplay.slice().sort((a, b) => {
+                const dateA = new Date(a.startDate);
+                const dateB = new Date(b.startDate);
+                const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
+                const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
+
+                if (isPastA !== isPastB) return isPastA ? 1 : -1;
+                return dateA - dateB;
+            });
             
             const buildList = (arr) => {
                 const groups = {};
