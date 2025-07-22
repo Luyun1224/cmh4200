@@ -248,6 +248,24 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
+    <!-- ChatBot Button -->
+    <button id="openChatBot" title="詢問概況" class="fixed bottom-5 right-20 bg-indigo-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 focus:outline-none z-50">
+        <i class="fas fa-robot"></i>
+    </button>
+
+    <!-- ChatBot Container -->
+    <div id="chatBotContainer" class="hidden fixed bottom-24 right-5 w-80 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col z-50">
+        <div class="flex justify-between items-center bg-indigo-600 text-white px-4 py-2 rounded-t-xl">
+            <span class="font-semibold">小幫手</span>
+            <button id="closeChatBot" class="text-white text-xl leading-none">&times;</button>
+        </div>
+        <div id="chatBotMessages" class="p-4 space-y-2 text-sm overflow-y-auto max-h-60"></div>
+        <form id="chatBotForm" class="flex border-t">
+            <input id="chatBotInput" type="text" placeholder="輸入問題..." class="flex-grow p-2 text-sm focus:outline-none" />
+            <button type="submit" class="px-3 text-indigo-600 font-semibold">送出</button>
+        </form>
+    </div>
+
     <script>
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
@@ -422,7 +440,8 @@
 
                 const projectCount = memberItems.filter(item => item.type === 'project').length;
                 const taskCount = memberItems.filter(item => item.type === 'task').length;
-                const activityCount = memberItems.filter(item => item.type === 'activity' || item.type === 'meeting').length;
+                const activityCount = memberItems.filter(item => item.type === 'activity').length;
+                const meetingCount = memberItems.filter(item => item.type === 'meeting').length;
 
                 const isActive = name === currentMemberFilter;
 
@@ -436,6 +455,7 @@
                                 <span>專案: ${projectCount}</span>
                                 <span>任務: ${taskCount}</span>
                                 <span>活動: ${activityCount}</span>
+                                <span>會議: ${meetingCount}</span>
                             </div>
                         </div>
                     </div>
@@ -959,6 +979,44 @@ ${summary}
             });
         }
 
+        function generateOverview() {
+            const projects = allActivities.filter(i => i.type === 'project').length;
+            const tasks = allActivities.filter(i => i.type === 'task').length;
+            const activities = allActivities.filter(i => i.type === 'activity').length;
+            const meetings = allActivities.filter(i => i.type === 'meeting').length;
+            const active = allActivities.filter(i => i.status === 'active').length;
+            const completed = allActivities.filter(i => i.status === 'completed').length;
+            const overdue = allActivities.filter(i => i.status === 'overdue').length;
+
+            return `本頁目前共有 ${projects + tasks + activities + meetings} 項目，其中專案 ${projects} 件、任務 ${tasks} 件、活動 ${activities} 場、會議 ${meetings} 次。進行中 ${active} 項，已完成 ${completed} 項，逾期 ${overdue} 項。`;
+        }
+
+        function setupChatBot() {
+            const openBtn = document.getElementById('openChatBot');
+            const container = document.getElementById('chatBotContainer');
+            const closeBtn = document.getElementById('closeChatBot');
+            const messages = document.getElementById('chatBotMessages');
+            const form = document.getElementById('chatBotForm');
+            const input = document.getElementById('chatBotInput');
+
+            openBtn.addEventListener('click', () => {
+                container.classList.remove('hidden');
+                messages.innerHTML = `<div class="text-gray-700">🤖 ${generateOverview()}</div>`;
+            });
+
+            closeBtn.addEventListener('click', () => container.classList.add('hidden'));
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = input.value.trim();
+                if (!text) return;
+                messages.innerHTML += `<div class="text-right text-gray-800">${text}</div>`;
+                messages.innerHTML += `<div class="text-gray-700">🤖 ${generateOverview()}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+                input.value = '';
+            });
+        }
+
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', async function() {
             const loadingOverlay = document.getElementById('loadingOverlay');
@@ -977,6 +1035,7 @@ ${summary}
             setupActivityModal();
             setupWeeklySummaryModal();
             setupScrollToTop(); // Set up the scroll-to-top button
+            setupChatBot();
 
             // Show loading indicator and fetch data
             loadingOverlay.classList.remove('hidden');
