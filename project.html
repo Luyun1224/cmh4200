@@ -588,7 +588,7 @@
             });
         }
         
-        // --- AI Suggestion Logic ---
+        // --- AI Suggestion Logic (Fallback and Main Function) ---
         function generateLocalAiSummary() {
             const overdueItems = allActivities.filter(item => item.status === 'overdue');
             const planningItems = allActivities.filter(item => item.status === 'planning');
@@ -603,39 +603,55 @@
                 item.progress < 50
             );
 
-            const total = allActivities.length;
             const completedCount = allActivities.filter(i => i.status === 'completed').length;
-            const overdueCount = overdueItems.length;
-            const activeCount = activeItems.length;
-            const planningCount = planningItems.length;
-
-            const ragStatus = overdueCount > 0 ? '🔴 紅色警示' :
+            const ragStatus = overdueItems.length > 0 ? '🔴 紅色警示' :
                                   highRiskItems.length > 0 ? '🟠 黃色觀察' :
-                                  planningCount > 0 ? '� 藍色規劃' : '🟢 綠色正常';
+                                  planningItems.length > 0 ? '🔵 藍色規劃' : '🟢 綠色正常';
 
-            const overdueList = overdueItems.map(i => i.name).join('、 ') || '無';
-            const highRiskList = highRiskItems.map(i => `${i.name} (進度 ${i.progress}%)`).join('、 ') || '無';
+            // ** Conditional text generation **
+            let riskAssessmentHTML = '';
+            if (overdueItems.length > 0) {
+                riskAssessmentHTML += `<p><strong>已逾期項目：</strong><span class="text-red-700 font-semibold">${overdueItems.map(i => i.name).join('、 ')}</span>。這些項目已超出預計時程，可能影響後續計畫，需立即檢討。</p>`;
+            } else {
+                riskAssessmentHTML += `<p><strong>已逾期項目：</strong><span class="text-green-700 font-semibold">無</span>。目前所有項目皆在時程內，請繼續保持。</p>`;
+            }
+            
+            if (highRiskItems.length > 0) {
+                riskAssessmentHTML += `<p><strong>高風險項目 (14天內到期且進度 < 50%)：</strong><span class="text-yellow-700 font-semibold">${highRiskItems.map(i => i.name).join('、 ')}</span>。這些項目有極高的延期風險，需密切監控。</p>`;
+            } else {
+                 riskAssessmentHTML += `<p><strong>高風險項目：</strong><span class="text-green-700 font-semibold">無</span>。目前沒有進度顯著落後的項目。</p>`;
+            }
+
+            let decisionSuggestionHTML = '';
+            if (overdueItems.length > 0) {
+                decisionSuggestionHTML += `<li><strong>立即行動：</strong>針對「${overdueItems.map(i => i.name).join('、 ')}」等逾期項目，建議指派專案負責人召開緊急會議，釐清延誤原因並制定補救計畫。</li>`;
+            } else {
+                decisionSuggestionHTML += `<li><strong>時程管理：</strong>目前無逾期項目，顯示時程控制得宜。建議持續追蹤各專案進度，確保風險維持在低水平。</li>`;
+            }
+
+            if (highRiskItems.length > 0) {
+                decisionSuggestionHTML += `<li><strong>資源審查：</strong>評估高風險項目「${highRiskItems.map(i => i.name).join('、 ')}」的資源是否充足，考慮是否需要重新分配人力或提供額外支援以確保如期完成。</li>`;
+            }
+            
+            decisionSuggestionHTML += `<li><strong>預防措施：</strong>定期檢視專案資源與範疇，分析潛在風險，作為未來專案規劃的參考，以降低未來風險。</li>`;
+
 
             return `
                 <h3><strong>1. 專案組合健康度速覽 (RAG 分析)</strong></h3>
                 <p><strong>整體狀態：</strong>${ragStatus}</p>
-                <p>基於目前的數據，專案組合的健康狀況需要關注。有 ${overdueCount} 個項目已逾期，建議立即採取行動。</p>
                 <ul class="list-disc ml-5 space-y-1 mt-2">
-                    <li><strong class="text-red-600">紅色警示 (已逾期):</strong> ${overdueCount} 項</li>
+                    <li><strong class="text-red-600">紅色警示 (已逾期):</strong> ${overdueItems.length} 項</li>
                     <li><strong class="text-yellow-600">黃色觀察 (有風險):</strong> ${highRiskItems.length} 項</li>
-                    <li><strong class="text-blue-600">藍色規劃 (規劃中):</strong> ${planningCount} 項</li>
-                    <li><strong class="text-green-600">綠色正常 (進行中/已完成):</strong> ${activeCount + completedCount} 項</li>
+                    <li><strong class="text-blue-600">藍色規劃 (規劃中):</strong> ${planningItems.length} 項</li>
+                    <li><strong class="text-green-600">綠色正常 (進行中/已完成):</strong> ${activeItems.length + completedCount} 項</li>
                 </ul>
 
                 <h3><strong>2. 風險評估與進度落後預警</strong></h3>
-                <p><strong>已逾期項目：</strong><span class="text-red-700 font-semibold">${overdueList}</span>。這些項目已超出預計時程，可能影響後續計畫，需立即檢討。</p>
-                <p><strong>高風險項目 (14天內到期且進度 < 50%)：</strong><span class="text-yellow-700 font-semibold">${highRiskList}</span>。這些項目有極高的延期風險，需密切監控。</p>
+                ${riskAssessmentHTML}
                 
                 <h3><strong>3. 高階經理人決策建議</strong></h3>
                 <ol class="list-decimal ml-5 space-y-2">
-                    <li><strong>立即行動：</strong>針對「${overdueList}」等逾期項目，建議指派專案負責人召開緊急會議，釐清延誤原因並制定補救計畫。</li>
-                    <li><strong>資源審查：</strong>評估高風險項目「${highRiskList}」的資源是否充足，考慮是否需要重新分配人力或提供額外支援以確保如期完成。</li>
-                    <li><strong>預防措施：</strong>分析本次逾期與高風險項目的共同原因（如：範疇不清、資源不足），作為未來專案規劃的參考，以降低未來風險。</li>
+                   ${decisionSuggestionHTML}
                 </ol>
             `;
         }
@@ -668,7 +684,22 @@
                     - 高風險項目 (14天內到期且進度低於50%): ${highRiskItems.length} (${highRiskItems.map(i => `${i.name} - ${i.progress}%`).join(', ') || '無'})
                 `;
 
-                const prompt = `你是一位奇美醫院教學中心的資深高階經理人。請根據我提供的儀表板數據摘要，生成一份專業的決策建議報告。報告必須嚴格遵循以下三個標題，並在每個標題下提供具體、可行的分析與建議。請勿加上任何開頭問候語或結尾署名。\n\n數據摘要:\n${summary}\n\n--- 請依此格式生成報告 ---\n\n### 1. 專案組合健康度速覽 (RAG 分析)\n(請在此分析整體項目的健康狀況，例如：紅色警戒、黃色觀察、綠色正常)\n\n### 2. 風險評估與進度落後預警\n(請在此明確指出具體的風險項目、逾期項目，並分析可能造成的影響)\n\n### 3. 高階經理人決策建議\n(請在此提供具體的管理決策，例如：資源重新分配、召開緊急會議、調整優先級等建議)`;
+                // ** Updated prompt with conditional instructions **
+                const prompt = `你是一位奇美醫院教學中心的資深高階經理人。請根據我提供的儀表板數據摘要，生成一份專業的決策建議報告。報告必須嚴格遵循以下三個標題，並在每個標題下提供具體、可行的分析與建議。請勿加上任何開頭問候語或結尾署名。
+
+數據摘要:
+${summary}
+
+--- 請依此格式生成報告 ---
+
+### 1. 專案組合健康度速覽 (RAG 分析)
+(請在此分析整體項目的健康狀況，例如：紅色警戒、黃色觀察、綠色正常)
+
+### 2. 風險評估與進度落後預警
+(請在此明確指出具體的風險項目、逾期項目。如果沒有逾期項目，請說明目前專案時程控制良好，無需立即處理。如果沒有高風險項目，也請說明風險可控。)
+
+### 3. 高階經理人決策建議
+(請在此提供具體的管理決策。如果沒有逾期或高風險項目，請提出維持現況或持續監控的建議。)`
 
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
