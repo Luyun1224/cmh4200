@@ -248,6 +248,7 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
+
     <script>
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
@@ -422,7 +423,8 @@
 
                 const projectCount = memberItems.filter(item => item.type === 'project').length;
                 const taskCount = memberItems.filter(item => item.type === 'task').length;
-                const activityCount = memberItems.filter(item => item.type === 'activity' || item.type === 'meeting').length;
+                const activityCount = memberItems.filter(item => item.type === 'activity').length;
+                const meetingCount = memberItems.filter(item => item.type === 'meeting').length;
 
                 const isActive = name === currentMemberFilter;
 
@@ -436,6 +438,7 @@
                                 <span>專案: ${projectCount}</span>
                                 <span>任務: ${taskCount}</span>
                                 <span>活動: ${activityCount}</span>
+                                <span>會議: ${meetingCount}</span>
                             </div>
                         </div>
                     </div>
@@ -958,6 +961,7 @@ ${summary}
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
+
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', async function() {
