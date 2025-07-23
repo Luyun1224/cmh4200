@@ -135,6 +135,12 @@
                         <option value="all">全部</option>
                     </select>
                 </div>
+                <div>
+                    <label for="filter-status" class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
+                    <select id="filter-status" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="all">全部</option>
+                    </select>
+                </div>
              </div>
              <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-500">
@@ -177,8 +183,16 @@
             'allied-health': '醫事人員訓練小組', 'chart-review': '病歷審查小組'
         };
 
+        const statusData = {
+            'planning': '規劃中',
+            'active': '進行中',
+            'completed': '已完成',
+            'overdue': '逾期'
+        };
+
         let currentGroupFilter = 'all';
         let currentAssigneeFilter = 'all';
+        let currentStatusFilter = 'all';
 
         // --- DOM Elements ---
         const form = document.getElementById('item-form');
@@ -195,6 +209,7 @@
         const tableBody = document.getElementById('items-table-body');
         const filterGroupSelect = document.getElementById('filter-group');
         const filterAssigneeSelect = document.getElementById('filter-assignee');
+        const filterStatusSelect = document.getElementById('filter-status');
 
         // --- API Communication ---
         async function handleApiRequest(action, payload, buttonElement) {
@@ -293,7 +308,15 @@
             assigneesSelect.innerHTML = '';
             collaboratorsSelect.innerHTML = '';
 
-            filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
+           filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
+
+            filterStatusSelect.innerHTML = '<option value="all">全部</option>';
+            for (const [key, value] of Object.entries(statusData)) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = value;
+                filterStatusSelect.appendChild(opt);
+            }
 
             const allStaffOption1 = document.createElement('option');
             allStaffOption1.value = '全體同仁';
@@ -343,21 +366,25 @@
             if (currentGroupFilter !== 'all') {
                 filtered = filtered.filter(i => i.group === currentGroupFilter);
             }
-            if (currentAssigneeFilter !== 'all') {
-                filtered = filtered.filter(i => i.assignees.includes(currentAssigneeFilter));
+           if (currentAssigneeFilter !== 'all') {
+               filtered = filtered.filter(i => i.assignees.includes(currentAssigneeFilter));
+           }
+            if (currentStatusFilter !== 'all') {
+                filtered = filtered.filter(i => i.status === currentStatusFilter);
             }
 
-            tableBody.innerHTML = filtered.map(item => {
+           tableBody.innerHTML = filtered.map(item => {
                 const groupName = groupData[item.group] || item.group;
                 const assigneesText = item.assignees.join(', ') || 'N/A';
                 const collaboratorsText = item.collaborators.join(', ') || '無';
                 const typeDisplay = getTypeDisplay(item.type);
 
-                const meetingRange = item.type === 'meeting' ? `<div class="text-xs text-gray-500 mt-1">${formatDateRange(item.startDate, item.deadline)}</div>` : '';
+                const dateRange = formatDateRange(item.startDate, item.deadline);
+                const dateRangeHtml = dateRange ? `<div class="text-xs text-gray-500 mt-1">${dateRange}</div>` : '';
 
                 return `
                 <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${typeDisplay}${meetingRange}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${typeDisplay}${dateRangeHtml}</td>
                     <td class="px-6 py-4">${groupName}</td>
                     <td class="px-6 py-4">${assigneesText}</td>
                     <td class="px-6 py-4">${collaboratorsText}</td>
@@ -494,6 +521,11 @@
 
         filterAssigneeSelect.addEventListener('change', (e) => {
             currentAssigneeFilter = e.target.value;
+            renderTable();
+        });
+
+        filterStatusSelect.addEventListener('change', (e) => {
+            currentStatusFilter = e.target.value;
             renderTable();
         });
 
