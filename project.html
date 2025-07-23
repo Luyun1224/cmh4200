@@ -787,8 +787,12 @@ ${summary}
         function generateCalendarHTML(year, month, activities) {
             const activitiesByDay = {};
             activities.forEach(item => {
-                if (item.startDate) {
-                    const d = new Date(item.startDate);
+                if (!item.startDate) return;
+
+                const start = new Date(item.startDate);
+                const end = item.deadline ? new Date(item.deadline) : new Date(item.startDate);
+
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                     if (d.getFullYear() === year && d.getMonth() === month) {
                         const day = d.getDate();
                         if (!activitiesByDay[day]) {
