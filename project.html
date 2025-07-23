@@ -254,12 +254,12 @@
     </button>
 
     <!-- ChatBot Container -->
-    <div id="chatBotContainer" class="hidden fixed bottom-24 right-5 w-80 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col z-50">
+    <div id="chatBotContainer" class="hidden fixed bottom-20 right-5 w-96 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col z-50">
         <div class="flex justify-between items-center bg-indigo-600 text-white px-4 py-2 rounded-t-xl">
             <span class="font-semibold">小幫手</span>
             <button id="closeChatBot" class="text-white text-xl leading-none">&times;</button>
         </div>
-        <div id="chatBotMessages" class="p-4 space-y-2 text-sm overflow-y-auto max-h-60"></div>
+        <div id="chatBotMessages" class="p-4 space-y-2 text-sm overflow-y-auto max-h-[60vh]"></div>
         <!-- Push-only mode, no user input -->
     </div>
 
@@ -378,12 +378,9 @@
             const itemsList = document.getElementById('itemsList');
             let filteredItems = itemsToRender;
 
-            // Apply status filter. If 'all', show everything except 'completed'.
+            // Apply status filter.
             if (currentStatusFilter !== 'all') {
                 filteredItems = itemsToRender.filter(p => p.status === currentStatusFilter);
-            } else {
-                // By default, the 'all' view hides completed tasks to focus on active work.
-                filteredItems = itemsToRender.filter(p => p.status !== 'completed');
             }
 
             if (filteredItems.length === 0) {
@@ -640,8 +637,8 @@
 
             const completedCount = allActivities.filter(i => i.status === 'completed').length;
             const ragStatus = overdueItems.length > 0 ? '🔴 紅色警示' :
-                                  highRiskItems.length > 0 ? '🟠 黃色觀察' :
-                                  planningItems.length > 0 ? '🔵 藍色規劃' : '🟢 綠色正常';
+                                highRiskItems.length > 0 ? '🟠 黃色觀察' :
+                                planningItems.length > 0 ? '🔵 藍色規劃' : '🟢 綠色正常';
 
             // ** Conditional text generation **
             let riskAssessmentHTML = '';
@@ -734,7 +731,7 @@ ${summary}
 (請在此明確指出具體的風險項目、逾期項目。如果沒有逾期項目，請說明目前專案時程控制良好，無需立即處理。如果沒有高風險項目，也請說明風險可控。)
 
 ### 3. 高階經理人決策建議
-(請在此提供具體的管理決策。如果沒有逾期或高風險項目，請提出維持現況或持續監控的建議。)`
+(請在此提供具體的管理決策。如果沒有逾期或高風險項目，請提出維持現況或持續監控的建議。)`;
 
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
@@ -976,47 +973,97 @@ ${summary}
             });
         }
 
-        function generateOverview() {
-            const projects = allActivities.filter(i => i.type === 'project').length;
-            const tasks = allActivities.filter(i => i.type === 'task').length;
-            const activities = allActivities.filter(i => i.type === 'activity').length;
-            const meetings = allActivities.filter(i => i.type === 'meeting').length;
-            const active = allActivities.filter(i => i.status === 'active').length;
-            const completed = allActivities.filter(i => i.status === 'completed').length;
-            const overdue = allActivities.filter(i => i.status === 'overdue').length;
+        function generateDashboardReportHTML() {
+            const now = new Date(currentDate);
+            const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
 
-            return `本頁目前共有 ${projects + tasks + activities + meetings} 項目，其中專案 ${projects} 件、任務 ${tasks} 件、活動 ${activities} 場、會議 ${meetings} 次。進行中 ${active} 項，已完成 ${completed} 項，逾期 ${overdue} 項。`;
-        }
-
-        function generateMonthlySummaryHTML() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
             const itemsThisMonth = allActivities.filter(item => {
                 if (!item.startDate) return false;
                 const d = new Date(item.startDate);
-                return d.getFullYear() === year && d.getMonth() === month;
+                return d >= startOfMonth && d <= endOfMonth;
             });
 
-            const completedCount = itemsThisMonth.filter(item =>
-                (item.type === 'project' || item.type === 'task') && item.status === 'completed'
-            ).length;
+            // --- Highlights ---
+            const completedThisMonth = itemsThisMonth.filter(item => item.status === 'completed' && (item.type === 'project' || item.type === 'task'));
+            const keyProjectCompleted = completedThisMonth.find(item => item.type === 'project');
+            let highlightsHTML = `<ul class="list-disc pl-5 space-y-1">
+                <li>🎉 本月已完成 <strong>${completedThisMonth.length}</strong> 項專案與任務。</li>`;
+            if (keyProjectCompleted) {
+                highlightsHTML += `<li>🚀 指標專案「<strong>${keyProjectCompleted.name}</strong>」順利完成！</li>`;
+            } else if (completedThisMonth.length > 0) {
+                highlightsHTML += `<li>👍 團隊持續推進，完成了「<strong>${completedThisMonth[0].name}</strong>」等重要任務。</li>`;
+            }
+            highlightsHTML += `</ul>`;
 
-            const summaryByGroup = {};
-            itemsThisMonth.forEach(item => {
-                if (!item.group) return;
-                if (!summaryByGroup[item.group]) summaryByGroup[item.group] = [];
-                summaryByGroup[item.group].push(item.name);
-            });
 
-            const bullets = [`本月已完成 ${completedCount} 個任務或專案`];
-            Object.entries(summaryByGroup).forEach(([g, items]) => {
-                bullets.push(`${groupData[g] || g}: ${items.join('、')}`);
-            });
+            // --- Business Overview ---
+            const projectsThisMonth = itemsThisMonth.filter(i => i.type === 'project').length;
+            const tasksThisMonth = itemsThisMonth.filter(i => i.type === 'task').length;
+            const activitiesThisMonth = itemsThisMonth.filter(i => i.type === 'activity').length;
+            const meetingsThisMonth = itemsThisMonth.filter(i => i.type === 'meeting').length;
+            const overviewHTML = `<ul class="list-disc pl-5 space-y-1">
+                <li><strong>總務：</strong>專案 ${projectsThisMonth} 件、任務 ${tasksThisMonth} 件、活動 ${activitiesThisMonth} 場、會議 ${meetingsThisMonth} 次。</li>
+            </ul>`;
 
-            return '<ul class="list-disc pl-5 space-y-1">' +
-                bullets.map(t => `<li>${t}</li>`).join('') +
-                '</ul>';
+            // --- Project Progress ---
+            const overdueItems = allActivities.filter(item => item.status === 'overdue');
+            let progressHTML = '';
+            if (overdueItems.length > 0) {
+                progressHTML += `<p class="font-semibold text-red-600">⚠️ 風險提示：</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>目前有 <strong>${overdueItems.length}</strong> 個項目逾期，請重點關注：<strong>${overdueItems.map(i => i.name).join('、 ')}</strong>。</li>
+                </ul>`;
+            } else {
+                progressHTML += `<p class="font-semibold text-green-600">✅ 進度正常：</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>目前無逾期項目，專案時程控制良好！</li>
+                </ul>`;
+            }
+
+            // --- Coming Up ---
+            const oneWeekLater = new Date(now);
+            oneWeekLater.setDate(now.getDate() + 7);
+            const upcomingItems = allActivities.filter(item => {
+                if (!item.startDate) return false;
+                const d = new Date(item.startDate);
+                return d > now && d <= oneWeekLater;
+            }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+            let upcomingHTML = '';
+            if (upcomingItems.length > 0) {
+                upcomingHTML = '<ul class="list-disc pl-5 space-y-1">' +
+                    upcomingItems.map(i => `<li><strong>${formatDate(i.startDate)}:</strong> ${i.name} (${getTypeText(i.type)})</li>`).join('') +
+                    '</ul>';
+            } else {
+                upcomingHTML = '<p class="pl-5">下週行程相對寬鬆，是補足專案進度的好時機。</p>';
+            }
+
+            return `
+                <div class="space-y-4">
+                    <div>
+                        <p class="font-semibold text-gray-800">您好！這是截至 ${dateStr} 的重點彙報。</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-star mr-2"></i>本月亮點 (Highlights)</h3>
+                        ${highlightsHTML}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-chart-pie mr-2"></i>業務概況 (Business Overview)</h3>
+                        ${overviewHTML}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-tasks mr-2"></i>專案進度 (Project Progress)</h3>
+                        ${progressHTML}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-calendar-check mr-2"></i>下週重點預告 (Coming Up)</h3>
+                        ${upcomingHTML}
+                    </div>
+                </div>
+            `;
         }
 
         function setupChatBot() {
@@ -1027,7 +1074,7 @@ ${summary}
 
             openBtn.addEventListener('click', () => {
                 container.classList.remove('hidden');
-                messages.innerHTML = generateMonthlySummaryHTML();
+                messages.innerHTML = generateDashboardReportHTML();
             });
 
             closeBtn.addEventListener('click', () => container.classList.add('hidden'));
