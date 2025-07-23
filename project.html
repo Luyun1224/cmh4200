@@ -1017,65 +1017,6 @@ ${summary}
             return '<ul class="list-disc pl-5 space-y-1">' +
                 bullets.map(t => `<li>${t}</li>`).join('') +
                 '</ul>';
-
-        function generateDashboardReportHTML() {
-            const now = new Date(currentDate);
-            const dateStr = now.toLocaleDateString('zh-TW');
-
-            const projects = allActivities.filter(i => i.type === 'project');
-            const tasks = allActivities.filter(i => i.type === 'task');
-            const activities = allActivities.filter(i => i.type === 'activity');
-            const meetings = allActivities.filter(i => i.type === 'meeting');
-
-            const active = allActivities.filter(i => i.status === 'active');
-            const completed = allActivities.filter(i => i.status === 'completed');
-            const overdue = allActivities.filter(i => i.status === 'overdue');
-
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-            const itemsThisMonth = allActivities.filter(item => {
-                if (!item.startDate) return false;
-                const d = new Date(item.startDate);
-                return d >= startOfMonth && d < nextMonth;
-            });
-            const completedThisMonth = itemsThisMonth.filter(item =>
-                (item.type === 'project' || item.type === 'task') && item.status === 'completed'
-            ).length;
-
-            const oneWeekLater = new Date(now);
-            oneWeekLater.setDate(now.getDate() + 7);
-            const upcoming = allActivities.filter(item => {
-                if (!item.startDate) return false;
-                const d = new Date(item.startDate);
-                return d >= now && d < oneWeekLater;
-            });
-
-            const upcomingList = upcoming.length
-                ? '<ul class="list-disc pl-5 space-y-1">' +
-                    upcoming.map(i => `<li>${i.name} (${getTypeText(i.type)}) - ${formatDate(i.startDate)}</li>`).join('') +
-                  '</ul>'
-                : '<p class="pl-5">下週暫無排定項目。</p>';
-
-            return `
-                <p class="font-semibold">您好！這是截至 ${dateStr} 的本月重點彙報。</p>
-                <h3 class="font-bold mt-2">⭐ 本月亮點 (Highlights)</h3>
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>總項目數 ${allActivities.length}，進行中 ${active.length}、已完成 ${completed.length}、逾期 ${overdue.length}</li>
-                    <li>本月完成 ${completedThisMonth} 個任務或專案里程碑</li>
-                </ul>
-                <h3 class="font-bold mt-4">📊 業務概況 (Business Overview)</h3>
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>專案 ${projects.length} 件、任務 ${tasks.length} 件、活動 ${activities.length} 場、會議 ${meetings.length} 次</li>
-                    <li>進行中 ${active.length} 項，已完成 ${completed.length} 項，逾期 ${overdue.length} 項</li>
-                </ul>
-                <h3 class="font-bold mt-4">⚙️ 專案進度 (Project Progress)</h3>
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>已完成專案：${projects.filter(p => p.status === 'completed').length} 項</li>
-                    <li>進行中專案：${projects.filter(p => p.status === 'active').length} 項</li>
-                    <li>逾期專案：${projects.filter(p => p.status === 'overdue').length} 項</li>
-                </ul>
-                <h3 class="font-bold mt-4">🗓️ 下週重點預告 (Coming Up)</h3>
-                ${upcomingList}`;
         }
 
         function setupChatBot() {
@@ -1086,7 +1027,7 @@ ${summary}
 
             openBtn.addEventListener('click', () => {
                 container.classList.remove('hidden');
-                messages.innerHTML = generateDashboardReportHTML();
+                messages.innerHTML = generateMonthlySummaryHTML();
             });
 
             closeBtn.addEventListener('click', () => container.classList.add('hidden'));
