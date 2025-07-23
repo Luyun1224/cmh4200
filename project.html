@@ -172,6 +172,10 @@
                         <label for="yearFilter" class="text-sm font-medium text-gray-600">篩選年度:</label>
                         <select id="yearFilter" onchange="filterByYear(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5"></select>
                     </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="monthFilter" class="text-sm font-medium text-gray-600">篩選月份:</label>
+                        <select id="monthFilter" onchange="filterByMonth(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5"></select>
+                    </div>
                     <span id="aiDataDate" class="text-xs text-gray-500 self-center hidden"></span>
                     <button id="aiBtn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors hover:bg-purple-700 flex items-center">
                         <i class="fas fa-brain mr-2"></i>AI 決策建議
@@ -296,6 +300,7 @@
         let currentStatusFilter = 'all';
         let currentMemberFilter = 'all';
         let currentYearFilter = 'all';
+        let currentMonthFilter = 'all';
         let currentSearchTerm = '';
         let calendarDate = new Date(currentDate); // State for the activity calendar, initialized to the current context date
 
@@ -372,6 +377,13 @@
             const years = ['all', ...new Set(allActivities.map(item => item.startDate ? new Date(item.startDate).getFullYear() : null).filter(Boolean))].sort();
             yearFilterSelect.innerHTML = years.map(year => `<option value="${year}">${year === 'all' ? '全部年份' : `${year}年`}</option>`).join('');
             yearFilterSelect.value = currentYearFilter;
+        }
+
+        function renderMonthFilter() {
+            const monthFilterSelect = document.getElementById('monthFilter');
+            const months = ['all', 1,2,3,4,5,6,7,8,9,10,11,12];
+            monthFilterSelect.innerHTML = months.map(m => `<option value="${m}">${m === 'all' ? '全部月份' : `${m}月`}</option>`).join('');
+            monthFilterSelect.value = currentMonthFilter;
         }
 
         function renderItems(itemsToRender) {
@@ -478,10 +490,16 @@
             if (currentYearFilter !== 'all') {
                  itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
             }
-            
-            // 2. Filter by Group
+
+            // 2. Filter by Month
+            let itemsForMonth = itemsForYear;
+            if (currentMonthFilter !== 'all') {
+                itemsForMonth = itemsForYear.filter(item => item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
+            }
+
+            // 3. Filter by Group
             const membersInGroup = currentGroupFilter === 'all' ? staffData.map(s => s.name) : staffData.filter(s => s.group === currentGroupFilter).map(s => s.name);
-            let itemsForGroup = currentGroupFilter === 'all' ? itemsForYear : itemsForYear.filter(item => item.group === currentGroupFilter);
+            let itemsForGroup = currentGroupFilter === 'all' ? itemsForMonth : itemsForMonth.filter(item => item.group === currentGroupFilter);
             
             // 3. Filter by Search Term
             if (currentSearchTerm) {
@@ -510,7 +528,7 @@
 
             // 5. Render all components
             updateStats(itemsToDisplay);
-            renderTeamMembers(membersInGroup, itemsForYear);
+            renderTeamMembers(membersInGroup, itemsForMonth);
             renderItems(itemsToDisplay);
 
             // 6. Update group tab styles
@@ -528,6 +546,11 @@
 
         function filterByYear(year) {
             currentYearFilter = year;
+            renderDashboard();
+        }
+
+        function filterByMonth(month) {
+            currentMonthFilter = month;
             renderDashboard();
         }
 
@@ -577,6 +600,7 @@
         async function refreshData() {
             allActivities = await fetchAllItems();
             renderYearFilter();
+            renderMonthFilter();
             renderDashboard();
         }
 
@@ -855,9 +879,10 @@ ${summary}
 
             const itemsForDisplay = allActivities.filter(item => {
                 const yearMatch = currentYearFilter === 'all' || (item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
+                const monthMatch = currentMonthFilter === 'all' || (item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
                 const groupMatch = currentGroupFilter === 'all' || item.group == currentGroupFilter;
                 const typeMatch = item.type && (item.type.toLowerCase() === 'activity' || item.type.toLowerCase() === 'meeting');
-                return yearMatch && groupMatch && typeMatch;
+                return yearMatch && monthMatch && groupMatch && typeMatch;
             });
 
             const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay);
@@ -1106,6 +1131,7 @@ ${summary}
             setupActivityModal();
             setupWeeklySummaryModal();
             setupScrollToTop(); // Set up the scroll-to-top button
+            renderMonthFilter();
             setupChatBot();
 
             // Show loading indicator and fetch data
