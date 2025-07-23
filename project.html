@@ -634,6 +634,7 @@
                 if (username === '4200' && password === '4200') {
                     loginMessage.textContent = '登入成功！';
                     loginMessage.className = 'text-center mb-4 font-medium text-green-500';
+                    localStorage.setItem('dashboardLoggedIn', 'true');
                     setTimeout(() => {
                         window.location.href = 'https://luyun1224.github.io/cmh4200/Project-admin.html';
                     }, 1500);
@@ -1138,7 +1139,7 @@ ${summary}
             loadingOverlay.classList.remove('hidden');
             try {
                 await refreshData(); // Initial data load
-                showWeeklySummary();
+                // showWeeklySummary(); // Disable auto popup of weekly summary
                 if (paramStatus) {
                     const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
                     if (btn) filterItemsByStatus(paramStatus, { target: btn });
