@@ -991,6 +991,34 @@ ${summary}
             return `本頁目前共有 ${projects + tasks + activities + meetings} 項目，其中專案 ${projects} 件、任務 ${tasks} 件、活動 ${activities} 場、會議 ${meetings} 次。進行中 ${active} 項，已完成 ${completed} 項，逾期 ${overdue} 項。`;
         }
 
+        function generateMonthlySummary() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const itemsThisMonth = allActivities.filter(item => {
+                if (!item.startDate) return false;
+                const d = new Date(item.startDate);
+                return d.getFullYear() === year && d.getMonth() === month;
+            });
+
+            const completedCount = itemsThisMonth.filter(item =>
+                (item.type === 'project' || item.type === 'task') && item.status === 'completed'
+            ).length;
+
+            const summaryByGroup = {};
+            itemsThisMonth.forEach(item => {
+                if (!item.group) return;
+                if (!summaryByGroup[item.group]) summaryByGroup[item.group] = [];
+                summaryByGroup[item.group].push(item.name);
+            });
+
+            const groupSummaryText = Object.entries(summaryByGroup).map(([g, items]) =>
+                `${groupData[g] || g}: ${items.join('、')}`
+            ).join('；');
+
+            return `本月已完成 ${completedCount} 個任務或專案。${groupSummaryText ? ' 本月大事紀：' + groupSummaryText : ''}`;
+        }
+
         function setupChatBot() {
             const openBtn = document.getElementById('openChatBot');
             const container = document.getElementById('chatBotContainer');
@@ -1001,7 +1029,7 @@ ${summary}
 
             openBtn.addEventListener('click', () => {
                 container.classList.remove('hidden');
-                messages.innerHTML = `<div class="text-gray-700">🤖 ${generateOverview()}</div>`;
+                messages.innerHTML = `<div class="text-gray-700">🤖 ${generateMonthlySummary()}</div>`;
             });
 
             closeBtn.addEventListener('click', () => container.classList.add('hidden'));
@@ -1011,7 +1039,7 @@ ${summary}
                 const text = input.value.trim();
                 if (!text) return;
                 messages.innerHTML += `<div class="text-right text-gray-800">${text}</div>`;
-                messages.innerHTML += `<div class="text-gray-700">🤖 ${generateOverview()}</div>`;
+                messages.innerHTML += `<div class="text-gray-700">🤖 ${generateMonthlySummary()}</div>`;
                 messages.scrollTop = messages.scrollHeight;
                 input.value = '';
             });
