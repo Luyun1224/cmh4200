@@ -258,6 +258,17 @@
             }
         }
 
+        function formatDate(dateString) {
+            return dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
+        }
+
+        function formatDateRange(start, end) {
+            const s = formatDate(start);
+            const e = formatDate(end);
+            if (!s && !e) return '';
+            return e ? `${s} - ${e}` : s;
+        }
+
         function populateDropdowns() {
             groupSelect.innerHTML = '<option value="">-- 請選擇所屬小組 --</option>';
             for (const [key, value] of Object.entries(groupData)) {
@@ -342,9 +353,11 @@
                 const collaboratorsText = item.collaborators.join(', ') || '無';
                 const typeDisplay = getTypeDisplay(item.type);
 
+                const meetingRange = item.type === 'meeting' ? `<div class="text-xs text-gray-500 mt-1">${formatDateRange(item.startDate, item.deadline)}</div>` : '';
+
                 return `
                 <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${typeDisplay}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${typeDisplay}${meetingRange}</td>
                     <td class="px-6 py-4">${groupName}</td>
                     <td class="px-6 py-4">${assigneesText}</td>
                     <td class="px-6 py-4">${collaboratorsText}</td>
