@@ -1024,12 +1024,16 @@ ${summary}
             }
 
             // --- Coming Up ---
-            const oneWeekLater = new Date(now);
-            oneWeekLater.setDate(now.getDate() + 7);
+            const startOfNextWeek = new Date(now);
+            startOfNextWeek.setDate(now.getDate() + 7);
+            const endOfNextWeek = new Date(now);
+            endOfNextWeek.setDate(now.getDate() + 14);
+
             const upcomingItems = allActivities.filter(item => {
                 if (!item.startDate) return false;
                 const d = new Date(item.startDate);
-                return d > now && d <= oneWeekLater;
+                // Get items in the next 7-day window (i.e., next week)
+                return d > startOfNextWeek && d <= endOfNextWeek;
             }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
 
             let upcomingHTML = '';
@@ -1038,7 +1042,7 @@ ${summary}
                     upcomingItems.map(i => `<li><strong>${formatDate(i.startDate)}:</strong> ${i.name} (${getTypeText(i.type)})</li>`).join('') +
                     '</ul>';
             } else {
-                upcomingHTML = '<p class="pl-5">下週行程相對寬鬆，是補足專案進度的好時機。</p>';
+                upcomingHTML = '<p class="pl-5">下週暫無排定項目。</p>';
             }
 
             return `
