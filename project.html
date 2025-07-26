@@ -127,7 +127,7 @@
             </form>
         </div>
     </div>
-    
+   
     <!-- AI Suggestion Modal -->
     <div id="aiModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -211,7 +211,7 @@
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-full">
                     <div class="p-6 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">教學中心成員</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">教學部成員</h3>
                     </div>
                     <div class="p-6">
                         <div id="teamMembers" class="space-y-2">
@@ -284,7 +284,7 @@
         
         // This constant represents the current date for all calculations.
         // Set to the user-provided context: July 22, 2025.
-const currentDate = new Date('2025-07-22T21:21:00+08:00');
+        const currentDate = new Date('2025-07-22T21:21:00+08:00');
 
         // Standardized project checkpoints for each 10% increment
         const standardSteps = ['啟動', '需求分析', '規劃', '設計', '開發', '測試', '部署', '驗收', '結案準備', '完成'];
@@ -426,7 +426,21 @@ const currentDate = new Date('2025-07-22T21:21:00+08:00');
                 return;
             }
 
-            itemsList.innerHTML = filteredItems.map(item => `
+            itemsList.innerHTML = filteredItems.map(item => {
+                // Calculate checkpoint progress. If progress is 100, it's the last step.
+                const currentStepIndex = Math.floor(item.progress / 10);
+                const currentStepNumber = item.progress === 100 ? standardSteps.length : Math.min(currentStepIndex, standardSteps.length - 1) + 1;
+                const totalSteps = standardSteps.length;
+
+                // Calculate progress change since last week for visual indicator
+                const progressChange = item.progress - (item.lastWeekProgress || 0);
+                const progressChangeHTML = progressChange > 0
+                    ? `<span class="text-green-600 font-medium text-sm ml-2">▲ ${progressChange}%</span>`
+                    : progressChange < 0
+                        ? `<span class="text-red-600 font-medium text-sm ml-2">▼ ${Math.abs(progressChange)}%</span>`
+                        : '';
+
+                return `
                 <div class="bg-white border rounded-lg p-4 flex flex-col h-full shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200 ${item.status === 'overdue' ? 'bg-red-50 overdue-glow' : 'border-gray-100'}">
                     <div class="flex-grow">
                         <div class="flex justify-between items-start mb-3">
@@ -442,18 +456,36 @@ const currentDate = new Date('2025-07-22T21:21:00+08:00');
                             </div>
                         </div>
                     </div>
-                    <div>
+                    
+                    <div class="mt-auto border-t border-gray-100 pt-3">
                         <div class="mb-3">
-                            <div class="flex justify-between text-sm mb-1"><span>進度</span><span>${item.progress}%</span></div>
-                            <div class="w-full bg-gray-200 rounded-full h-2" title="目前步驟: ${getStandardStep(item.progress)}"><div class="progress-bar h-2 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div>
+                            <div class="flex justify-between items-center text-sm mb-1">
+                                <span class="text-gray-600">進度: ${item.progress}%</span>
+                                ${progressChangeHTML}
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5" title="目前步驟: ${getStandardStep(item.progress)}">
+                                <div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">檢查點: ${currentStepNumber}/${totalSteps}</p>
                         </div>
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-600">日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : ((item.type === 'activity' || item.type === 'meeting') ? '迄今 (進行中)' : '迄今')}</span>
+
+                        <div class="flex justify-between items-center text-sm text-gray-500">
+                            <span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : ((item.type === 'activity' || item.type === 'meeting') ? '迄今 (進行中)' : '迄今')}</span>
                             ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
                         </div>
-                        ${item.status === 'overdue' && item.helpMessage ? `<p class="text-red-700 text-sm mt-2">求救訊息：${item.helpMessage}</p>` : ''}
+
+                        ${item.helpMessage ? `
+                        <div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3">
+                            <span class="text-xl pt-1">😭</span>
+                            <div>
+                                <p class="font-semibold text-red-800 text-sm">需要協助：</p>
+                                <p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p>
+                            </div>
+                        </div>
+                        ` : ''}
                     </div>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         }
         
         function renderTeamMembers(members, allItems) {
@@ -685,8 +717,8 @@ const currentDate = new Date('2025-07-22T21:21:00+08:00');
 
             const completedCount = allActivities.filter(i => i.status === 'completed').length;
             const ragStatus = overdueItems.length > 0 ? '🔴 紅色警示' :
-                                highRiskItems.length > 0 ? '🟠 黃色觀察' :
-                                planningItems.length > 0 ? '🔵 藍色規劃' : '🟢 綠色正常';
+                                  highRiskItems.length > 0 ? '🟠 黃色觀察' :
+                                  planningItems.length > 0 ? '🔵 藍色規劃' : '🟢 綠色正常';
 
             // ** Conditional text generation **
             let riskAssessmentHTML = '';
