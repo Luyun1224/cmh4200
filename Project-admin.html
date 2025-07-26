@@ -110,10 +110,21 @@
                         <input type="date" id="item-deadline" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
-                 <div class="pt-2">
+                <div class="pt-2">
                     <label for="item-progress" class="block text-sm font-medium text-gray-700">進度 (%)</label>
-                    <input type="range" id="item-progress" min="0" max="100" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                    <div class="text-center text-sm text-gray-600 mt-1"><span id="progress-value">0</span>%</div>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" id="decrease-progress" class="px-2 py-1 bg-gray-200 rounded">-10</button>
+                        <input type="number" id="item-progress" min="0" max="100" step="10" value="0" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg">
+                        <button type="button" id="increase-progress" class="px-2 py-1 bg-gray-200 rounded">+10</button>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <label for="item-lastweek-progress" class="block text-sm font-medium text-gray-700">上週進度 (%)</label>
+                    <input type="number" id="item-lastweek-progress" min="0" max="100" step="10" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="pt-2">
+                    <label for="item-help-message" class="block text-sm font-medium text-gray-700">求救訊息 / 停滯原因</label>
+                    <textarea id="item-help-message" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
                 </div>
                 <div class="flex justify-end space-x-4 pt-4">
                     <button type="button" id="cancel-edit-btn" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors hidden">取消編輯</button>
@@ -204,8 +215,11 @@
         const formTitle = document.getElementById('form-title');
         const saveBtn = document.getElementById('save-item-btn');
         const cancelBtn = document.getElementById('cancel-edit-btn');
-        const progressSlider = document.getElementById('item-progress');
-        const progressValue = document.getElementById('progress-value');
+        const progressInput = document.getElementById('item-progress');
+        const lastWeekProgressInput = document.getElementById('item-lastweek-progress');
+        const helpMessageInput = document.getElementById('item-help-message');
+        const increaseBtn = document.getElementById('increase-progress');
+        const decreaseBtn = document.getElementById('decrease-progress');
         const groupSelect = document.getElementById('item-group');
         const otherGroupWrapper = document.getElementById('other-group-wrapper');
         const otherGroupNameInput = document.getElementById('other-group-name');
@@ -407,8 +421,9 @@
         
         function resetForm() {
             form.reset();
-            progressSlider.value = 0;
-            progressValue.textContent = 0;
+            progressInput.value = 0;
+            lastWeekProgressInput.value = 0;
+            helpMessageInput.value = '';
             document.getElementById('item-id').value = '';
             formTitle.textContent = '新增項目';
             saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
@@ -443,8 +458,9 @@
             // Use the new formatting function for dates
             document.getElementById('item-start-date').value = formatDateForInput(item.startDate);
             document.getElementById('item-deadline').value = formatDateForInput(item.deadline);
-            progressSlider.value = item.progress;
-            progressValue.textContent = item.progress;
+            progressInput.value = item.progress;
+            lastWeekProgressInput.value = item.lastWeekProgress || 0;
+            helpMessageInput.value = item.helpMessage || '';
 
             [...assigneesSelect.options].forEach(opt => { opt.selected = item.assignees.includes(opt.value); });
             [...collaboratorsSelect.options].forEach(opt => { opt.selected = item.collaborators.includes(opt.value); });
@@ -507,8 +523,13 @@
         }
 
         // --- Event Listeners ---
-        progressSlider.addEventListener('input', (e) => {
-            progressValue.textContent = e.target.value;
+        increaseBtn.addEventListener('click', () => {
+            let val = parseInt(progressInput.value) || 0;
+            progressInput.value = Math.min(100, val + 10);
+        });
+        decreaseBtn.addEventListener('click', () => {
+            let val = parseInt(progressInput.value) || 0;
+            progressInput.value = Math.max(0, val - 10);
         });
 
         groupSelect.addEventListener('change', (e) => {
@@ -565,7 +586,9 @@
                 priority: document.getElementById('item-priority').value,
                 startDate: document.getElementById('item-start-date').value,
                 deadline: document.getElementById('item-deadline').value,
-                progress: parseInt(progressSlider.value),
+                progress: parseInt(progressInput.value),
+                lastWeekProgress: parseInt(lastWeekProgressInput.value) || 0,
+                helpMessage: helpMessageInput.value
             };
 
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
