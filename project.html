@@ -282,11 +282,10 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let allActivities = []; // This will hold all data from the server
         
-        // This constant represents the current date for all calculations.
-        // Set to the user-provided context: July 22, 2025.
+        // This constant represents the default/fallback date for calculations.
         const currentDate = new Date('2025-07-22T21:21:00+08:00');
 
-        // Standardized project checkpoints for each 10% increment
+        // Standardized project checkpoints
         const standardSteps = ['啟動', '需求分析', '規劃', '設計', '開發', '測試', '部署', '驗收', '結案準備', '完成'];
 
         const staffData = [
@@ -315,7 +314,7 @@
         let currentYearFilter = 'all';
         let currentMonthFilter = 'all';
         let currentSearchTerm = '';
-        let calendarDate = new Date(currentDate); // State for the activity calendar, initialized to the current context date
+        let calendarDate = new Date(currentDate); // State for the activity calendar, initialized to the default date
 
         // --- Helper Functions ---
         const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
@@ -323,23 +322,19 @@
         const getPriorityColor = (priority) => ({ high: 'text-red-600 bg-red-50', medium: 'text-yellow-600 bg-yellow-50', low: 'text-green-600 bg-green-50' }[priority] || 'text-gray-600 bg-gray-50');
         const getPriorityText = (priority) => ({ high: '高', medium: '中', low: '低' }[priority] || '未知');
         const getStandardStep = (progress) => {
-            const index = Math.min(standardSteps.length - 1, Math.floor(progress / 10));
+            if (progress >= 100) return standardSteps[standardSteps.length - 1];
+            const index = Math.floor(progress / 10);
             return standardSteps[index] || '';
         };
         const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
         const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目');
         const getTypeStyle = (type, status) => {
             switch(type) {
-                case 'project':
-                    return 'text-blue-700';
-                case 'task':
-                    return 'text-green-700';
-                case 'activity':
-                    return 'text-purple-700';
-                case 'meeting':
-                    return status === 'completed' ? 'text-gray-400' : 'text-indigo-700';
-                default:
-                    return 'text-gray-500';
+                case 'project': return 'text-blue-700';
+                case 'task': return 'text-green-700';
+                case 'activity': return 'text-purple-700';
+                case 'meeting': return status === 'completed' ? 'text-gray-400' : 'text-indigo-700';
+                default: return 'text-gray-500';
             }
         };
 
@@ -352,22 +347,19 @@
                     body: JSON.stringify({ action: 'getAllItems' }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok: ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
                 
-                const today = new Date(currentDate); // Use the fixed current date
+                const today = new Date(); // Use real current date for status calculation
                 today.setHours(0, 0, 0, 0); 
 
                 return result.data.map(item => {
-                    const progress = item.progress;
+                    const progress = parseInt(item.progress, 10) || 0;
                     const deadline = item.deadline ? new Date(item.deadline) : null;
+                    let finalStatus = item.status || 'planning';
 
-                    let finalStatus = item.status || 'active';
-
-                    if (progress === 100) {
+                    if (progress >= 100) {
                         finalStatus = 'completed';
                     } else if (finalStatus !== 'completed' && deadline && deadline < today) {
                         finalStatus = 'overdue';
@@ -375,8 +367,9 @@
 
                     return {
                         ...item,
+                        progress: progress,
                         status: finalStatus,
-                        lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress) : 0,
+                        lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
                         helpMessage: item.helpMessage || ''
                     };
                 });
@@ -412,7 +405,6 @@
             const itemsList = document.getElementById('itemsList');
             let filteredItems = itemsToRender;
 
-            // Apply status filter.
             if (currentStatusFilter !== 'all') {
                 filteredItems = itemsToRender.filter(p => p.status === currentStatusFilter);
             }
@@ -427,18 +419,22 @@
             }
 
             itemsList.innerHTML = filteredItems.map(item => {
-                // Calculate checkpoint progress. If progress is 100, it's the last step.
-                const currentStepIndex = Math.floor(item.progress / 10);
-                const currentStepNumber = item.progress === 100 ? standardSteps.length : Math.min(currentStepIndex, standardSteps.length - 1) + 1;
+                const currentStepNumber = item.progress >= 100 ? standardSteps.length : Math.floor(item.progress / 10) + 1;
                 const totalSteps = standardSteps.length;
-
-                // Calculate progress change since last week for visual indicator
                 const progressChange = item.progress - (item.lastWeekProgress || 0);
                 const progressChangeHTML = progressChange > 0
                     ? `<span class="text-green-600 font-medium text-sm ml-2">▲ ${progressChange}%</span>`
                     : progressChange < 0
                         ? `<span class="text-red-600 font-medium text-sm ml-2">▼ ${Math.abs(progressChange)}%</span>`
                         : '';
+
+                const checkpointsHTML = standardSteps.map((step, index) => {
+                    const isCompleted = item.progress >= ((index + 1) * 10);
+                    return `<li class="flex items-center ${isCompleted ? 'text-green-300' : 'text-gray-400'}">
+                        <span class="w-5 text-left">${isCompleted ? '✓' : '○'}</span>
+                        <span>${step}</span>
+                    </li>`;
+                }).join('');
 
                 return `
                 <div class="bg-white border rounded-lg p-4 flex flex-col h-full shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200 ${item.status === 'overdue' ? 'bg-red-50 overdue-glow' : 'border-gray-100'}">
@@ -466,11 +462,18 @@
                             <div class="w-full bg-gray-200 rounded-full h-2.5" title="目前步驟: ${getStandardStep(item.progress)}">
                                 <div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div>
                             </div>
-                            <p class="text-sm text-gray-600 mt-1">檢查點: ${currentStepNumber}/${totalSteps}</p>
+                            <div class="relative group">
+                                <p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${currentStepNumber}/${totalSteps}</p>
+                                <div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+                                    <h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4>
+                                    <ul class="space-y-1 mt-2">${checkpointsHTML}</ul>
+                                    <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="flex justify-between items-center text-sm text-gray-500">
-                            <span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : ((item.type === 'activity' || item.type === 'meeting') ? '迄今 (進行中)' : '迄今')}</span>
+                            <span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '無'}</span>
                             ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
                         </div>
 
@@ -540,23 +543,19 @@
 
         // --- Event Handlers & Main Logic ---
         function renderDashboard() {
-            // 1. Filter by Year
             let itemsForYear = allActivities;
             if (currentYearFilter !== 'all') {
                  itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
             }
 
-            // 2. Filter by Month
             let itemsForMonth = itemsForYear;
             if (currentMonthFilter !== 'all') {
                 itemsForMonth = itemsForYear.filter(item => item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
             }
 
-            // 3. Filter by Group
             const membersInGroup = currentGroupFilter === 'all' ? staffData.map(s => s.name) : staffData.filter(s => s.group === currentGroupFilter).map(s => s.name);
             let itemsForGroup = currentGroupFilter === 'all' ? itemsForMonth : itemsForMonth.filter(item => item.group === currentGroupFilter);
             
-            // 3. Filter by Search Term
             if (currentSearchTerm) {
                 const lowerCaseTerm = currentSearchTerm.toLowerCase();
                 itemsForGroup = itemsForGroup.filter(item => 
@@ -565,7 +564,6 @@
                 );
             }
 
-            // 4. Filter by Member
             let itemsToDisplay = itemsForGroup;
             if (currentMemberFilter !== 'all') {
                 itemsToDisplay = itemsForGroup.filter(item => 
@@ -574,19 +572,16 @@
                 );
             }
 
-            // Sort items chronologically by start date
             itemsToDisplay.sort((a, b) => {
                 if (!a.startDate) return 1;
                 if (!b.startDate) return -1;
                 return new Date(a.startDate) - new Date(b.startDate);
             });
 
-            // 5. Render all components
             updateStats(itemsToDisplay);
             renderTeamMembers(membersInGroup, itemsForMonth);
             renderItems(itemsToDisplay);
 
-            // 6. Update group tab styles
             document.querySelectorAll('.group-tab-btn').forEach(btn => {
                 btn.classList.toggle('tab-active', btn.id === `tab-${currentGroupFilter}`);
                 btn.classList.toggle('bg-gray-100', btn.id !== `tab-${currentGroupFilter}`);
@@ -615,7 +610,6 @@
             currentStatusFilter = 'all';
             document.getElementById('searchInput').value = '';
             currentSearchTerm = '';
-            // Reset status filter UI
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'bg-gray-200', 'text-gray-800', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
                 btn.classList.add('bg-gray-100', 'text-gray-700');
@@ -625,11 +619,7 @@
         }
         
         function filterByMember(memberName) {
-            if (currentMemberFilter === memberName) {
-                currentMemberFilter = 'all';
-            } else {
-                currentMemberFilter = memberName;
-            }
+            currentMemberFilter = (currentMemberFilter === memberName) ? 'all' : memberName;
             renderDashboard();
         }
 
@@ -648,7 +638,6 @@
             });
             event.target.classList.add('active', ...colorMap[statusFilter]);
             event.target.classList.remove('bg-gray-100', 'text-gray-700');
-            
             renderDashboard();
         }
 
@@ -659,7 +648,6 @@
             renderDashboard();
         }
 
-        // --- Login Modal Logic ---
         function setupLoginModal() {
             const loginBtn = document.getElementById('loginBtn');
             const loginModal = document.getElementById('loginModal');
@@ -667,29 +655,17 @@
             const loginForm = document.getElementById('loginForm');
             const loginMessage = document.getElementById('login-message');
 
-            loginBtn.addEventListener('click', () => {
-                loginModal.classList.remove('hidden');
-            });
-
-            closeModalBtn.addEventListener('click', () => {
-                loginModal.classList.add('hidden');
-            });
-
-            loginModal.addEventListener('click', (event) => {
-                if (event.target === loginModal) {
-                    loginModal.classList.add('hidden');
-                }
-            });
+            loginBtn.addEventListener('click', () => loginModal.classList.remove('hidden'));
+            closeModalBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
+            loginModal.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.classList.add('hidden'); });
 
             loginForm.addEventListener('submit', (event) => {
                 event.preventDefault();
                 const username = event.target.username.value;
                 const password = event.target.password.value;
-
                 if (username === '4200' && password === '4200') {
                     loginMessage.textContent = '登入成功！';
                     loginMessage.className = 'text-center mb-4 font-medium text-green-500';
-                    localStorage.setItem('dashboardLoggedIn', 'true');
                     setTimeout(() => {
                         window.location.href = 'https://luyun1224.github.io/cmh4200/Project-admin.html';
                     }, 1500);
@@ -700,17 +676,16 @@
             });
         }
         
-        // --- AI Suggestion Logic (Fallback and Main Function) ---
         function generateLocalAiSummary() {
+            const today = new Date();
             const overdueItems = allActivities.filter(item => item.status === 'overdue');
             const planningItems = allActivities.filter(item => item.status === 'planning');
             const activeItems = allActivities.filter(item => item.status === 'active');
-            
-            const fourteenDaysFromNow = new Date(currentDate);
-            fourteenDaysFromNow.setDate(currentDate.getDate() + 14);
+            const fourteenDaysFromNow = new Date(today);
+            fourteenDaysFromNow.setDate(today.getDate() + 14);
 
             const highRiskItems = allActivities.filter(item =>
-                new Date(item.deadline) > currentDate &&
+                new Date(item.deadline) > today &&
                 new Date(item.deadline) < fourteenDaysFromNow &&
                 item.progress < 50
             );
@@ -720,33 +695,22 @@
                                   highRiskItems.length > 0 ? '🟠 黃色觀察' :
                                   planningItems.length > 0 ? '🔵 藍色規劃' : '🟢 綠色正常';
 
-            // ** Conditional text generation **
-            let riskAssessmentHTML = '';
-            if (overdueItems.length > 0) {
-                riskAssessmentHTML += `<p><strong>已逾期項目：</strong><span class="text-red-700 font-semibold">${overdueItems.map(i => i.name).join('、 ')}</span>。這些項目已超出預計時程，可能影響後續計畫，需立即檢討。</p>`;
-            } else {
-                riskAssessmentHTML += `<p><strong>已逾期項目：</strong><span class="text-green-700 font-semibold">無</span>。目前所有項目皆在時程內，請繼續保持。</p>`;
-            }
+            let riskAssessmentHTML = overdueItems.length > 0
+                ? `<p><strong>已逾期項目：</strong><span class="text-red-700 font-semibold">${overdueItems.map(i => i.name).join('、 ')}</span>。這些項目已超出預計時程，可能影響後續計畫，需立即檢討。</p>`
+                : `<p><strong>已逾期項目：</strong><span class="text-green-700 font-semibold">無</span>。目前所有項目皆在時程內，請繼續保持。</p>`;
             
-            if (highRiskItems.length > 0) {
-                riskAssessmentHTML += `<p><strong>高風險項目 (14天內到期且進度 < 50%)：</strong><span class="text-yellow-700 font-semibold">${highRiskItems.map(i => i.name).join('、 ')}</span>。這些項目有極高的延期風險，需密切監控。</p>`;
-            } else {
-                 riskAssessmentHTML += `<p><strong>高風險項目：</strong><span class="text-green-700 font-semibold">無</span>。目前沒有進度顯著落後的項目。</p>`;
-            }
+            riskAssessmentHTML += highRiskItems.length > 0
+                ? `<p><strong>高風險項目 (14天內到期且進度 < 50%)：</strong><span class="text-yellow-700 font-semibold">${highRiskItems.map(i => i.name).join('、 ')}</span>。這些項目有極高的延期風險，需密切監控。</p>`
+                : `<p><strong>高風險項目：</strong><span class="text-green-700 font-semibold">無</span>。目前沒有進度顯著落後的項目。</p>`;
 
-            let decisionSuggestionHTML = '';
-            if (overdueItems.length > 0) {
-                decisionSuggestionHTML += `<li><strong>立即行動：</strong>針對「${overdueItems.map(i => i.name).join('、 ')}」等逾期項目，建議指派專案負責人召開緊急會議，釐清延誤原因並制定補救計畫。</li>`;
-            } else {
-                decisionSuggestionHTML += `<li><strong>時程管理：</strong>目前無逾期項目，顯示時程控制得宜。建議持續追蹤各專案進度，確保風險維持在低水平。</li>`;
-            }
+            let decisionSuggestionHTML = overdueItems.length > 0
+                ? `<li><strong>立即行動：</strong>針對「${overdueItems.map(i => i.name).join('、 ')}」等逾期項目，建議指派專案負責人召開緊急會議，釐清延誤原因並制定補救計畫。</li>`
+                : `<li><strong>時程管理：</strong>目前無逾期項目，顯示時程控制得宜。建議持續追蹤各專案進度，確保風險維持在低水平。</li>`;
 
             if (highRiskItems.length > 0) {
                 decisionSuggestionHTML += `<li><strong>資源審查：</strong>評估高風險項目「${highRiskItems.map(i => i.name).join('、 ')}」的資源是否充足，考慮是否需要重新分配人力或提供額外支援以確保如期完成。</li>`;
             }
-            
             decisionSuggestionHTML += `<li><strong>預防措施：</strong>定期檢視專案資源與範疇，分析潛在風險，作為未來專案規劃的參考，以降低未來風險。</li>`;
-
 
             return `
                 <h3><strong>1. 專案組合健康度速覽 (RAG 分析)</strong></h3>
@@ -757,15 +721,10 @@
                     <li><strong class="text-blue-600">藍色規劃 (規劃中):</strong> ${planningItems.length} 項</li>
                     <li><strong class="text-green-600">綠色正常 (進行中/已完成):</strong> ${activeItems.length + completedCount} 項</li>
                 </ul>
-
                 <h3><strong>2. 風險評估與進度落後預警</strong></h3>
                 ${riskAssessmentHTML}
-                
                 <h3><strong>3. 高階經理人決策建議</strong></h3>
-                <ol class="list-decimal ml-5 space-y-2">
-                   ${decisionSuggestionHTML}
-                </ol>
-            `;
+                <ol class="list-decimal ml-5 space-y-2">${decisionSuggestionHTML}</ol>`;
         }
 
         async function getAiSuggestions() {
@@ -774,7 +733,7 @@
             const aiBtn = document.getElementById('aiBtn');
             const aiDataDate = document.getElementById('aiDataDate');
             
-            aiDataDate.textContent = `(數據更新至 ${currentDate.toLocaleDateString('zh-TW')})`;
+            aiDataDate.textContent = `(數據更新至 ${new Date().toLocaleDateString('zh-TW')})`;
             aiDataDate.classList.remove('hidden');
 
             aiContent.innerHTML = `<div class="flex justify-center items-center h-full"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="ml-3">AI 正在分析數據，請稍候...</p></div>`;
@@ -782,12 +741,12 @@
             aiBtn.disabled = true;
 
             try {
-                const fourteenDaysFromNow = new Date(currentDate);
-                fourteenDaysFromNow.setDate(currentDate.getDate() + 14);
+                const today = new Date();
+                const fourteenDaysFromNow = new Date(today);
+                fourteenDaysFromNow.setDate(today.getDate() + 14);
 
                 const overdueItems = allActivities.filter(item => item.status === 'overdue');
-                const highRiskItems = allActivities.filter(item => new Date(item.deadline) > currentDate && new Date(item.deadline) < fourteenDaysFromNow && item.progress < 50);
-                
+                const highRiskItems = allActivities.filter(item => new Date(item.deadline) > today && new Date(item.deadline) < fourteenDaysFromNow && item.progress < 50);
                 const stagnant = allActivities.filter(i => (i.progress - (i.lastWeekProgress || 0)) <= 0 && i.status !== 'completed');
                 const summary = `
                     - 總項目數: ${allActivities.length}
@@ -798,7 +757,6 @@
                     - 進度停滯項目: ${stagnant.length} (${stagnant.map(i => `${i.name}`).join(', ') || '無'})
                 `;
 
-                // ** Updated prompt with conditional instructions **
                 const prompt = `你是一位奇美醫院教學中心的資深高階經理人。請根據我提供的儀表板數據摘要，生成一份專業的決策建議報告。報告必須嚴格遵循以下三個標題，並在每個標題下提供具體、可行的分析與建議。請勿加上任何開頭問候語或結尾署名。
 
 數據摘要:
@@ -815,8 +773,7 @@ ${summary}
 ### 3. 高階經理人決策建議
 (請在此提供具體的管理決策。如果沒有逾期或高風險項目，請提出維持現況或持續監控的建議。)`;
 
-                let chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
                 const payload = { contents: chatHistory };
                 const apiKey = "AIzaSyDpehmvN237MFUJvHJTBDkXDNT0n3o0To8"; // User-provided Gemini API key
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
@@ -829,18 +786,15 @@ ${summary}
 
                 const result = await response.json();
 
-                if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
+                if (result.candidates?.[0]?.content?.parts?.[0]) {
                     const text = result.candidates[0].content.parts[0].text;
-                    // Use regex to format titles and replace newlines with <br> for HTML display.
                     aiContent.innerHTML = text.replace(/### (.*?)\n/g, '<h3>$1</h3>').replace(/\n/g, '<br>');
                 } else {
                     console.error("AI API Response Error:", JSON.stringify(result, null, 2));
-                    // Fallback to local summary if API fails
                     aiContent.innerHTML = generateLocalAiSummary();
                 }
             } catch (error) {
                 console.error('AI Suggestion Error:', error);
-                // Fallback to local summary on network error
                 aiContent.innerHTML = generateLocalAiSummary();
             } finally {
                 aiBtn.disabled = false;
@@ -851,35 +805,29 @@ ${summary}
             const aiBtn = document.getElementById('aiBtn');
             const aiModal = document.getElementById('aiModal');
             const closeAiModalBtn = document.getElementById('closeAiModalBtn');
-            const aiDataDate = document.getElementById('aiDataDate');
             
             aiBtn.addEventListener('click', getAiSuggestions);
             closeAiModalBtn.addEventListener('click', () => {
                 aiModal.classList.add('hidden');
-                aiDataDate.classList.add('hidden');
+                document.getElementById('aiDataDate').classList.add('hidden');
             });
         }
 
-        // --- Activity Modal & Calendar Logic ---
         function navigateCalendar(offset) {
             calendarDate.setMonth(calendarDate.getMonth() + offset);
-            openActivityModal(false); // false indicates not to reset the date
+            openActivityModal(false);
         }
 
         function generateCalendarHTML(year, month, activities) {
             const activitiesByDay = {};
             activities.forEach(item => {
                 if (!item.startDate) return;
-
                 const start = new Date(item.startDate);
                 const end = item.deadline ? new Date(item.deadline) : new Date(item.startDate);
-
                 for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                     if (d.getFullYear() === year && d.getMonth() === month) {
                         const day = d.getDate();
-                        if (!activitiesByDay[day]) {
-                            activitiesByDay[day] = [];
-                        }
+                        if (!activitiesByDay[day]) activitiesByDay[day] = [];
                         activitiesByDay[day].push(item);
                     }
                 }
@@ -887,7 +835,6 @@ ${summary}
 
             const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
             const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
-            
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -899,13 +846,8 @@ ${summary}
                 </div>
                 <div class="grid grid-cols-7 gap-1 text-center text-sm">`;
             
-            daysOfWeek.forEach(day => {
-                calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`;
-            });
-
-            for (let i = 0; i < firstDay; i++) {
-                calendarHtml += `<div></div>`;
-            }
+            daysOfWeek.forEach(day => { calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`; });
+            for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`; }
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const activitiesToday = activitiesByDay[day];
@@ -923,24 +865,24 @@ ${summary}
                     calendarHtml += `<div class="flex items-center justify-center w-8 h-8">${day}</div>`;
                 }
             }
-
             calendarHtml += `</div></div>`;
             return calendarHtml;
         }
 
         function openActivityModal(resetDate = true) {
-            if (resetDate) {
-                calendarDate = new Date(currentDate);
-            }
+            if (resetDate) calendarDate = new Date();
             const modal = document.getElementById('activityModal');
             const content = document.getElementById('activity-content');
+            const today = new Date();
+            today.setHours(0,0,0,0);
 
             const itemsForDisplay = allActivities.filter(item => {
+                const typeMatch = item.type && (item.type.toLowerCase() === 'activity' || item.type.toLowerCase() === 'meeting');
+                if (!typeMatch) return false;
                 const yearMatch = currentYearFilter === 'all' || (item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
                 const monthMatch = currentMonthFilter === 'all' || (item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
                 const groupMatch = currentGroupFilter === 'all' || item.group == currentGroupFilter;
-                const typeMatch = item.type && (item.type.toLowerCase() === 'activity' || item.type.toLowerCase() === 'meeting');
-                return yearMatch && monthMatch && groupMatch && typeMatch;
+                return yearMatch && monthMatch && groupMatch;
             });
 
             const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay);
@@ -950,25 +892,18 @@ ${summary}
                 modal.classList.remove('hidden');
                 return;
             }
-
-            const today = new Date(currentDate);
-            today.setHours(0,0,0,0);
-
+            
             const sortedItems = itemsForDisplay.slice().sort((a, b) => {
                 const dateA = new Date(a.startDate);
                 const dateB = new Date(b.startDate);
                 const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
                 const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
-
                 if (isPastA !== isPastB) return isPastA ? 1 : -1;
                 return dateA - dateB;
             });
             
             const buildList = (arr) => {
-                if (arr.length === 0) {
-                    return '<p class="text-center text-gray-500 mt-4">此月份沒有活動列表。</p>';
-                }
-
+                if (arr.length === 0) return '<p class="text-center text-gray-500 mt-4">此月份沒有活動列表。</p>';
                 let html = '';
                 let currentKey = '';
                 arr.forEach(item => {
@@ -979,23 +914,21 @@ ${summary}
                         currentKey = key;
                         html += `<div class="mt-4"><h3 class="text-2xl font-bold text-purple-700 mb-2">${d.getFullYear()}年${d.getMonth()+1}月</h3><ul class="space-y-4">`;
                     }
-
                     const day = d.getDate();
                     const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
                     const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
-
-                    html += `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">`+
-                            `${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}`+
-                            `<div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">`+
-                            `<span class="text-xl font-bold text-purple-700">${day}</span>`+
-                            `</div>`+
-                            `<div class="flex-grow pt-1">`+
-                            `<p class="font-semibold text-gray-800">${item.name}</p>`+
-                            `<p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>`+
-                            `<p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>`+
-                            `${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}`+
-                            `</div>`+
-                            `</li>`;
+                    html += `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">
+                            ${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}
+                            <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
+                            <span class="text-xl font-bold text-purple-700">${day}</span>
+                            </div>
+                            <div class="flex-grow pt-1">
+                            <p class="font-semibold text-gray-800">${item.name}</p>
+                            <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>
+                            <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                            ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}
+                            </div>
+                            </li>`;
                 });
                 if (currentKey) html += '</ul></div>';
                 return html;
@@ -1021,8 +954,7 @@ ${summary}
         function showWeeklySummary() {
             const modal = document.getElementById('weeklySummaryModal');
             const content = document.getElementById('weekly-summary-content');
-
-            const start = new Date(currentDate);
+            const start = new Date();
             start.setHours(0,0,0,0);
             const end = new Date(start);
             end.setDate(end.getDate() + 7);
@@ -1039,31 +971,21 @@ ${summary}
                 const list = upcoming.map(i => `<li>${i.name} (${getTypeText(i.type)}) - ${formatDate(i.startDate)}</li>`).join('');
                 content.innerHTML = `<ul class="list-disc pl-5 space-y-1">${list}</ul><p class="text-center mt-4 font-semibold">大家加油！💪</p>`;
             }
-
             modal.classList.remove('hidden');
         }
 
         function setupScrollToTop() {
             const scrollToTopBtn = document.getElementById('scrollToTopBtn');
             if (!scrollToTopBtn) return;
-
             window.onscroll = () => {
-                if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
-                    scrollToTopBtn.classList.remove('hidden');
-                } else {
-                    scrollToTopBtn.classList.add('hidden');
-                }
+                scrollToTopBtn.classList.toggle('hidden', document.body.scrollTop <= 100 && document.documentElement.scrollTop <= 100);
             };
-
-            scrollToTopBtn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
+            scrollToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         }
 
         function generateDashboardReportHTML() {
-            const now = new Date(currentDate);
+            const now = new Date(); // Use real current time for the report
             const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
-
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
@@ -1073,7 +995,6 @@ ${summary}
                 return d >= startOfMonth && d <= endOfMonth;
             });
 
-            // --- Highlights ---
             const completedThisMonth = itemsThisMonth.filter(item => item.status === 'completed' && (item.type === 'project' || item.type === 'task'));
             const keyProjectCompleted = completedThisMonth.find(item => item.type === 'project');
             let highlightsHTML = `<ul class="list-disc pl-5 space-y-1">
@@ -1085,8 +1006,6 @@ ${summary}
             }
             highlightsHTML += `</ul>`;
 
-
-            // --- Business Overview ---
             const projectsThisMonth = itemsThisMonth.filter(i => i.type === 'project').length;
             const tasksThisMonth = itemsThisMonth.filter(i => i.type === 'task').length;
             const activitiesThisMonth = itemsThisMonth.filter(i => i.type === 'activity').length;
@@ -1095,73 +1014,42 @@ ${summary}
                 <li><strong>總務：</strong>專案 ${projectsThisMonth} 件、任務 ${tasksThisMonth} 件、活動 ${activitiesThisMonth} 場、會議 ${meetingsThisMonth} 次。</li>
             </ul>`;
 
-            // --- Project Progress ---
             const overdueItems = allActivities.filter(item => item.status === 'overdue');
-            let progressHTML = '';
-            if (overdueItems.length > 0) {
-                progressHTML += `<p class="font-semibold text-red-600">⚠️ 風險提示：</p>
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>目前有 <strong>${overdueItems.length}</strong> 個項目逾期，請重點關注：<strong>${overdueItems.map(i => i.name).join('、 ')}</strong>。</li>
-                </ul>`;
-            } else {
-                progressHTML += `<p class="font-semibold text-green-600">✅ 進度正常：</p>
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>目前無逾期項目，專案時程控制良好！</li>
-                </ul>`;
-            }
+            let progressHTML = overdueItems.length > 0
+                ? `<p class="font-semibold text-red-600">⚠️ 風險提示：</p>
+                   <ul class="list-disc pl-5 space-y-1"><li>目前有 <strong>${overdueItems.length}</strong> 個項目逾期，請重點關注：<strong>${overdueItems.map(i => i.name).join('、 ')}</strong>。</li></ul>`
+                : `<p class="font-semibold text-green-600">✅ 進度正常：</p>
+                   <ul class="list-disc pl-5 space-y-1"><li>目前無逾期項目，專案時程控制良好！</li></ul>`;
 
             const stagnantItems = allActivities.filter(i => (i.progress - (i.lastWeekProgress || 0)) <= 0 && i.status !== 'completed');
             if (stagnantItems.length > 0) {
                 progressHTML += `<p class="font-semibold text-yellow-600 mt-2">⚠️ 進度停滯項目：</p><ul class="list-disc pl-5 space-y-1">` +
-                    stagnantItems.map(i => `<li>${i.name}：${i.progress}% (上週 ${i.lastWeekProgress || 0}%)</li>`).join('') +
-                    '</ul>';
+                    stagnantItems.map(i => `<li>${i.name}：${i.progress}% (上週 ${i.lastWeekProgress || 0}%)</li>`).join('') + '</ul>';
             }
 
-            // --- Coming Up ---
             const startOfNextWeek = new Date(now);
-            startOfNextWeek.setDate(now.getDate() + 7);
-            const endOfNextWeek = new Date(now);
-            endOfNextWeek.setDate(now.getDate() + 14);
+            startOfNextWeek.setDate(now.getDate() - now.getDay() + 8);
+            const endOfNextWeek = new Date(startOfNextWeek);
+            endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
 
             const upcomingItems = allActivities.filter(item => {
                 if (!item.startDate) return false;
                 const d = new Date(item.startDate);
-                // Get items in the next 7-day window (i.e., next week)
-                return d > startOfNextWeek && d <= endOfNextWeek;
+                return d >= startOfNextWeek && d <= endOfNextWeek;
             }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
 
-            let upcomingHTML = '';
-            if (upcomingItems.length > 0) {
-                upcomingHTML = '<ul class="list-disc pl-5 space-y-1">' +
-                    upcomingItems.map(i => `<li><strong>${formatDate(i.startDate)}:</strong> ${i.name} (${getTypeText(i.type)})</li>`).join('') +
-                    '</ul>';
-            } else {
-                upcomingHTML = '<p class="pl-5">下週暫無排定項目。</p>';
-            }
+            let upcomingHTML = upcomingItems.length > 0
+                ? '<ul class="list-disc pl-5 space-y-1">' + upcomingItems.map(i => `<li><strong>${formatDate(i.startDate)}:</strong> ${i.name} (${getTypeText(i.type)})</li>`).join('') + '</ul>'
+                : '<p class="pl-5">下週暫無排定項目。</p>';
 
             return `
                 <div class="space-y-4">
-                    <div>
-                        <p class="font-semibold text-gray-800">您好！這是截至 ${dateStr} 的重點彙報。</p>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-star mr-2"></i>本月亮點 (Highlights)</h3>
-                        ${highlightsHTML}
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-chart-pie mr-2"></i>業務概況 (Business Overview)</h3>
-                        ${overviewHTML}
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-tasks mr-2"></i>專案進度 (Project Progress)</h3>
-                        ${progressHTML}
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-calendar-check mr-2"></i>下週重點預告 (Coming Up)</h3>
-                        ${upcomingHTML}
-                    </div>
-                </div>
-            `;
+                    <div><p class="font-semibold text-gray-800">您好！這是截至 ${dateStr} 的重點彙報。</p></div>
+                    <div><h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-star mr-2"></i>本月亮點</h3>${highlightsHTML}</div>
+                    <div><h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-chart-pie mr-2"></i>業務概況</h3>${overviewHTML}</div>
+                    <div><h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-tasks mr-2"></i>專案進度</h3>${progressHTML}</div>
+                    <div><h3 class="font-bold text-indigo-700 flex items-center"><i class="fas fa-calendar-check mr-2"></i>下週重點預告</h3>${upcomingHTML}</div>
+                </div>`;
         }
 
         function setupChatBot() {
@@ -1174,7 +1062,6 @@ ${summary}
                 container.classList.remove('hidden');
                 messages.innerHTML = generateDashboardReportHTML();
             });
-
             closeBtn.addEventListener('click', () => container.classList.add('hidden'));
         }
 
@@ -1182,38 +1069,30 @@ ${summary}
         document.addEventListener('DOMContentLoaded', async function() {
             const loadingOverlay = document.getElementById('loadingOverlay');
             const errorDisplay = document.getElementById('errorDisplay');
-
             const urlParams = new URLSearchParams(window.location.search);
             const paramStatus = urlParams.get('status');
-            if (paramStatus) {
-                currentStatusFilter = paramStatus;
-            }
+            if (paramStatus) currentStatusFilter = paramStatus;
             
-            // Setup static components first
             renderGroupTabs();
             setupLoginModal();
             setupAiModal();
             setupActivityModal();
             setupWeeklySummaryModal();
-            setupScrollToTop(); // Set up the scroll-to-top button
+            setupScrollToTop();
             renderMonthFilter();
             setupChatBot();
 
-            // Show loading indicator and fetch data
             loadingOverlay.classList.remove('hidden');
             try {
-                await refreshData(); // Initial data load
-                // showWeeklySummary(); // Disable auto popup of weekly summary
+                await refreshData();
                 if (paramStatus) {
                     const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
                     if (btn) filterItemsByStatus(paramStatus, { target: btn });
                 }
             } catch (error) {
-                // If data fetch fails, show an error message
                 document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
                 errorDisplay.classList.remove('hidden');
             } finally {
-                // Always hide the loading overlay
                 loadingOverlay.classList.add('hidden');
             }
         });
