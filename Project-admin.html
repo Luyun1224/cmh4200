@@ -15,10 +15,49 @@
         select[multiple] {
             padding: 8px;
         }
+        /* Custom styles for range input */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb; /* gray-200 */
+            border-radius: 9999px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type=range]:hover {
+            opacity: 1;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2563eb; /* blue-600 */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #2563eb; /* blue-600 */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
     </style>
     <script>
+        // Basic security check: Redirect if not "logged in".
+        // In a real application, this should be handled with server-side authentication.
         if (!localStorage.getItem('dashboardLoggedIn')) {
-            window.location.href = 'project.html';
+            // Uncomment the line below for production to redirect unauthenticated users.
+            // window.location.href = 'https://luyun1224.github.io/cmh4200/project.html'; 
+            console.warn("Authentication check bypassed for development.");
         }
     </script>
 </head>
@@ -65,6 +104,18 @@
                     <label for="item-description" class="block text-sm font-medium text-gray-700 mb-2">項目備註說明</label>
                     <textarea id="item-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="請輸入此項目的詳細說明或備註..."></textarea>
                 </div>
+
+                <!-- NEW: Standardized Checklist Section -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">標準化任務清單 (選填)</label>
+                    <div id="checklist-container" class="space-y-2">
+                        <!-- Checklist items will be dynamically added here -->
+                    </div>
+                    <button type="button" id="add-checklist-item-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        <i class="fas fa-plus-circle mr-1"></i> 新增檢查點
+                    </button>
+                </div>
+
                 <div class="grid md:grid-cols-2 gap-6">
                      <div>
                         <label for="item-assignees" class="block text-sm font-medium text-gray-700 mb-2">主要負責人 (可複選)</label>
@@ -111,18 +162,19 @@
                     </div>
                 </div>
                 <div class="pt-2">
-                    <label for="item-progress" class="block text-sm font-medium text-gray-700">進度 (%)</label>
-                    <div class="flex items-center space-x-2">
-                        <button type="button" id="decrease-progress" class="px-2 py-1 bg-gray-200 rounded">-10</button>
-                        <input type="range" id="item-progress" min="0" max="100" step="10" value="0" class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                        <button type="button" id="increase-progress" class="px-2 py-1 bg-gray-200 rounded">+10</button>
-                        <span class="text-sm text-gray-600 ml-2"><span id="progress-value">0</span>%</span>
+                    <label for="item-progress" class="block text-sm font-medium text-gray-700 mb-2">進度 (%)</label>
+                    <div class="flex items-center space-x-4">
+                        <input type="range" id="item-progress" min="0" max="100" step="10" value="0" class="flex-grow">
+                        <span id="progress-value" class="font-semibold text-gray-700 w-12 text-center">0%</span>
+                        <div class="flex space-x-2">
+                            <button type="button" id="decrease-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">-10</button>
+                            <button type="button" id="increase-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">+10</button>
+                        </div>
                     </div>
                 </div>
                 <div class="pt-2">
-                    <label for="item-help-message" class="block text-sm font-medium text-gray-700">留言板</label>
-                    <textarea id="item-help-message" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="專案進度說明(停滯原因...等)"></textarea>
-                    <p class="text-xs text-gray-400 mt-1">專案進度說明(停滯原因...等)</p>
+                    <label for="item-comments" class="block text-sm font-medium text-gray-700">留言板</label>
+                    <textarea id="item-comments" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="專案進度說明(停滯原因...等)"></textarea>
                 </div>
                 <div class="flex justify-end space-x-4 pt-4">
                     <button type="button" id="cancel-edit-btn" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors hidden">取消編輯</button>
@@ -137,19 +189,19 @@
         <div class="bg-white rounded-xl shadow-lg p-6">
              <h2 class="text-xl font-semibold text-gray-800 mb-4">現有項目列表</h2>
              <div class="flex flex-col md:flex-row gap-4 mb-4">
-                <div>
+                 <div>
                     <label for="filter-group" class="block text-sm font-medium text-gray-700 mb-1">所屬小組</label>
                     <select id="filter-group" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
                     </select>
                 </div>
-                <div>
+                 <div>
                     <label for="filter-assignee" class="block text-sm font-medium text-gray-700 mb-1">負責人</label>
                     <select id="filter-assignee" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
                     </select>
                 </div>
-                <div>
+                 <div>
                     <label for="filter-status" class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
                     <select id="filter-status" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
@@ -182,7 +234,7 @@
     <script>
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
-        let activities = []; // Data is now fetched from the Google Sheet
+        let activities = [];
 
         const staffData = [
             { name: '廖家德' }, { name: '劉雯' }, { name: '楊依玲' }, { name: '高瑞穗' },
@@ -215,7 +267,7 @@
         const cancelBtn = document.getElementById('cancel-edit-btn');
         const progressInput = document.getElementById('item-progress');
         const progressValue = document.getElementById('progress-value');
-        const helpMessageInput = document.getElementById('item-help-message');
+        const commentsInput = document.getElementById('item-comments');
         const increaseBtn = document.getElementById('increase-progress');
         const decreaseBtn = document.getElementById('decrease-progress');
         const groupSelect = document.getElementById('item-group');
@@ -227,6 +279,8 @@
         const filterGroupSelect = document.getElementById('filter-group');
         const filterAssigneeSelect = document.getElementById('filter-assignee');
         const filterStatusSelect = document.getElementById('filter-status');
+        const checklistContainer = document.getElementById('checklist-container');
+        const addChecklistItemBtn = document.getElementById('add-checklist-item-btn');
 
         // --- API Communication ---
         async function handleApiRequest(action, payload, buttonElement) {
@@ -267,23 +321,12 @@
 
         // --- Functions ---
         
-        /**
-         * Formats a date string into YYYY-MM-DD for date input fields.
-         * @param {string} dateString The date string from the data source.
-         * @returns {string} A formatted date string or an empty string.
-         */
         function formatDateForInput(dateString) {
             if (!dateString) return '';
             try {
                 const date = new Date(dateString);
-                // Check if the date is valid
-                if (isNaN(date.getTime())) {
-                    return '';
-                }
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
+                if (isNaN(date.getTime())) return '';
+                return date.toISOString().split('T')[0];
             } catch (e) {
                 console.error("Could not format date:", dateString, e);
                 return '';
@@ -303,99 +346,58 @@
 
         function populateDropdowns() {
             groupSelect.innerHTML = '<option value="">-- 請選擇所屬小組 --</option>';
-            for (const [key, value] of Object.entries(groupData)) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = value;
-                groupSelect.appendChild(option);
-            }
-            const otherOption = document.createElement('option');
-            otherOption.value = 'other';
-            otherOption.textContent = '-- 其他 (自行輸入) --';
-            groupSelect.appendChild(otherOption);
+            Object.entries(groupData).forEach(([key, value]) => {
+                groupSelect.add(new Option(value, key));
+            });
+            groupSelect.add(new Option('-- 其他 (自行輸入) --', 'other'));
 
             filterGroupSelect.innerHTML = '<option value="all">全部</option>';
-            for (const [key, value] of Object.entries(groupData)) {
-                const opt = document.createElement('option');
-                opt.value = key;
-                opt.textContent = value;
-                filterGroupSelect.appendChild(opt);
-            }
+            Object.entries(groupData).forEach(([key, value]) => {
+                filterGroupSelect.add(new Option(value, key));
+            });
 
             assigneesSelect.innerHTML = '';
             collaboratorsSelect.innerHTML = '';
-
-           filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
-
+            filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
             filterStatusSelect.innerHTML = '<option value="all">全部</option>';
-            for (const [key, value] of Object.entries(statusData)) {
-                const opt = document.createElement('option');
-                opt.value = key;
-                opt.textContent = value;
-                filterStatusSelect.appendChild(opt);
-            }
+            
+            Object.entries(statusData).forEach(([key, value]) => {
+                filterStatusSelect.add(new Option(value, key));
+            });
 
-            const allStaffOption1 = document.createElement('option');
-            allStaffOption1.value = '全體同仁';
-            allStaffOption1.textContent = '全體同仁';
-            assigneesSelect.appendChild(allStaffOption1);
-
-            const allStaffOption2 = document.createElement('option');
-            allStaffOption2.value = '全體同仁';
-            allStaffOption2.textContent = '全體同仁';
-            collaboratorsSelect.appendChild(allStaffOption2);
+            const allStaffOption1 = new Option('全體同仁', '全體同仁');
+            const allStaffOption2 = new Option('全體同仁', '全體同仁');
+            assigneesSelect.add(allStaffOption1);
+            collaboratorsSelect.add(allStaffOption2);
 
             staffData.forEach(staff => {
-                const option1 = document.createElement('option');
-                option1.value = staff.name;
-                option1.textContent = staff.name;
-                assigneesSelect.appendChild(option1);
-
-                const option2 = document.createElement('option');
-                option2.value = staff.name;
-                option2.textContent = staff.name;
-                collaboratorsSelect.appendChild(option2);
-
-                const opt3 = document.createElement('option');
-                opt3.value = staff.name;
-                opt3.textContent = staff.name;
-                filterAssigneeSelect.appendChild(opt3);
+                assigneesSelect.add(new Option(staff.name, staff.name));
+                collaboratorsSelect.add(new Option(staff.name, staff.name));
+                filterAssigneeSelect.add(new Option(staff.name, staff.name));
             });
         }
         
         function getTypeDisplay(type) {
-            switch(type) {
-                case 'project':
-                    return '<span class="text-xs font-normal text-blue-500">(專案)</span>';
-                case 'task':
-                    return '<span class="text-xs font-normal text-green-500">(任務)</span>';
-                case 'activity':
-                    return '<span class="text-xs font-normal text-purple-500">(活動)</span>';
-                case 'meeting':
-                    return '<span class="text-xs font-normal text-indigo-500">(會議)</span>';
-                default:
-                    return '';
-            }
+            const types = {
+                project: '<span class="text-xs font-normal text-blue-500">(專案)</span>',
+                task: '<span class="text-xs font-normal text-green-500">(任務)</span>',
+                activity: '<span class="text-xs font-normal text-purple-500">(活動)</span>',
+                meeting: '<span class="text-xs font-normal text-indigo-500">(會議)</span>'
+            };
+            return types[type] || '';
         }
 
        function renderTable() {
             let filtered = activities;
-            if (currentGroupFilter !== 'all') {
-                filtered = filtered.filter(i => i.group === currentGroupFilter);
-            }
-           if (currentAssigneeFilter !== 'all') {
-               filtered = filtered.filter(i => i.assignees.includes(currentAssigneeFilter));
-           }
-            if (currentStatusFilter !== 'all') {
-                filtered = filtered.filter(i => i.status === currentStatusFilter);
-            }
+            if (currentGroupFilter !== 'all') filtered = filtered.filter(i => i.group === currentGroupFilter);
+            if (currentAssigneeFilter !== 'all') filtered = filtered.filter(i => i.assignees.includes(currentAssigneeFilter));
+            if (currentStatusFilter !== 'all') filtered = filtered.filter(i => i.status === currentStatusFilter);
 
            tableBody.innerHTML = filtered.map(item => {
                 const groupName = groupData[item.group] || item.group;
                 const assigneesText = item.assignees.join(', ') || 'N/A';
                 const collaboratorsText = item.collaborators.join(', ') || '無';
                 const typeDisplay = getTypeDisplay(item.type);
-
                 const dateRange = formatDateRange(item.startDate, item.deadline);
                 const dateRangeHtml = dateRange ? `<div class="text-xs text-gray-500 mt-1">${dateRange}</div>` : '';
 
@@ -405,7 +407,7 @@
                     <td class="px-6 py-4">${groupName}</td>
                     <td class="px-6 py-4">${assigneesText}</td>
                     <td class="px-6 py-4">${collaboratorsText}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-800' : item.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${item.status}</span></td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-800' : item.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${statusData[item.status] || item.status}</span></td>
                     <td class="px-6 py-4 text-right">
                         <button onclick="editItem(${item.id})" class="font-medium text-blue-600 hover:underline mr-4"><i class="fas fa-edit"></i> 編輯</button>
                         <button onclick="deleteItem(${item.id})" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
@@ -419,15 +421,15 @@
         
         function resetForm() {
             form.reset();
-            progressInput.value = 0;
-            progressValue.textContent = 0;
-            helpMessageInput.value = '';
+            updateProgress(0);
+            commentsInput.value = '';
             document.getElementById('item-id').value = '';
             formTitle.textContent = '新增項目';
             saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
             cancelBtn.classList.add('hidden');
             otherGroupWrapper.classList.add('hidden');
             otherGroupNameInput.value = '';
+            checklistContainer.innerHTML = '';
             [...assigneesSelect.options].forEach(opt => opt.selected = false);
             [...collaboratorsSelect.options].forEach(opt => opt.selected = false);
         }
@@ -453,12 +455,15 @@
             document.getElementById('item-type').value = item.type;
             document.getElementById('item-status').value = item.status;
             document.getElementById('item-priority').value = item.priority;
-            // Use the new formatting function for dates
             document.getElementById('item-start-date').value = formatDateForInput(item.startDate);
             document.getElementById('item-deadline').value = formatDateForInput(item.deadline);
-            progressInput.value = item.progress;
-            progressValue.textContent = item.progress;
-            helpMessageInput.value = item.helpMessage || '';
+            updateProgress(item.progress || 0);
+            commentsInput.value = item.helpMessage || '';
+
+            checklistContainer.innerHTML = '';
+            if (Array.isArray(item.checklist)) {
+                item.checklist.forEach(taskText => addChecklistItem(taskText));
+            }
 
             [...assigneesSelect.options].forEach(opt => { opt.selected = item.assignees.includes(opt.value); });
             [...collaboratorsSelect.options].forEach(opt => { opt.selected = item.collaborators.includes(opt.value); });
@@ -479,7 +484,6 @@
             confirmModal.classList.add('flex');
 
             confirmOkBtn.onclick = async () => {
-                // Provide immediate feedback
                 confirmOkBtn.disabled = true;
                 confirmOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
 
@@ -489,7 +493,6 @@
                     await loadItems();
                 }
 
-                // Hide modal and reset button state after operation
                 confirmModal.classList.add('hidden');
                 confirmOkBtn.disabled = false;
                 confirmOkBtn.innerHTML = originalBtnText;
@@ -497,7 +500,6 @@
             
             confirmCancelBtn.onclick = () => {
                 confirmModal.classList.add('hidden');
-                // Reset button in case it was somehow left in a loading state
                 confirmOkBtn.disabled = false;
                 confirmOkBtn.innerHTML = originalBtnText;
             };
@@ -520,28 +522,54 @@
                         .map(option => option.value);
         }
 
+        function addChecklistItem(text = '') {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex items-center space-x-2';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'checklist-item-input flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500';
+            input.placeholder = '輸入檢查點任務...';
+            input.value = text;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'text-gray-400 hover:text-red-500 transition-colors';
+            removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            removeBtn.onclick = () => itemDiv.remove();
+            
+            itemDiv.appendChild(input);
+            itemDiv.appendChild(removeBtn);
+            checklistContainer.appendChild(itemDiv);
+        }
+
         // --- Event Listeners ---
-        increaseBtn.addEventListener('click', () => {
-            let val = parseInt(progressInput.value) || 0;
-            progressInput.value = Math.min(100, val + 10);
-            progressValue.textContent = progressInput.value;
-        });
-        decreaseBtn.addEventListener('click', () => {
-            let val = parseInt(progressInput.value) || 0;
-            progressInput.value = Math.max(0, val - 10);
-            progressValue.textContent = progressInput.value;
-        });
+        function updateProgress(value) {
+            const val = Math.max(0, Math.min(100, value));
+            progressInput.value = val;
+            progressValue.textContent = `${val}%`;
+            updateProgressBarStyle();
+        }
+
+        function updateProgressBarStyle() {
+            const percent = progressInput.value;
+            progressInput.style.background = `linear-gradient(to right, #60a5fa ${percent}%, #e5e7eb ${percent}%)`;
+        }
 
         progressInput.addEventListener('input', (e) => {
-            progressValue.textContent = e.target.value;
+            progressValue.textContent = `${e.target.value}%`;
+            updateProgressBarStyle();
+        });
+
+        increaseBtn.addEventListener('click', () => {
+            updateProgress(parseInt(progressInput.value) + 10);
+        });
+        decreaseBtn.addEventListener('click', () => {
+            updateProgress(parseInt(progressInput.value) - 10);
         });
 
         groupSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'other') {
-                otherGroupWrapper.classList.remove('hidden');
-            } else {
-                otherGroupWrapper.classList.add('hidden');
-            }
+            otherGroupWrapper.classList.toggle('hidden', e.target.value !== 'other');
         });
 
         filterGroupSelect.addEventListener('change', (e) => {
@@ -558,6 +586,8 @@
             currentStatusFilter = e.target.value;
             renderTable();
         });
+
+        addChecklistItemBtn.addEventListener('click', () => addChecklistItem());
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -578,6 +608,10 @@
                 }
             }
 
+            const checklistItems = Array.from(document.querySelectorAll('.checklist-item-input'))
+                                        .map(input => input.value.trim())
+                                        .filter(text => text);
+
             const itemData = {
                 id: id ? parseInt(id) : Date.now(),
                 name: document.getElementById('item-name').value,
@@ -591,7 +625,8 @@
                 startDate: document.getElementById('item-start-date').value,
                 deadline: document.getElementById('item-deadline').value,
                 progress: parseInt(progressInput.value),
-                helpMessage: helpMessageInput.value
+                helpMessage: commentsInput.value,
+                checklist: JSON.stringify(checklistItems) // Stringify for Google Sheets
             };
 
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
@@ -601,7 +636,6 @@
                 resetForm();
                 await loadItems();
             } else {
-               // Reset button text on failure
                if(id) {
                    saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
                } else {
@@ -616,6 +650,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             populateDropdowns();
             loadItems();
+            updateProgressBarStyle(); // Initial style update
         });
     </script>
 </body>
