@@ -807,19 +807,15 @@
                     const result = await response.json();
                     
                     if (result.status === 'success') {
-                        const loginResult = result.data;
-                        if (loginResult.success) {
-                            loginMessage.textContent = '登入成功！即將跳轉...';
-                            loginMessage.className = 'text-center mb-4 font-medium text-green-500';
-                            setTimeout(() => {
-                                window.location.href = 'https://luyun1224.github.io/cmh4200/Project-admin.html';
-                            }, 1500);
-                        } else {
-                            loginMessage.innerHTML = `<pre class="text-xs text-left whitespace-pre-wrap">${loginResult.message}</pre>`;
-                            loginMessage.className = 'text-center mb-4 font-medium';
-                        }
+                        // **MODIFIED: Handle the new response format from GS**
+                        const loginData = result.data;
+                        loginMessage.textContent = '登入成功！即將跳轉...';
+                        loginMessage.className = 'text-center mb-4 font-medium text-green-500';
+                        setTimeout(() => {
+                            window.location.href = `https://luyun1224.github.io/cmh4200/Project-admin.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
+                        }, 1500);
                     } else {
-                        throw new Error(result.message || '後端腳本發生未知錯誤。');
+                        throw new Error(result.message || '帳號或密碼錯誤。');
                     }
                 } catch (error) {
                     console.error("Login Error Details:", error);
