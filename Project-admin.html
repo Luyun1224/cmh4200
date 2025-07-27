@@ -98,11 +98,11 @@
 
                 <!-- MODIFIED: Interactive Checklist Builder -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">檢查點 (Checkpoints)</label>
-                    <div id="checkpoints-container" class="space-y-2 border p-4 rounded-lg bg-gray-50">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">檢查點 (Checklist)</label>
+                    <div id="checklist-container" class="space-y-2 border p-4 rounded-lg bg-gray-50">
                         <!-- Checklist items will be dynamically added here -->
                     </div>
-                    <button type="button" id="add-checkpoint-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    <button type="button" id="add-checklist-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
                         <i class="fas fa-plus-circle mr-1"></i> 新增檢查點
                     </button>
                 </div>
@@ -270,8 +270,8 @@
         const filterGroupSelect = document.getElementById('filter-group');
         const filterAssigneeSelect = document.getElementById('filter-assignee');
         const filterStatusSelect = document.getElementById('filter-status');
-        const checkpointsContainer = document.getElementById('checkpoints-container');
-        const addCheckpointBtn = document.getElementById('add-checkpoint-btn');
+        const checklistContainer = document.getElementById('checklist-container');
+        const addChecklistBtn = document.getElementById('add-checklist-btn');
 
         // --- API Communication ---
         async function handleApiRequest(action, payload, buttonElement) {
@@ -420,7 +420,7 @@
             cancelBtn.classList.add('hidden');
             otherGroupWrapper.classList.add('hidden');
             otherGroupNameInput.value = '';
-            checkpointsContainer.innerHTML = ''; // MODIFIED: Clear checkpoints container
+            checklistContainer.innerHTML = ''; // MODIFIED: Clear checklist container
             [...assigneesSelect.options].forEach(opt => opt.selected = false);
             [...collaboratorsSelect.options].forEach(opt => opt.selected = false);
         }
@@ -451,10 +451,10 @@
             updateProgress(item.progress || 0);
             commentsInput.value = item.helpMessage || '';
 
-            // MODIFIED: Populate checkpoints interactively
-            checkpointsContainer.innerHTML = '';
-            if(Array.isArray(item.checkpoints)) {
-                item.checkpoints.forEach(cp => addCheckpointItem(cp.name, cp.completed));
+            // MODIFIED: Populate checklist interactively
+            checklistContainer.innerHTML = '';
+            if(Array.isArray(item.checklist)) {
+                item.checklist.forEach(cp => addChecklistItem(cp.name, cp.completed));
             }
 
             [...assigneesSelect.options].forEach(opt => { opt.selected = item.assignees.includes(opt.value); });
@@ -515,9 +515,9 @@
         }
 
         // --- NEW: Interactive Checklist Functions ---
-        function addCheckpointItem(name = '', completed = false) {
+        function addChecklistItem(name = '', completed = false) {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'flex items-center space-x-3 checkpoint-item';
+            itemDiv.className = 'flex items-center space-x-3 checklist-item';
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -539,7 +539,7 @@
             itemDiv.appendChild(checkbox);
             itemDiv.appendChild(input);
             itemDiv.appendChild(removeBtn);
-            checkpointsContainer.appendChild(itemDiv);
+            checklistContainer.appendChild(itemDiv);
         }
 
         // --- Event Listeners ---
@@ -586,7 +586,7 @@
             renderTable();
         });
 
-        addCheckpointBtn.addEventListener('click', () => addCheckpointItem());
+        addChecklistBtn.addEventListener('click', () => addChecklistItem());
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -607,13 +607,13 @@
                 }
             }
 
-            // MODIFIED: Collect checkpoints from the interactive list
-            const checkpointsData = [];
-            document.querySelectorAll('#checkpoints-container .checkpoint-item').forEach(itemDiv => {
+            // MODIFIED: Collect checklist from the interactive list
+            const checklistData = [];
+            document.querySelectorAll('#checklist-container .checklist-item').forEach(itemDiv => {
                 const input = itemDiv.querySelector('input[type="text"]');
                 const checkbox = itemDiv.querySelector('input[type="checkbox"]');
                 if (input.value.trim()) {
-                    checkpointsData.push({
+                    checklistData.push({
                         name: input.value.trim(),
                         completed: checkbox.checked
                     });
@@ -634,7 +634,7 @@
                 deadline: document.getElementById('item-deadline').value,
                 progress: parseInt(progressInput.value),
                 helpMessage: commentsInput.value,
-                checkpoints: checkpointsData
+                checklist: checklistData
             };
 
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
