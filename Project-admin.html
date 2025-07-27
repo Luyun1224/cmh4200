@@ -508,7 +508,8 @@
                 confirmOkBtn.disabled = true;
                 confirmOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
 
-                const result = await handleApiRequest('deleteItem', { id });
+                // **MODIFIED: Pass userId for permission check**
+                const result = await handleApiRequest('deleteItem', { id, userId: loggedInUser.id });
                 if (result) {
                     showToast('項目已刪除', 'success');
                     await loadItems();
