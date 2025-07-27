@@ -96,12 +96,13 @@
                     <textarea id="item-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="請輸入此項目的詳細說明或備註..."></textarea>
                 </div>
 
+                <!-- MODIFIED: Interactive Checklist Builder -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">標準化任務清單 (選填)</label>
-                    <div id="checklist-container" class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">檢查點 (Checkpoints)</label>
+                    <div id="checkpoints-container" class="space-y-2 border p-4 rounded-lg bg-gray-50">
                         <!-- Checklist items will be dynamically added here -->
                     </div>
-                    <button type="button" id="add-checklist-item-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    <button type="button" id="add-checkpoint-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
                         <i class="fas fa-plus-circle mr-1"></i> 新增檢查點
                     </button>
                 </div>
@@ -163,7 +164,7 @@
                     </div>
                 </div>
                 <div class="pt-2">
-                    <label for="item-comments" class="block text-sm font-medium text-gray-700">留言板</label>
+                    <label for="item-comments" class="block text-sm font-medium text-gray-700">留言板 (求救訊息)</label>
                     <textarea id="item-comments" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="專案進度說明(停滯原因...等)"></textarea>
                 </div>
                 <div class="flex justify-end space-x-4 pt-4">
@@ -269,8 +270,8 @@
         const filterGroupSelect = document.getElementById('filter-group');
         const filterAssigneeSelect = document.getElementById('filter-assignee');
         const filterStatusSelect = document.getElementById('filter-status');
-        const checklistContainer = document.getElementById('checklist-container');
-        const addChecklistItemBtn = document.getElementById('add-checklist-item-btn');
+        const checkpointsContainer = document.getElementById('checkpoints-container');
+        const addCheckpointBtn = document.getElementById('add-checkpoint-btn');
 
         // --- API Communication ---
         async function handleApiRequest(action, payload, buttonElement) {
@@ -419,7 +420,7 @@
             cancelBtn.classList.add('hidden');
             otherGroupWrapper.classList.add('hidden');
             otherGroupNameInput.value = '';
-            checklistContainer.innerHTML = '';
+            checkpointsContainer.innerHTML = ''; // MODIFIED: Clear checkpoints container
             [...assigneesSelect.options].forEach(opt => opt.selected = false);
             [...collaboratorsSelect.options].forEach(opt => opt.selected = false);
         }
@@ -448,11 +449,12 @@
             document.getElementById('item-start-date').value = formatDateForInput(item.startDate);
             document.getElementById('item-deadline').value = formatDateForInput(item.deadline);
             updateProgress(item.progress || 0);
-            commentsInput.value = item.comments || ''; // FIXED: Use 'comments' key
+            commentsInput.value = item.helpMessage || '';
 
-            checklistContainer.innerHTML = '';
-            if (Array.isArray(item.checklist)) {
-                item.checklist.forEach(taskText => addChecklistItem(taskText));
+            // MODIFIED: Populate checkpoints interactively
+            checkpointsContainer.innerHTML = '';
+            if(Array.isArray(item.checkpoints)) {
+                item.checkpoints.forEach(cp => addCheckpointItem(cp.name, cp.completed));
             }
 
             [...assigneesSelect.options].forEach(opt => { opt.selected = item.assignees.includes(opt.value); });
@@ -512,15 +514,21 @@
                         .map(option => option.value);
         }
 
-        function addChecklistItem(text = '') {
+        // --- NEW: Interactive Checklist Functions ---
+        function addCheckpointItem(name = '', completed = false) {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'flex items-center space-x-2';
+            itemDiv.className = 'flex items-center space-x-3 checkpoint-item';
             
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = completed;
+            checkbox.className = 'h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500';
+
             const input = document.createElement('input');
             input.type = 'text';
-            input.className = 'checklist-item-input flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500';
+            input.className = 'flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500';
             input.placeholder = '輸入檢查點任務...';
-            input.value = text;
+            input.value = name;
             
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -528,9 +536,10 @@
             removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
             removeBtn.onclick = () => itemDiv.remove();
             
+            itemDiv.appendChild(checkbox);
             itemDiv.appendChild(input);
             itemDiv.appendChild(removeBtn);
-            checklistContainer.appendChild(itemDiv);
+            checkpointsContainer.appendChild(itemDiv);
         }
 
         // --- Event Listeners ---
@@ -577,7 +586,7 @@
             renderTable();
         });
 
-        addChecklistItemBtn.addEventListener('click', () => addChecklistItem());
+        addCheckpointBtn.addEventListener('click', () => addCheckpointItem());
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -598,9 +607,18 @@
                 }
             }
 
-            const checklistItems = Array.from(document.querySelectorAll('.checklist-item-input'))
-                                        .map(input => input.value.trim())
-                                        .filter(text => text);
+            // MODIFIED: Collect checkpoints from the interactive list
+            const checkpointsData = [];
+            document.querySelectorAll('#checkpoints-container .checkpoint-item').forEach(itemDiv => {
+                const input = itemDiv.querySelector('input[type="text"]');
+                const checkbox = itemDiv.querySelector('input[type="checkbox"]');
+                if (input.value.trim()) {
+                    checkpointsData.push({
+                        name: input.value.trim(),
+                        completed: checkbox.checked
+                    });
+                }
+            });
 
             const itemData = {
                 id: id ? parseInt(id) : Date.now(),
@@ -615,8 +633,8 @@
                 startDate: document.getElementById('item-start-date').value,
                 deadline: document.getElementById('item-deadline').value,
                 progress: parseInt(progressInput.value),
-                comments: commentsInput.value, // FIXED: Use 'comments' key
-                checklist: JSON.stringify(checklistItems)
+                helpMessage: commentsInput.value,
+                checkpoints: checkpointsData
             };
 
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
