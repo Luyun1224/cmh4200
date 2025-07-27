@@ -252,7 +252,7 @@
             { name: '楊宜婷', group: 'allied-health' }, { name: '陳詩芸', group: 'allied-health' },
             { name: '李迎真', group: 'chart-review' }, { name: '林盟淦', group: 'chart-review' },
         ];
-        const localProfileImages = { '盧英云': '盧英云.png' };
+        const localProfileImages = { '盧英云': 'https://raw.githubusercontent.com/luyun1224/cmh4200/main/Lulu.JPG' };
         const groupData = {
             'all': '全部', 'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
             'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
@@ -310,7 +310,8 @@
                         finalStatus = 'overdue';
                     }
 
-                    const checkpoints = Array.isArray(item.checkpoints) ? item.checkpoints : [];
+                    // **FIXED: Use 'checklist' to match backend**
+                    const checklist = Array.isArray(item.checklist) ? item.checklist : [];
 
                     return {
                         ...item,
@@ -318,7 +319,7 @@
                         status: finalStatus,
                         lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
                         helpMessage: item.helpMessage || '',
-                        checkpoints: checkpoints
+                        checklist: checklist 
                     };
                 });
             } catch (error) {
@@ -367,9 +368,10 @@
             }
 
             itemsList.innerHTML = filteredItems.map(item => {
-                const checkpoints = item.checkpoints || [];
-                const totalSteps = checkpoints.length;
-                const completedSteps = checkpoints.filter(c => c.completed).length;
+                // **FIXED: Use 'checklist' to match backend**
+                const checklist = item.checklist || [];
+                const totalSteps = checklist.length;
+                const completedSteps = checklist.filter(c => c.completed).length;
 
                 const progressChange = item.progress - (item.lastWeekProgress || 0);
                 const progressChangeHTML = progressChange > 0
@@ -378,8 +380,8 @@
                         ? `<span class="text-red-600 font-medium text-sm ml-2">▼ ${Math.abs(progressChange)}%</span>`
                         : '';
 
-                const checkpointsHTML = totalSteps > 0 
-                    ? checkpoints.map(cp => `
+                const checklistHTML = totalSteps > 0 
+                    ? checklist.map(cp => `
                         <li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}">
                             <span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span>
                             <span>${cp.name}</span>
@@ -415,7 +417,7 @@
                                 <p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p>
                                 <div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
                                     <h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4>
-                                    <ul class="space-y-1 mt-2">${checkpointsHTML}</ul>
+                                    <ul class="space-y-1 mt-2">${checklistHTML}</ul>
                                     <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
                                 </div>
                             </div>
