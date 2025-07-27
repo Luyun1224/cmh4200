@@ -45,21 +45,18 @@
             box-shadow: 0 0 5px rgba(0,0,0,0.2);
         }
     </style>
-    <script>
-        if (!localStorage.getItem('dashboardLoggedIn')) {
-            // window.location.href = 'https://luyun1224.github.io/cmh4200/project.html'; 
-            console.warn("Authentication check bypassed for development.");
-        }
-    </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <div class="text-center mb-8 relative">
-             <a href="https://luyun1224.github.io/cmh4200/project.html" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
+        <div class="text-center mb-8 relative flex items-center justify-between">
+             <a href="https://luyun1224.github.io/cmh4200/project.html" class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
                  <i class="fas fa-arrow-left mr-2"></i>返回儀表板
              </a>
-            <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
-            <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
+             <div class="text-center absolute left-1/2 -translate-x-1/2">
+                <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
+                <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
+            </div>
+             <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
         </div>
 
         <!-- Form for Adding/Editing Items -->
@@ -191,7 +188,7 @@
 
         <!-- Items List -->
         <div class="bg-white rounded-xl shadow-2xl p-6 border border-slate-200">
-             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-4">現有項目列表</h2>
+             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-4">我的項目列表</h2>
              <div class="flex flex-col md:flex-row gap-4 mb-4">
                  <div>
                     <label for="filter-group" class="block text-sm font-medium text-gray-700 mb-1">所屬小組</label>
@@ -253,14 +250,9 @@
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let activities = [];
+        let staffData = []; // Will be fetched from backend
+        let loggedInUser = { name: '', id: '' }; // To store logged-in user info
 
-        const staffData = [
-            { name: '廖家德' }, { name: '劉雯' }, { name: '楊依玲' }, { name: '高瑞穗' },
-            { name: '林汶秀' }, { name: '林淑雅' }, { name: '許淑怡' }, { name: '侯昱瑾' },
-            { name: '吳曉琪' }, { name: '王嬿茹' }, { name: '盧英云' }, { name: '黃惠津' },
-            { name: '楊宜婷' }, { name: '陳詩芸' }, { name: '李迎真' }, { name: '林盟淦' },
-        ];
-        
         const groupData = {
             'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
             'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
@@ -328,15 +320,23 @@
                 }
             }
         }
+        
+        async function fetchStaffData() {
+            const users = await handleApiRequest('getAllUsers');
+            if (users) {
+                staffData = users.map(u => ({ name: u.name }));
+            }
+        }
 
         async function loadItems() {
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在從 Google Sheet 載入資料...</td></tr>`;
-            const items = await handleApiRequest('getAllItems');
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在載入您的專屬資料...</td></tr>`;
+            // **MODIFIED: Pass the loggedInUser.id to fetch only this user's items**
+            const items = await handleApiRequest('getAllItems', { userId: loggedInUser.id });
             if (items) {
                 activities = items;
                 renderTable();
             } else {
-                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">載入資料失敗或沒有任何項目。</td></tr>`;
+                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">載入資料失敗或您尚未新增任何項目。</td></tr>`;
             }
         }
 
@@ -450,7 +450,7 @@
             cancelBtn.classList.add('hidden');
             otherGroupWrapper.classList.add('hidden');
             otherGroupNameInput.value = '';
-            checklistContainer.innerHTML = ''; // MODIFIED: Clear checklist container
+            checklistContainer.innerHTML = ''; 
             [...assigneesSelect.options].forEach(opt => opt.selected = false);
             [...collaboratorsSelect.options].forEach(opt => opt.selected = false);
         }
@@ -481,7 +481,6 @@
             updateProgress(item.progress || 0);
             commentsInput.value = item.helpMessage || '';
 
-            // MODIFIED: Populate checklist interactively
             checklistContainer.innerHTML = '';
             if(Array.isArray(item.checklist)) {
                 item.checklist.forEach(cp => addChecklistItem(cp.name, cp.completed));
@@ -646,8 +645,6 @@
                 template.forEach(item => addChecklistItem(item.name, item.completed));
                 showToast(`已載入範本 "${templateName}"`, 'success');
             }
-            // **FIXED: Do not reset the dropdown value after loading**
-            // loadChecklistTemplateSelect.value = ''; 
         }
         
         function deleteChecklistTemplate() {
@@ -789,7 +786,8 @@
                 deadline: document.getElementById('item-deadline').value,
                 progress: parseInt(progressInput.value),
                 helpMessage: commentsInput.value,
-                checklist: checklistData
+                checklist: checklistData,
+                createdBy: loggedInUser.id // **MODIFIED: Add createdBy field**
             };
 
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
@@ -827,11 +825,26 @@
         }
 
         // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userName = urlParams.get('user');
+            const userId = urlParams.get('id');
+
+            if (!userName || !userId) {
+                // Redirect if not logged in
+                // For development, we can bypass this
+                console.warn("User info not in URL. Bypassing auth for development.");
+                // window.location.href = 'https://luyun1224.github.io/cmh4200/project.html'; 
+            }
+
+            loggedInUser = { name: userName, id: userId };
+            document.getElementById('user-greeting').textContent = `${userName || '使用者'}, 您好！`;
+
+            await fetchStaffData();
             populateDropdowns();
             populateTemplateDropdown();
             setupTemplateNameModal();
-            loadItems();
+            await loadItems();
             updateProgressBarStyle();
         });
     </script>
