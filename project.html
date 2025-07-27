@@ -250,7 +250,7 @@
         </div>
     </header>
 
-    <!-- **NEW: Filter Tabs Container** -->
+    <!-- Filter Tabs Container -->
     <div class="bg-white shadow-sm sticky top-0 z-40">
         <!-- Unit Filter Tabs -->
         <div class="container mx-auto px-4 sm:px-6 border-b">
@@ -326,7 +326,7 @@
         let staffData = [];
         
         const localProfileImages = { '盧英云': 'https://raw.githubusercontent.com/luyun1224/cmh4200/main/Lulu.JPG' };
-        // **UPDATED: Removed 'all' from groupData**
+        
         const groupData = {
             'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
             'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
@@ -334,7 +334,7 @@
         };
         
         // --- State Variables ---
-        let currentUnitFilter = 'all'; // **NEW**
+        let currentUnitFilter = 'all'; 
         let currentGroupFilter = 'all';
         let currentStatusFilter = 'all';
         let currentMemberFilter = 'all';
@@ -377,7 +377,7 @@
                     name: user.name,
                     group: user.group,
                     birthday: user.birthday,
-                    unit: user.unit // **NEW**
+                    unit: user.unit
                 }));
             } catch (error) {
                 console.error("Failed to fetch staff data:", error);
@@ -432,7 +432,6 @@
 
         // --- Rendering Functions ---
         
-        // **NEW: Function to render unit tabs**
         function renderUnitTabs() {
             const tabsContainer = document.getElementById('unitTabs');
             if (!staffData || staffData.length === 0) return;
@@ -445,7 +444,6 @@
             }).join('');
         }
 
-        // **UPDATED: Removed the 'all' button logic**
         function renderGroupTabs(membersToConsider) {
             const tabsContainer = document.getElementById('groupTabs');
             const groups = [...new Set(membersToConsider.map(s => s.group).filter(Boolean))];
@@ -456,11 +454,17 @@
                 return;
             }
             tabsContainer.style.padding = '0.75rem 0';
+            
+            let buttonsHTML = '';
+            if(groups.length > 0) {
+                buttonsHTML += `<button onclick="filterByGroup('all')" id="tab-all" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${'all' === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">全部組別</button>`;
+            }
 
-            tabsContainer.innerHTML = groups.map(key => {
+            buttonsHTML += groups.map(key => {
                 const value = groupData[key] || key;
                 return `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${value}</button>`
             }).join('');
+            tabsContainer.innerHTML = buttonsHTML;
         }
         
         function renderYearFilter() {
@@ -618,13 +622,13 @@
         }
 
         function updateStats(itemsToCount) {
-            const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
-            const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
+            const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
+            const activitiesAndMeetings = allActivities.filter(item => item.type === 'activity' || item.type === 'meeting');
 
             document.getElementById('totalTasks').textContent = projectsAndTasks.length;
             document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
             document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
-            document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
+            document.getElementById('completedTasks').textContent = allActivities.filter(t => t.status === 'completed').length;
             document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
         }
 
@@ -683,7 +687,7 @@
             itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
             // Update UI
-            updateStats(itemsToDisplay);
+            updateStats(allActivities); // **UPDATED: Always use the global list for stats**
             renderTeamMembers(membersInGroup, itemsForMonth);
             renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
         }
@@ -713,8 +717,6 @@
             
             document.querySelectorAll('.group-tab-btn').forEach(btn => {
                 btn.classList.toggle('tab-active', btn.id === `tab-${groupKey}`);
-                btn.classList.toggle('bg-gray-100', btn.id !== `tab-${groupKey}`);
-                btn.classList.toggle('hover:bg-gray-200', btn.id !== `tab-${groupKey}`);
             });
             renderDashboard();
         }
@@ -804,23 +806,19 @@
                     
                     const result = await response.json();
                     
-                    // **V3修正: 處理後端回傳的新格式**
                     if (result.status === 'success') {
                         const loginResult = result.data;
                         if (loginResult.success) {
-                            // 登入成功
                             loginMessage.textContent = '登入成功！即將跳轉...';
                             loginMessage.className = 'text-center mb-4 font-medium text-green-500';
                             setTimeout(() => {
                                 window.location.href = 'https://luyun1224.github.io/cmh4200/Project-admin.html';
                             }, 1500);
                         } else {
-                            // 登入失敗，顯示後端傳來的詳細偵錯訊息
                             loginMessage.innerHTML = `<pre class="text-xs text-left whitespace-pre-wrap">${loginResult.message}</pre>`;
                             loginMessage.className = 'text-center mb-4 font-medium';
                         }
                     } else {
-                        // GS腳本本身發生錯誤
                         throw new Error(result.message || '後端腳本發生未知錯誤。');
                     }
                 } catch (error) {
@@ -889,20 +887,213 @@
         }
         
         // --- MODAL AND UI FUNCTIONS ---
-        // ... (The rest of the modal functions like generateLocalAiSummary, getAiSuggestions, etc. remain unchanged) ...
+        
+        function openActivityModal(resetDate = true) {
+            if (resetDate) calendarDate = new Date();
+            const modal = document.getElementById('activityModal');
+            const content = document.getElementById('activity-content');
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            const itemsForDisplay = allActivities.filter(item => {
+                const typeMatch = item.type && (item.type.toLowerCase() === 'activity' || item.type.toLowerCase() === 'meeting');
+                return typeMatch;
+            });
+
+            const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay);
+
+            if (itemsForDisplay.length === 0) {
+                content.innerHTML = calendarHTML + `<p class="text-center text-gray-500 mt-4">目前沒有任何活動。</p>`;
+                modal.classList.remove('hidden');
+                return;
+            }
+            
+            const sortedItems = itemsForDisplay.slice().sort((a, b) => {
+                const dateA = new Date(a.startDate);
+                const dateB = new Date(b.startDate);
+                const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
+                const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
+                if (isPastA !== isPastB) return isPastA ? 1 : -1;
+                return dateA - dateB;
+            });
+            
+            const buildList = (arr) => {
+                if (arr.length === 0) return '<p class="text-center text-gray-500 mt-4">此月份沒有活動列表。</p>';
+                let html = '';
+                let currentKey = '';
+                arr.forEach(item => {
+                    const d = new Date(item.startDate);
+                    const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+                    if (key !== currentKey) {
+                        if (currentKey) html += '</ul></div>';
+                        currentKey = key;
+                        html += `<div class="mt-4"><h3 class="text-2xl font-bold text-purple-700 mb-2">${d.getFullYear()}年${d.getMonth()+1}月</h3><ul class="space-y-4">`;
+                    }
+                    const day = d.getDate();
+                    const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
+                    const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
+                    html += `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">
+                            ${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}
+                            <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
+                            <span class="text-xl font-bold text-purple-700">${day}</span>
+                            </div>
+                            <div class="flex-grow pt-1">
+                            <p class="font-semibold text-gray-800">${item.name}</p>
+                            <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>
+                            <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                            ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}
+                            </div>
+                            </li>`;
+                });
+                if (currentKey) html += '</ul></div>';
+                return html;
+            };
+
+            content.innerHTML = calendarHTML + `<hr class="my-6"/>` + `<div class="space-y-6">${buildList(sortedItems)}</div>`;
+            modal.classList.remove('hidden');
+        }
+
+        function showItemsInModal(filterType) {
+            const modal = document.getElementById('itemListModal');
+            const titleEl = document.getElementById('itemListModalTitle');
+            const contentEl = document.getElementById('itemListModalContent');
+            
+            let itemsToShow = [];
+            let modalTitle = '';
+
+            const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
+            const statusOrder = { 'active': 1, 'planning': 2, 'overdue': 3, 'completed': 4 };
+
+            switch(filterType) {
+                case 'total':
+                    itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
+                    modalTitle = '總項目列表';
+                    break;
+                case 'active':
+                    itemsToShow = projectsAndTasks.filter(item => item.status === 'active');
+                    modalTitle = '進行中項目列表';
+                    break;
+                case 'overdue':
+                    itemsToShow = projectsAndTasks.filter(item => item.status === 'overdue');
+                    modalTitle = '逾期項目列表';
+                    break;
+                case 'completed':
+                    itemsToShow = allActivities.filter(item => item.status === 'completed');
+                    modalTitle = '已完成項目列表';
+                    break;
+            }
+
+            titleEl.innerHTML = `<i class="fas fa-list-check mr-3"></i> ${modalTitle} (${itemsToShow.length})`;
+
+            if (itemsToShow.length === 0) {
+                contentEl.innerHTML = '<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>';
+            } else {
+                contentEl.innerHTML = itemsToShow.map(item => `
+                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100">
+                        <p class="font-semibold text-gray-800">${item.name}</p>
+                        <p class="text-sm text-gray-600">負責人: ${item.assignees.join(', ')}</p>
+                        <div class="flex justify-between items-center text-xs mt-1">
+                            <span class="font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span>
+                            <span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
         function generateLocalAiSummary(){/*...omitted for brevity...*/};
         async function getAiSuggestions(){/*...omitted for brevity...*/};
-        function setupAiModal(){/*...omitted for brevity...*/};
-        function setupActivityModal(){/*...omitted for brevity...*/};
-        function navigateCalendar(offset){/*...omitted for brevity...*/};
-        function generateCalendarHTML(year, month, activities){/*...omitted for brevity...*/};
-        function openActivityModal(resetDate = true){/*...omitted for brevity...*/};
-        function setupWeeklySummaryModal(){/*...omitted for brevity...*/};
+        
+        function setupModal(modalId, openBtnId, closeBtnId) {
+            const modal = document.getElementById(modalId);
+            const openBtn = openBtnId ? document.getElementById(openBtnId) : null;
+            const closeBtn = document.getElementById(closeBtnId);
+
+            const open = () => modal.classList.remove('hidden');
+            const close = () => modal.classList.add('hidden');
+
+            if (openBtn) openBtn.addEventListener('click', open);
+            closeBtn.addEventListener('click', close);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    close();
+                }
+            });
+        }
+
+        function setupAiModal(){
+            setupModal('aiModal', 'aiBtn', 'closeAiModalBtn');
+            document.getElementById('aiBtn').addEventListener('click', getAiSuggestions);
+        };
+        function setupActivityModal(){
+            setupModal('activityModal', null, 'closeActivityModalBtn');
+        };
+        function setupWeeklySummaryModal(){
+            setupModal('weeklySummaryModal', null, 'closeWeeklySummaryBtn');
+        };
+        function setupItemListModal(){
+            setupModal('itemListModal', null, 'closeItemListModalBtn');
+        };
+        
+        function navigateCalendar(offset){
+            calendarDate.setMonth(calendarDate.getMonth() + offset);
+            openActivityModal(false);
+        };
+        function generateCalendarHTML(year, month, activities){
+            const activitiesByDay = {};
+            activities.forEach(item => {
+                if (!item.startDate) return;
+                const start = new Date(item.startDate);
+                const end = item.deadline ? new Date(item.deadline) : new Date(item.startDate);
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    if (d.getFullYear() === year && d.getMonth() === month) {
+                        const day = d.getDate();
+                        if (!activitiesByDay[day]) activitiesByDay[day] = [];
+                        activitiesByDay[day].push(item);
+                    }
+                }
+            });
+
+            const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+            const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let calendarHtml = `<div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="navigateCalendar(-1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt;</button>
+                    <h3 class="text-xl font-bold text-purple-700">${year}年 ${monthNames[month]}</h3>
+                    <button onclick="navigateCalendar(1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&gt;</button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-sm">`;
+            
+            daysOfWeek.forEach(day => { calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`; });
+            for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`; }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const activitiesToday = activitiesByDay[day];
+                if (activitiesToday) {
+                    const tooltipHtml = activitiesToday.map(act => `<li class="truncate">${act.name}</li>`).join('');
+                    calendarHtml += `<div class="relative group flex items-center justify-center">
+                        <div class="mx-auto flex items-center justify-center w-8 h-8 rounded-full border-2 border-purple-400 text-purple-700 font-semibold cursor-pointer">${day}</div>
+                        <span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full">${activitiesToday.length}</span>
+                        <div class="absolute bottom-full mb-2 w-56 p-2 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 transform -translate-x-1/2 left-1/2">
+                            <ul class="space-y-1">${tooltipHtml}</ul>
+                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
+                        </div>
+                    </div>`;
+                } else {
+                    calendarHtml += `<div class="flex items-center justify-center w-8 h-8">${day}</div>`;
+                }
+            }
+            calendarHtml += `</div></div>`;
+            return calendarHtml;
+        };
         function setupScrollToTop(){/*...omitted for brevity...*/};
         function generateDashboardReportHTML(){/*...omitted for brevity...*/};
         function setupChatBot(){/*...omitted for brevity...*/};
-        function showItemsInModal(filterType){/*...omitted for brevity...*/};
-        function setupItemListModal(){/*...omitted for brevity...*/};
 
 
         document.addEventListener('DOMContentLoaded', async function() {
@@ -925,7 +1116,7 @@
             loadingOverlay.classList.remove('hidden');
             try {
                 await fetchStaffData();
-                renderUnitTabs(); // **NEW: Render unit tabs after fetching data**
+                renderUnitTabs();
                 await refreshData();
                 
                 if (paramStatus) {
