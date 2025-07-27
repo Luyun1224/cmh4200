@@ -5,108 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教學部-專案進度儀表板</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f4f8; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .progress-bar { transition: width 0.5s ease-in-out; }
         .tab-active {
             background-color: rgb(20, 53, 114); /* 深藍色 */
             color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
         #loginModal, #aiModal, #activityModal, #weeklySummaryModal, #loadingOverlay { z-index: 50; }
         .ai-content h3, .activity-content h3 { 
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 700; /* font-bold */
-            margin-top: 1.5rem; /* mt-6 */
-            margin-bottom: 1rem; /* mb-4 */
-            border-bottom: 1px solid #e5e7eb; /* border-b */
-            padding-bottom: 0.5rem; /* pb-2 */
-            color: #4b5563; /* text-gray-600 */
+            font-size: 1.25rem; 
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            color: #4b5563;
         }
         .ai-content p { margin-bottom: 0.5rem; }
         .filter-btn.active {
-            font-weight: 600;
+            font-weight: 700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         :root {
-            --deep-blue: rgb(20, 53, 114);
-            --dark-maroon: rgb(165, 35, 38);
-            --orange-yellow: rgb(248, 181, 44);
-            --dark-green: rgb(16, 106, 63);
-            --lime-green: rgb(193, 201, 39);
-            --light-blue: rgb(195, 223, 229);
-            --light-purple: rgb(173, 145, 195);
-            --dark-gray: rgb(62, 58, 56);
+            --deep-blue: #1a3a6e;
+            --dark-maroon: #a52326;
+            --orange-yellow: #f8b52c;
+            --dark-green: #106a3f;
+            --light-blue: #c3dfe5;
+            --light-purple: #ad91c3;
+            --dark-gray: #3e3a38;
         }
 
-        /* Blue */
-        .text-blue-500, .text-blue-600, .text-blue-700 { color: var(--deep-blue) !important; }
-        .bg-blue-500, .bg-blue-600, .bg-blue-700 { background-color: var(--deep-blue) !important; }
-        .bg-sky-500 { background-color: var(--deep-blue) !important; }
-        .hover\:bg-blue-700:hover { background-color: var(--deep-blue) !important; }
-        .border-blue-500, .border-blue-600 { border-color: var(--deep-blue) !important; }
-        .focus\:ring-blue-500:focus { --tw-ring-color: var(--deep-blue); }
-        .focus\:border-blue-500:focus { border-color: var(--deep-blue); }
+        .text-blue-700 { color: var(--deep-blue) !important; }
+        .bg-blue-600 { background-color: var(--deep-blue) !important; }
+        .hover\:bg-blue-700:hover { background-color: #142c54 !important; }
         .bg-blue-100 { background-color: var(--light-blue) !important; }
-
-        /* Red */
-        .text-red-500, .text-red-600, .text-red-700 { color: var(--dark-maroon) !important; }
-        .bg-red-500, .bg-red-600 { background-color: var(--dark-maroon) !important; }
-        .hover\:bg-red-700:hover { background-color: var(--dark-maroon) !important; }
-        .border-red-500, .border-red-600 { border-color: var(--dark-maroon) !important; }
+        .text-red-700 { color: var(--dark-maroon) !important; }
+        .bg-red-600 { background-color: var(--dark-maroon) !important; }
         .bg-red-100 { background-color: rgba(165, 35, 38, 0.1) !important; }
-
-        /* Yellow */
-        .text-yellow-500, .text-yellow-600, .text-yellow-700 { color: var(--orange-yellow) !important; }
-        .bg-yellow-500, .bg-yellow-600 { background-color: var(--orange-yellow) !important; }
-        .border-yellow-500, .border-yellow-600 { border-color: var(--orange-yellow) !important; }
+        .text-yellow-700 { color: var(--orange-yellow) !important; }
         .bg-yellow-100 { background-color: rgba(248, 181, 44, 0.1) !important; }
-
-        /* Green */
-        .text-green-500, .text-green-600, .text-green-700 { color: var(--dark-green) !important; }
-        .bg-green-500, .bg-green-600 { background-color: var(--dark-green) !important; }
-
-        /* Overdue glow */
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-            100% { box-shadow: 0 0 10px 4px rgba(220, 38, 38, 0.7); }
-        }
-        .overdue-glow {
-            animation: pulse-red 1s infinite alternate;
-            border-color: rgba(220, 38, 38, 0.8);
-        }
-        .hover\:bg-green-700:hover { background-color: var(--dark-green) !important; }
-        .border-green-500, .border-green-600 { border-color: var(--dark-green) !important; }
-        .bg-green-100 { background-color: var(--lime-green) !important; }
-
-        /* Purple */
-        .text-purple-500, .text-purple-600, .text-purple-700 { color: var(--light-purple) !important; }
-        .bg-purple-500, .bg-purple-600, .bg-purple-700 { background-color: var(--light-purple) !important; }
-        .hover\:bg-purple-700:hover { background-color: var(--light-purple) !important; }
+        .text-green-700 { color: var(--dark-green) !important; }
+        .bg-green-600 { background-color: var(--dark-green) !important; }
+        .bg-green-100 { background-color: rgba(16, 106, 63, 0.15) !important; }
+        .text-purple-700 { color: var(--light-purple) !important; }
         .bg-purple-100 { background-color: rgba(173, 145, 195, 0.2) !important; }
 
-        /* Gray */
-        .text-gray-800, .text-gray-900,
-        .text-slate-800, .text-slate-900 { color: var(--dark-gray) !important; }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+            100% { box-shadow: 0 0 10px 5px rgba(220, 38, 38, 0); }
+        }
+        .overdue-glow {
+            animation: pulse-red 1.5s infinite;
+            border-color: rgba(220, 38, 38, 0.8);
+        }
+        .stat-card-icon {
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover .stat-card-icon {
+            transform: scale(1.2) rotate(-5deg);
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-100 min-h-screen">
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center hidden">
+    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center hidden z-50">
         <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
         <p class="mt-4 text-lg text-gray-700 font-medium">正在載入儀表板數據...</p>
     </div>
 
     <!-- Error Display -->
-    <div id="errorDisplay" class="hidden fixed inset-x-0 top-0 p-4">
+    <div id="errorDisplay" class="hidden fixed inset-x-0 top-0 p-4 z-50">
         <div class="max-w-2xl mx-auto bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg shadow-lg" role="alert">
             <p class="font-bold">資料載入失敗</p>
             <p id="errorMessage">無法從伺服器獲取專案數據，請檢查您的網路連線或稍後再試。</p>
         </div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- Login Modal & Other Modals -->
     <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-bold text-center text-slate-900 mb-6">管理者登入</h2>
@@ -128,7 +110,6 @@
         </div>
     </div>
    
-    <!-- AI Suggestion Modal -->
     <div id="aiModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -139,20 +120,16 @@
         </div>
     </div>
 
-    <!-- Activity Overview Modal -->
     <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
                 <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-calendar-alt text-purple-500 mr-3"></i>活動概覽</h2>
                 <button id="closeActivityModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
-            <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content">
-                <!-- Calendar and List will be rendered here -->
-            </div>
+            <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content"></div>
         </div>
     </div>
 
-    <!-- Weekly Summary Modal -->
     <div id="weeklySummaryModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -164,33 +141,22 @@
     </div>
 
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
+    <header class="bg-white shadow-md border-b-2 border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div class="text-center sm:text-left">
-                    <h1 class="text-2xl font-bold text-gray-900">教學部-專案進度儀表板</h1>
+                    <h1 class="text-3xl font-black text-gray-900 tracking-wider">教學部-專案儀表板</h1>
                     <p class="text-sm text-gray-500 mt-1">即時追蹤所有進行中的專案與任務</p>
                 </div>
                 <div class="flex flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-4">
                     <div class="relative">
                         <input type="search" id="searchInput" oninput="filterBySearch(this.value)" placeholder="搜尋項目..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 pl-8">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <i class="fas fa-search text-gray-400"></i>
-                        </div>
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <label for="yearFilter" class="text-sm font-medium text-gray-600">篩選年度:</label>
-                        <select id="yearFilter" onchange="filterByYear(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5"></select>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <label for="monthFilter" class="text-sm font-medium text-gray-600">篩選月份:</label>
-                        <select id="monthFilter" onchange="filterByMonth(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5"></select>
-                    </div>
-                    <span id="aiDataDate" class="text-xs text-gray-500 self-center hidden"></span>
-                    <button id="aiBtn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors hover:bg-purple-700 flex items-center">
-                        <i class="fas fa-brain mr-2"></i>AI 決策建議
-                    </button>
-                    <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors hover:bg-slate-900">管理者登入</button>
+                    <select id="yearFilter" onchange="filterByYear(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"></select>
+                    <select id="monthFilter" onchange="filterByMonth(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"></select>
+                    <button id="aiBtn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-brain mr-2"></i>AI 決策建議</button>
+                    <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">管理者登入</button>
                 </div>
             </div>
         </div>
@@ -199,9 +165,7 @@
     <!-- Group Filter Tabs -->
     <div class="bg-white shadow-sm sticky top-0 z-40">
         <div class="container mx-auto px-4 sm:px-6">
-            <div id="groupTabs" class="flex flex-wrap justify-center space-x-2 py-3">
-                <!-- Tabs will be generated by JavaScript -->
-            </div>
+            <div id="groupTabs" class="flex flex-wrap justify-center space-x-2 py-3"></div>
         </div>
     </div>
 
@@ -209,14 +173,12 @@
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <!-- Left Panel: Team Members -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-full">
-                    <div class="p-6 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">教學部成員</h3>
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 h-full">
+                    <div class="p-6 border-b-2 border-gray-100 bg-gradient-to-r from-blue-900 to-blue-600 rounded-t-xl">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-3"><i class="fas fa-users-cog"></i>教學部戰隊成員</h3>
                     </div>
-                    <div class="p-6">
-                        <div id="teamMembers" class="space-y-2">
-                            <!-- Team members will be generated by JavaScript -->
-                        </div>
+                    <div class="p-4">
+                        <div id="teamMembers" class="space-y-2"></div>
                     </div>
                 </div>
             </div>
@@ -225,82 +187,59 @@
             <div class="lg:col-span-3 space-y-8">
                 <!-- Statistics Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600" title="專案/任務">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">📊</span></div></div></div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">進行中</p><p class="text-3xl font-bold text-blue-600" id="activeTasks">0</p></div><div class="bg-blue-100 p-3 rounded-lg"><span class="text-2xl">⚡</span></div></div></div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">逾期項目</p><p class="text-3xl font-bold text-red-600" id="overdueTasks">0</p></div><div class="bg-red-100 p-3 rounded-lg"><span class="text-2xl">⚠️</span></div></div></div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">已完成</p><p class="text-3xl font-bold text-green-600" id="completedTasks">0</p></div><div class="bg-green-100 p-3 rounded-lg"><span class="text-2xl">✅</span></div></div></div>
-                    <div onclick="openActivityModal()" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動總數</p><p class="text-3xl font-bold text-purple-600" id="activityCount">0</p></div><div class="bg-purple-100 p-3 rounded-lg"><span class="text-2xl">📅</span></div></div></div>
+                    <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500 transition-all hover:shadow-2xl hover:-translate-y-1"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600" title="專案/任務">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="text-blue-500 text-4xl stat-card-icon"><i class="fas fa-dragon"></i></div></div></div>
+                    <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-purple-500 transition-all hover:shadow-2xl hover:-translate-y-1"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">進行中</p><p class="text-3xl font-bold text-purple-700" id="activeTasks">0</p></div><div class="text-purple-500 text-4xl stat-card-icon"><i class="fas fa-rocket"></i></div></div></div>
+                    <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-red-500 transition-all hover:shadow-2xl hover:-translate-y-1"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">逾期項目</p><p class="text-3xl font-bold text-red-700" id="overdueTasks">0</p></div><div class="text-red-500 text-4xl stat-card-icon"><i class="fas fa-skull-crossbones"></i></div></div></div>
+                    <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-green-500 transition-all hover:shadow-2xl hover:-translate-y-1"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">已完成</p><p class="text-3xl font-bold text-green-700" id="completedTasks">0</p></div><div class="text-green-500 text-4xl stat-card-icon"><i class="fas fa-trophy"></i></div></div></div>
+                    <div onclick="openActivityModal()" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-yellow-500 cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動總數</p><p class="text-3xl font-bold text-yellow-700" id="activityCount">0</p></div><div class="text-yellow-500 text-4xl stat-card-icon"><i class="fas fa-calendar-check"></i></div></div></div>
                 </div>
                 
                 <!-- Item List -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100">
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <h2 class="text-xl font-semibold text-gray-900 flex-shrink-0">項目概覽</h2>
+                            <h2 class="text-2xl font-bold text-gray-900 flex-shrink-0">項目概覽</h2>
                             <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
-                                <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700">全部</button>
-                                <button onclick="filterItemsByStatus('planning', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">規劃中</button>
-                                <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">進行中</button>
-                                <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">已完成</button>
-                                <button onclick="filterItemsByStatus('overdue', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700">逾期</button>
+                                <button onclick="filterItemsByStatus('all', event)" class="filter-btn active px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700 transition-all">全部</button>
+                                <button onclick="filterItemsByStatus('planning', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 transition-all">規劃中</button>
+                                <button onclick="filterItemsByStatus('active', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 transition-all">進行中</button>
+                                <button onclick="filterItemsByStatus('completed', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 transition-all">已完成</button>
+                                <button onclick="filterItemsByStatus('overdue', event)" class="filter-btn px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 transition-all">逾期</button>
                             </div>
                         </div>
                     </div>
                     <div class="p-6">
-                        <div id="itemsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                            <!-- Items will be generated here -->
-                        </div>
+                        <div id="itemsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
 
-    <!-- Scroll to Top Button -->
-    <button id="scrollToTopBtn" title="回到頂部" class="hidden fixed bottom-5 right-5 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-opacity z-50">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
-    <!-- ChatBot Button -->
-    <button id="openChatBot" title="詢問概況" class="fixed bottom-5 right-20 bg-indigo-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 focus:outline-none z-50">
-        <i class="fas fa-robot"></i>
-    </button>
-
-    <!-- ChatBot Container -->
+    <!-- UI Elements -->
+    <button id="scrollToTopBtn" title="回到頂部" class="hidden fixed bottom-5 right-5 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all z-50 hover:scale-110"><i class="fas fa-arrow-up"></i></button>
+    <button id="openChatBot" title="詢問概況" class="hidden fixed bottom-5 right-20 bg-indigo-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 focus:outline-none z-50 transition-all hover:scale-110"><i class="fas fa-robot"></i></button>
     <div id="chatBotContainer" class="hidden fixed bottom-20 right-5 w-96 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col z-50">
-        <div class="flex justify-between items-center bg-indigo-600 text-white px-4 py-2 rounded-t-xl">
-            <span class="font-semibold">小幫手</span>
-            <button id="closeChatBot" class="text-white text-xl leading-none">&times;</button>
-        </div>
+        <div class="flex justify-between items-center bg-indigo-600 text-white px-4 py-2 rounded-t-xl"><span class="font-semibold">小幫手</span><button id="closeChatBot" class="text-white text-xl leading-none">&times;</button></div>
         <div id="chatBotMessages" class="p-4 space-y-2 text-sm overflow-y-auto max-h-[60vh]"></div>
-        <!-- Push-only mode, no user input -->
     </div>
 
     <script>
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
-        let allActivities = []; // This will hold all data from the server
+        let allActivities = [];
+        const currentDate = new Date(); // Use real current date
         
-        // This constant represents the default/fallback date for calculations.
-        const currentDate = new Date('2025-07-22T21:21:00+08:00');
-
-        // Standardized project checkpoints
-        const standardSteps = ['啟動', '需求分析', '規劃', '設計', '開發', '測試', '部署', '驗收', '結案準備', '完成'];
-
         const staffData = [
             { name: '廖家德', group: 'teaching-center' }, { name: '劉雯', group: 'teaching-center' }, { name: '楊依玲', group: 'teaching-center' }, { name: '高瑞穗', group: 'teaching-center' },
-            { name: '林汶秀', group: 'fdc' },
-            { name: '林淑雅', group: 'resident' },
+            { name: '林汶秀', group: 'fdc' }, { name: '林淑雅', group: 'resident' },
             { name: '許淑怡', group: 'clerk' }, { name: '侯昱瑾', group: 'clerk' },
             { name: '吳曉琪', group: 'pgy' }, { name: '王嬿茹', group: 'pgy' },
             { name: '盧英云', group: 'csc' }, { name: '黃惠津', group: 'csc' },
             { name: '楊宜婷', group: 'allied-health' }, { name: '陳詩芸', group: 'allied-health' },
             { name: '李迎真', group: 'chart-review' }, { name: '林盟淦', group: 'chart-review' },
         ];
-
         const localProfileImages = { '盧英云': 'https://raw.githubusercontent.com/luyun1224/cmh4200/main/Lulu.JPG' };
-
         const groupData = {
             'all': '全部', 'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
             'clerk': '實習醫學生訓練小組', 'pgy': 'PGY訓練組', 'csc': '臨床技能中心',
@@ -314,18 +253,11 @@
         let currentYearFilter = 'all';
         let currentMonthFilter = 'all';
         let currentSearchTerm = '';
-        let calendarDate = new Date(currentDate); // State for the activity calendar, initialized to the default date
+        let calendarDate = new Date();
 
         // --- Helper Functions ---
-        const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-blue-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
+        const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
         const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
-        const getPriorityColor = (priority) => ({ high: 'text-red-600 bg-red-50', medium: 'text-yellow-600 bg-yellow-50', low: 'text-green-600 bg-green-50' }[priority] || 'text-gray-600 bg-gray-50');
-        const getPriorityText = (priority) => ({ high: '高', medium: '中', low: '低' }[priority] || '未知');
-        const getStandardStep = (progress) => {
-            if (progress >= 100) return standardSteps[standardSteps.length - 1];
-            const index = Math.floor(progress / 10);
-            return standardSteps[index] || '';
-        };
         const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
         const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目');
         const getTypeStyle = (type, status) => {
@@ -351,7 +283,7 @@
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
                 
-                const today = new Date(); // Use real current date for status calculation
+                const today = new Date();
                 today.setHours(0, 0, 0, 0); 
 
                 return result.data.map(item => {
@@ -365,12 +297,15 @@
                         finalStatus = 'overdue';
                     }
 
+                    const checkpoints = Array.isArray(item.checkpoints) ? item.checkpoints : [];
+
                     return {
                         ...item,
                         progress: progress,
                         status: finalStatus,
                         lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
-                        helpMessage: item.helpMessage || ''
+                        helpMessage: item.helpMessage || '',
+                        checkpoints: checkpoints
                     };
                 });
             } catch (error) {
@@ -419,8 +354,10 @@
             }
 
             itemsList.innerHTML = filteredItems.map(item => {
-                const currentStepNumber = item.progress >= 100 ? standardSteps.length : Math.floor(item.progress / 10) + 1;
-                const totalSteps = standardSteps.length;
+                const checkpoints = item.checkpoints || [];
+                const totalSteps = checkpoints.length;
+                const completedSteps = checkpoints.filter(c => c.completed).length;
+
                 const progressChange = item.progress - (item.lastWeekProgress || 0);
                 const progressChangeHTML = progressChange > 0
                     ? `<span class="text-green-600 font-medium text-sm ml-2">▲ ${progressChange}%</span>`
@@ -428,27 +365,26 @@
                         ? `<span class="text-red-600 font-medium text-sm ml-2">▼ ${Math.abs(progressChange)}%</span>`
                         : '';
 
-                const checkpointsHTML = standardSteps.map((step, index) => {
-                    const isCompleted = item.progress >= ((index + 1) * 10);
-                    return `<li class="flex items-center ${isCompleted ? 'text-green-300' : 'text-gray-400'}">
-                        <span class="w-5 text-left">${isCompleted ? '✓' : '○'}</span>
-                        <span>${step}</span>
-                    </li>`;
-                }).join('');
+                const checkpointsHTML = totalSteps > 0 
+                    ? checkpoints.map(cp => `
+                        <li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}">
+                            <span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span>
+                            <span>${cp.name}</span>
+                        </li>`).join('')
+                    : '<li>無定義的檢查點</li>';
 
                 return `
-                <div class="bg-white border rounded-lg p-4 flex flex-col h-full shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200 ${item.status === 'overdue' ? 'bg-red-50 overdue-glow' : 'border-gray-100'}">
+                <div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}">
                     <div class="flex-grow">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex-1">
-                                <h4 class="font-semibold text-gray-900 mb-1">${item.name} <span class="text-xs font-normal ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>
+                                <h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>
                                 ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
                                 <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
                                 ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}
                             </div>
                             <div class="flex items-center space-x-2 ml-2">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(item.priority)}">${getPriorityText(item.priority)}</span>
-                                <span class="flex items-center text-sm"><span class="status-dot ${getStatusColor(item.status)}"></span>${getStatusText(item.status)}</span>
+                                <span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
                             </div>
                         </div>
                     </div>
@@ -456,14 +392,14 @@
                     <div class="mt-auto border-t border-gray-100 pt-3">
                         <div class="mb-3">
                             <div class="flex justify-between items-center text-sm mb-1">
-                                <span class="text-gray-600">進度: ${item.progress}%</span>
+                                <span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>
                                 ${progressChangeHTML}
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5" title="目前步驟: ${getStandardStep(item.progress)}">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
                                 <div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div>
                             </div>
                             <div class="relative group">
-                                <p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${currentStepNumber}/${totalSteps}</p>
+                                <p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p>
                                 <div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
                                     <h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4>
                                     <ul class="space-y-1 mt-2">${checkpointsHTML}</ul>
@@ -472,7 +408,7 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-between items-center text-sm text-gray-500">
+                        <div class="flex justify-between items-center text-xs text-gray-500">
                             <span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '無'}</span>
                             ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
                         </div>
@@ -499,18 +435,14 @@
             }
 
             teamMembersDiv.innerHTML = members.map(name => {
-                const memberItems = allItems.filter(t => t.assignees.includes(name) || t.collaborators.includes(name));
+                const memberItems = allItems.filter(t => t.assignees.includes(name) || (t.collaborators && t.collaborators.includes(name)));
                 const overdueCount = memberItems.filter(t => t.status === 'overdue').length;
-
                 const projectCount = memberItems.filter(item => item.type === 'project').length;
                 const taskCount = memberItems.filter(item => item.type === 'task').length;
-                const activityCount = memberItems.filter(item => item.type === 'activity').length;
-                const meetingCount = memberItems.filter(item => item.type === 'meeting').length;
-
                 const isActive = name === currentMemberFilter;
 
                 return `
-                <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${isActive ? 'bg-blue-100 shadow-sm' : 'hover:bg-gray-50 hover:shadow-sm hover:translate-x-1'}">
+                <div onclick="filterByMember('${name}')" class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}">
                     <div class="flex items-center min-w-0">
                         ${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover flex-shrink-0" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}
                         <div class="ml-3 min-w-0">
@@ -518,13 +450,11 @@
                             <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1">
                                 <span>專案: ${projectCount}</span>
                                 <span>任務: ${taskCount}</span>
-                                <span>活動: ${activityCount}</span>
-                                <span>會議: ${meetingCount}</span>
                             </div>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0 ml-2">
-                        ${overdueCount > 0 ? `<span class="text-red-600 text-sm font-medium">${overdueCount} 逾期</span>` : ''}
+                        ${overdueCount > 0 ? `<span class="text-xs font-bold text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center">${overdueCount}</span>` : ''}
                     </div>
                 </div>`;
             }).join('');
@@ -541,7 +471,6 @@
             document.getElementById('activityCount').textContent = activities.length;
         }
 
-        // --- Event Handlers & Main Logic ---
         function renderDashboard() {
             let itemsForYear = allActivities;
             if (currentYearFilter !== 'all') {
@@ -568,19 +497,15 @@
             if (currentMemberFilter !== 'all') {
                 itemsToDisplay = itemsForGroup.filter(item => 
                     item.assignees.includes(currentMemberFilter) || 
-                    item.collaborators.includes(currentMemberFilter)
+                    (item.collaborators && item.collaborators.includes(currentMemberFilter))
                 );
             }
 
-            itemsToDisplay.sort((a, b) => {
-                if (!a.startDate) return 1;
-                if (!b.startDate) return -1;
-                return new Date(a.startDate) - new Date(b.startDate);
-            });
+            itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
             updateStats(itemsToDisplay);
             renderTeamMembers(membersInGroup, itemsForMonth);
-            renderItems(itemsToDisplay);
+            renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
 
             document.querySelectorAll('.group-tab-btn').forEach(btn => {
                 btn.classList.toggle('tab-active', btn.id === `tab-${currentGroupFilter}`);
@@ -589,20 +514,9 @@
             });
         }
         
-        function filterBySearch(term) {
-            currentSearchTerm = term;
-            renderDashboard();
-        }
-
-        function filterByYear(year) {
-            currentYearFilter = year;
-            renderDashboard();
-        }
-
-        function filterByMonth(month) {
-            currentMonthFilter = month;
-            renderDashboard();
-        }
+        function filterBySearch(term) { currentSearchTerm = term; renderDashboard(); }
+        function filterByYear(year) { currentYearFilter = year; renderDashboard(); }
+        function filterByMonth(month) { currentMonthFilter = month; renderDashboard(); }
 
         function filterByGroup(groupKey) {
             currentGroupFilter = groupKey;
@@ -611,7 +525,7 @@
             document.getElementById('searchInput').value = '';
             currentSearchTerm = '';
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'bg-gray-200', 'text-gray-800', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+                btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'bg-purple-100', 'text-purple-700', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700', 'bg-yellow-100', 'text-yellow-700');
                 btn.classList.add('bg-gray-100', 'text-gray-700');
             });
             document.querySelector('.filter-btn[onclick*="\'all\'"]').classList.add('active', 'bg-blue-100', 'text-blue-700');
@@ -626,10 +540,8 @@
         function filterItemsByStatus(statusFilter, event) {
             currentStatusFilter = statusFilter;
             const colorMap = {
-                'all': ['bg-blue-100', 'text-blue-700'],
-                'planning': ['bg-yellow-100', 'text-yellow-700'],
-                'active': ['bg-blue-100', 'text-blue-700'],
-                'completed': ['bg-green-100', 'text-green-700'],
+                'all': ['bg-blue-100', 'text-blue-700'], 'planning': ['bg-yellow-100', 'text-yellow-700'],
+                'active': ['bg-purple-100', 'text-purple-700'], 'completed': ['bg-green-100', 'text-green-700'],
                 'overdue': ['bg-red-100', 'text-red-700'],
             };
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -666,9 +578,7 @@
                 if (username === '4200' && password === '4200') {
                     loginMessage.textContent = '登入成功！';
                     loginMessage.className = 'text-center mb-4 font-medium text-green-500';
-                    setTimeout(() => {
-                        window.location.href = 'https://luyun1224.github.io/cmh4200/Project-admin.html';
-                    }, 1500);
+                    setTimeout(() => { window.location.href = 'https://luyun1224.github.io/cmh4200/Project-admin.html'; }, 1500);
                 } else {
                     loginMessage.textContent = '帳號或密碼錯誤。';
                     loginMessage.className = 'text-center mb-4 font-medium text-red-500';
@@ -676,16 +586,17 @@
             });
         }
         
+        // --- MODAL AND UI FUNCTIONS ---
         function generateLocalAiSummary() {
-            const today = new Date();
             const overdueItems = allActivities.filter(item => item.status === 'overdue');
             const planningItems = allActivities.filter(item => item.status === 'planning');
             const activeItems = allActivities.filter(item => item.status === 'active');
-            const fourteenDaysFromNow = new Date(today);
-            fourteenDaysFromNow.setDate(today.getDate() + 14);
+            
+            const fourteenDaysFromNow = new Date(currentDate);
+            fourteenDaysFromNow.setDate(currentDate.getDate() + 14);
 
             const highRiskItems = allActivities.filter(item =>
-                new Date(item.deadline) > today &&
+                new Date(item.deadline) > currentDate &&
                 new Date(item.deadline) < fourteenDaysFromNow &&
                 item.progress < 50
             );
@@ -726,27 +637,19 @@
                 <h3><strong>3. 高階經理人決策建議</strong></h3>
                 <ol class="list-decimal ml-5 space-y-2">${decisionSuggestionHTML}</ol>`;
         }
-
+        
         async function getAiSuggestions() {
             const aiModal = document.getElementById('aiModal');
             const aiContent = document.getElementById('ai-suggestion-content');
-            const aiBtn = document.getElementById('aiBtn');
-            const aiDataDate = document.getElementById('aiDataDate');
-            
-            aiDataDate.textContent = `(數據更新至 ${new Date().toLocaleDateString('zh-TW')})`;
-            aiDataDate.classList.remove('hidden');
-
             aiContent.innerHTML = `<div class="flex justify-center items-center h-full"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="ml-3">AI 正在分析數據，請稍候...</p></div>`;
             aiModal.classList.remove('hidden');
-            aiBtn.disabled = true;
 
             try {
-                const today = new Date();
-                const fourteenDaysFromNow = new Date(today);
-                fourteenDaysFromNow.setDate(today.getDate() + 14);
+                const fourteenDaysFromNow = new Date();
+                fourteenDaysFromNow.setDate(currentDate.getDate() + 14);
 
                 const overdueItems = allActivities.filter(item => item.status === 'overdue');
-                const highRiskItems = allActivities.filter(item => new Date(item.deadline) > today && new Date(item.deadline) < fourteenDaysFromNow && item.progress < 50);
+                const highRiskItems = allActivities.filter(item => new Date(item.deadline) > currentDate && new Date(item.deadline) < fourteenDaysFromNow && item.progress < 50);
                 const stagnant = allActivities.filter(i => (i.progress - (i.lastWeekProgress || 0)) <= 0 && i.status !== 'completed');
                 const summary = `
                     - 總項目數: ${allActivities.length}
@@ -796,8 +699,6 @@ ${summary}
             } catch (error) {
                 console.error('AI Suggestion Error:', error);
                 aiContent.innerHTML = generateLocalAiSummary();
-            } finally {
-                aiBtn.disabled = false;
             }
         }
 
@@ -809,15 +710,20 @@ ${summary}
             aiBtn.addEventListener('click', getAiSuggestions);
             closeAiModalBtn.addEventListener('click', () => {
                 aiModal.classList.add('hidden');
-                document.getElementById('aiDataDate').classList.add('hidden');
             });
         }
 
+        function setupActivityModal() {
+            const modal = document.getElementById('activityModal');
+            const closeBtn = document.getElementById('closeActivityModalBtn');
+            closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+        }
+        
         function navigateCalendar(offset) {
             calendarDate.setMonth(calendarDate.getMonth() + offset);
             openActivityModal(false);
         }
-
+        
         function generateCalendarHTML(year, month, activities) {
             const activitiesByDay = {};
             activities.forEach(item => {
@@ -938,40 +844,11 @@ ${summary}
             modal.classList.remove('hidden');
         }
 
-        function setupActivityModal() {
-            const modal = document.getElementById('activityModal');
-            const closeBtn = document.getElementById('closeActivityModalBtn');
-            closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
-        }
-
         function setupWeeklySummaryModal() {
             const modal = document.getElementById('weeklySummaryModal');
             const closeBtn = document.getElementById('closeWeeklySummaryBtn');
             closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
-        }
-
-        function showWeeklySummary() {
-            const modal = document.getElementById('weeklySummaryModal');
-            const content = document.getElementById('weekly-summary-content');
-            const start = new Date();
-            start.setHours(0,0,0,0);
-            const end = new Date(start);
-            end.setDate(end.getDate() + 7);
-
-            const upcoming = allActivities.filter(item => {
-                if (!item.startDate) return false;
-                const d = new Date(item.startDate);
-                return d >= start && d < end;
-            });
-
-            if (upcoming.length === 0) {
-                content.innerHTML = '<p class="text-center text-gray-600">本週沒有排定的項目。</p><p class="text-center mt-4 font-semibold">大家加油！💪</p>';
-            } else {
-                const list = upcoming.map(i => `<li>${i.name} (${getTypeText(i.type)}) - ${formatDate(i.startDate)}</li>`).join('');
-                content.innerHTML = `<ul class="list-disc pl-5 space-y-1">${list}</ul><p class="text-center mt-4 font-semibold">大家加油！💪</p>`;
-            }
-            modal.classList.remove('hidden');
         }
 
         function setupScrollToTop() {
@@ -984,21 +861,20 @@ ${summary}
         }
 
         function generateDashboardReportHTML() {
-            const now = new Date(); // Use real current time for the report
+            const now = new Date();
             const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
+            
             const itemsThisMonth = allActivities.filter(item => {
                 if (!item.startDate) return false;
                 const d = new Date(item.startDate);
-                return d >= startOfMonth && d <= endOfMonth;
+                return d >= startOfMonth && d <= now;
             });
 
             const completedThisMonth = itemsThisMonth.filter(item => item.status === 'completed' && (item.type === 'project' || item.type === 'task'));
             const keyProjectCompleted = completedThisMonth.find(item => item.type === 'project');
             let highlightsHTML = `<ul class="list-disc pl-5 space-y-1">
-                <li>🎉 本月已完成 <strong>${completedThisMonth.length}</strong> 項專案與任務。</li>`;
+                <li>🎉 本月迄今已完成 <strong>${completedThisMonth.length}</strong> 項專案與任務。</li>`;
             if (keyProjectCompleted) {
                 highlightsHTML += `<li>🚀 指標專案「<strong>${keyProjectCompleted.name}</strong>」順利完成！</li>`;
             } else if (completedThisMonth.length > 0) {
@@ -1065,7 +941,6 @@ ${summary}
             closeBtn.addEventListener('click', () => container.classList.add('hidden'));
         }
 
-        // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', async function() {
             const loadingOverlay = document.getElementById('loadingOverlay');
             const errorDisplay = document.getElementById('errorDisplay');
@@ -1089,6 +964,7 @@ ${summary}
                     const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
                     if (btn) filterItemsByStatus(paramStatus, { target: btn });
                 }
+                document.getElementById('openChatBot').classList.remove('hidden');
             } catch (error) {
                 document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
                 errorDisplay.classList.remove('hidden');
