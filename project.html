@@ -283,27 +283,9 @@
         let allActivities = [];
         const currentDate = new Date(); // Use real current date
         
-        // --- NEW: Staff data now includes id (personnel number) and birthday ---
-        // --- PLEASE UPDATE with real data ---
-        const staffData = [
-            { id: '12345', name: '廖家德', group: 'teaching-center', birthday: '01/15' },
-            { id: '12346', name: '劉雯', group: 'teaching-center', birthday: '03/22' },
-            { id: '12347', name: '楊依玲', group: 'teaching-center', birthday: '05/30' },
-            { id: '12348', name: '高瑞穗', group: 'teaching-center', birthday: '07/19' },
-            { id: '23456', name: '林汶秀', group: 'fdc', birthday: '09/01' },
-            { id: '23457', name: '林淑雅', group: 'resident', birthday: '11/11' },
-            { id: '34567', name: '許淑怡', group: 'clerk', birthday: '02/28' },
-            { id: '34568', name: '侯昱瑾', group: 'clerk', birthday: '04/16' },
-            { id: '45678', name: '吳曉琪', group: 'pgy', birthday: '06/08' },
-            { id: '45679', name: '王嬿茹', group: 'pgy', birthday: '08/24' },
-            { id: '56789', name: '盧英云', group: 'csc', birthday: '12/24' }, // Example birthday
-            { id: '56780', name: '黃惠津', group: 'csc', birthday: '10/25' },
-            { id: '67890', name: '楊宜婷', group: 'allied-health', birthday: '01/01' },
-            { id: '67891', name: '陳詩芸', group: 'allied-health', birthday: '02/14' },
-            { id: '78901', name: '李迎真', group: 'chart-review', birthday: '07/26' }, // Example birthday for tomorrow
-            { id: '78902', name: '林盟淦', group: 'chart-review', birthday: '07/27' }, // Example birthday for today
-        ];
-
+        // **UPDATED: staffData is now an empty array, will be fetched from backend**
+        let staffData = [];
+        
         const localProfileImages = { '盧英云': 'https://raw.githubusercontent.com/luyun1224/cmh4200/main/Lulu.JPG' };
         const groupData = {
             'all': '全部', 'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
@@ -336,6 +318,35 @@
         };
 
         // --- API Communication ---
+        
+        // **NEW: Function to fetch staff data from Google Sheet**
+        async function fetchStaffData() {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify({ action: 'getAllUsers' }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                if (!response.ok) throw new Error('無法獲取團隊成員資料');
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+                
+                // Map the data from Google Sheet to the format needed by the frontend
+                staffData = result.data.map(user => ({
+                    id: user.employeeId, // from 'employeeId' column
+                    name: user.name,       // from 'name' column
+                    group: user.group,     // from 'group' column
+                    birthday: user.birthday // from 'birthday' column (format MM/DD)
+                }));
+            } catch (error) {
+                console.error("Failed to fetch staff data:", error);
+                staffData = []; // Ensure staffData is an empty array on failure
+                document.getElementById('errorMessage').textContent = `無法載入團隊成員列表: ${error.message}`;
+                document.getElementById('errorDisplay').classList.remove('hidden');
+            }
+        }
+
         async function fetchAllItems() {
             try {
                 const response = await fetch(SCRIPT_URL, {
@@ -494,8 +505,8 @@
         
         function renderTeamMembers(members, allItems) {
             const teamMembersDiv = document.getElementById('teamMembers');
-            if (members.length === 0) {
-                teamMembersDiv.innerHTML = `<p class="text-center text-gray-500 py-4">此小組無成員</p>`;
+            if (!members || members.length === 0) {
+                teamMembersDiv.innerHTML = `<p class="text-center text-gray-500 py-4">此小組無成員或資料載入失敗</p>`;
                 return;
             }
 
@@ -512,13 +523,12 @@
                 const taskCount = memberItems.filter(item => item.type === 'task').length;
                 const isActive = name === currentMemberFilter;
 
-                // --- NEW: Birthday Check ---
-                const isBirthday = memberInfo.birthday && `${String(new Date(memberInfo.birthday).getMonth() + 1).padStart(2, '0')}/${String(new Date(memberInfo.birthday).getDate()).padStart(2, '0')}` === todayStr;
+                // Birthday Check
+                const isBirthday = memberInfo.birthday === todayStr;
                 
                 const birthdayContainerClass = isBirthday ? 'birthday-container' : '';
                 const birthdayHatHTML = isBirthday ? '<i class="fas fa-birthday-cake birthday-hat"></i>' : '';
                 const confettiHTML = isBirthday ? Array.from({length: 9}).map((_, i) => `<div class="confetti"></div>`).join('') : '';
-
 
                 return `
                 <div onclick="filterByMember('${name}')" class="relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}">
@@ -565,7 +575,6 @@
                 itemsForMonth = itemsForYear.filter(item => item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
             }
 
-            // --- UPDATED: Use staffData directly for member list ---
             const membersInGroup = currentGroupFilter === 'all' ? staffData : staffData.filter(s => s.group === currentGroupFilter);
             
             let itemsForGroup = currentGroupFilter === 'all' ? itemsForMonth : itemsForMonth.filter(item => item.group === currentGroupFilter);
@@ -589,7 +598,6 @@
             itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
             updateStats(itemsToDisplay);
-            // --- UPDATED: Pass full member objects to renderTeamMembers ---
             renderTeamMembers(membersInGroup, itemsForMonth);
             renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
 
@@ -646,7 +654,6 @@
             renderDashboard();
         }
 
-        // --- UPDATED: Login Modal Logic ---
         function setupLoginModal() {
             const loginBtn = document.getElementById('loginBtn');
             const loginModal = document.getElementById('loginModal');
@@ -670,7 +677,6 @@
                 const username = event.target.username.value;
                 const password = event.target.password.value;
 
-                // Show loading state
                 loginMessage.textContent = '';
                 btnText.textContent = '登入中...';
                 btnSpinner.classList.remove('hidden');
@@ -694,7 +700,6 @@
                         loginMessage.textContent = '登入成功！即將跳轉...';
                         loginMessage.className = 'text-center mb-4 font-medium text-green-500';
                         setTimeout(() => {
-                            // Redirect to the admin page upon successful login
                             window.location.href = 'https://luyun1224.github.io/cmh4200/Project-admin.html';
                         }, 1500);
                     } else {
@@ -704,7 +709,6 @@
                     loginMessage.textContent = error.message;
                     loginMessage.className = 'text-center mb-4 font-medium text-red-500';
                 } finally {
-                    // Hide loading state
                     btnText.textContent = '登入';
                     btnSpinner.classList.add('hidden');
                     loginSubmitBtn.disabled = false;
@@ -1146,7 +1150,10 @@ ${summary}
 
             loadingOverlay.classList.remove('hidden');
             try {
-                await refreshData();
+                // **UPDATED: Fetch dynamic data on load**
+                await fetchStaffData(); // Fetch staff data first
+                await refreshData(); // Then fetch items and render using the new staff data
+                
                 if (paramStatus) {
                     const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
                     if (btn) filterItemsByStatus(paramStatus, { target: btn });
