@@ -1013,7 +1013,7 @@
         // --- UPDATED AI SUGGESTION FUNCTION ---
         async function getAiSuggestions() {
             const aiContent = document.getElementById('ai-suggestion-content');
-            const apiKey = "AIzaSyDpehmvN237MFUJvHJTBDkXDNT0n3o0To8"; // Leave this empty, it will be handled by the environment
+            const apiKey = ""; // Leave this empty, it will be handled by the environment
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             aiContent.innerHTML = `
@@ -1153,7 +1153,10 @@
         }
 
         function renderAiReport(data) {
-            const { healthOverview, riskAssessment, recommendations } = data;
+            // **FIX:** Provide default values to prevent errors if the AI response is missing parts.
+            const { healthOverview = {}, riskAssessment = [], recommendations = [] } = data;
+            const rag = healthOverview.rag || [];
+            const summary = healthOverview.summary || "無法生成總結。";
 
             const renderSection = (title, color, icon, content) => {
                 return `
@@ -1167,8 +1170,8 @@
             const renderList = (items) => items.map(item => `<div class="pl-8 flex items-start text-gray-800"><span class="mr-3 mt-1.5 text-gray-500 text-xs">●</span><span>${item}</span></div>`).join('');
 
             const healthContent = `
-                <p class="pl-8 text-gray-800">${healthOverview.summary}</p>
-                ${healthOverview.rag.map(item => {
+                <p class="pl-8 text-gray-800">${summary}</p>
+                ${rag.map(item => {
                     let color = 'text-gray-600', i = 'fa-info-circle';
                     if(item.includes('紅') || item.includes('逾期')) { color = 'text-red-600'; i = 'fa-exclamation-circle'; }
                     else if(item.includes('黃') || item.includes('進行中')) { color = 'text-yellow-600'; i = 'fa-eye'; }
