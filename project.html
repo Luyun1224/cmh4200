@@ -1308,6 +1308,10 @@
         
         function viewMemberHistory(name, event) {
             event.stopPropagation(); // Prevent the filterByMember from being called
+            if (name === '盧英云') {
+                window.open('https://qpig0218.github.io/Ying-Yun/', '_blank');
+                return;
+            }
             alert(`檢視 ${name} 的個人歷程 (功能開發中)`);
             // In a real application, this would navigate to a user-specific page
             // window.location.href = `/member-history?name=${encodeURIComponent(name)}`;
