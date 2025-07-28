@@ -53,10 +53,16 @@
                  <i class="fas fa-arrow-left mr-2"></i>返回儀表板
              </a>
              <div class="text-center absolute left-1/2 -translate-x-1/2">
-                <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
-                <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
+                 <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
+                 <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
+             </div>
+             <!-- MODIFIED: Added a container for greeting and logout button -->
+             <div class="flex items-center gap-3">
+                <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
+                <button id="logout-btn" title="登出" class="bg-white text-red-500 hover:bg-red-50 hover:text-red-700 px-3 py-2 rounded-lg transition-all text-sm font-medium shadow-md border border-slate-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
-             <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
         </div>
 
         <!-- Form for Adding/Editing Items -->
@@ -251,7 +257,8 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let activities = [];
         let staffData = []; // Will be fetched from backend
-        let loggedInUser = { name: '', id: '' }; // To store logged-in user info
+        // MODIFIED: This will be populated from sessionStorage after authentication check
+        let loggedInUser = null; 
 
         const groupData = {
             'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
@@ -330,7 +337,7 @@
 
         async function loadItems() {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在載入您的專屬資料...</td></tr>`;
-            // **MODIFIED: Pass the loggedInUser.id to fetch only this user's items**
+            // Pass the loggedInUser.id to fetch only this user's items
             const items = await handleApiRequest('getAllItems', { userId: loggedInUser.id });
             if (items) {
                 activities = items;
@@ -508,7 +515,7 @@
                 confirmOkBtn.disabled = true;
                 confirmOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
 
-                // **MODIFIED: Pass userId for permission check**
+                // Pass userId for permission check
                 const result = await handleApiRequest('deleteItem', { id, userId: loggedInUser.id });
                 if (result) {
                     showToast('項目已刪除', 'success');
@@ -788,7 +795,7 @@
                 progress: parseInt(progressInput.value),
                 helpMessage: commentsInput.value,
                 checklist: checklistData,
-                createdBy: loggedInUser.id // **MODIFIED: Add createdBy field**
+                createdBy: loggedInUser.id // Add createdBy field
             };
 
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
@@ -827,20 +834,38 @@
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userName = urlParams.get('user');
-            const userId = urlParams.get('id');
+            // --- NEW: Authentication Check ---
+            // This is the core of the security fix.
+            // We check for user data in `sessionStorage`. This data should be set by your login page.
+            // If it's not present, it means the user hasn't logged in, so we redirect them.
+            const loggedInUserData = sessionStorage.getItem('loggedInUser');
 
-            if (!userName || !userId) {
-                // Redirect if not logged in
-                // For development, we can bypass this
-                console.warn("User info not in URL. Bypassing auth for development.");
-                // window.location.href = 'https://luyun1224.github.io/cmh4200/project.html'; 
+            if (!loggedInUserData) {
+                // You can show a message here before redirecting.
+                alert('您尚未登入或登入逾時，將返回登入頁面。');
+                // IMPORTANT: Replace with the actual URL of your login page.
+                window.location.href = 'https://luyun1224.github.io/cmh4200/project.html';
+                return; // Stop executing any more code on this page.
             }
 
-            loggedInUser = { name: userName, id: userId };
-            document.getElementById('user-greeting').textContent = `${userName || '使用者'}, 您好！`;
+            // If the user data exists, parse it and store it globally.
+            loggedInUser = JSON.parse(loggedInUserData);
 
+            // Now, we can safely proceed with loading the page.
+            document.getElementById('user-greeting').textContent = `${loggedInUser.name || '使用者'}, 您好！`;
+
+            // Add event listener for the new logout button
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                sessionStorage.removeItem('loggedInUser');
+                showToast('您已成功登出。', 'success');
+                setTimeout(() => {
+                    // IMPORTANT: Replace with the actual URL of your login page.
+                    window.location.href = 'https://luyun1224.github.io/cmh4200/project.html';
+                }, 1500); // Wait a bit for the toast to be seen
+            });
+
+
+            // --- Original Initialization Code ---
             await fetchStaffData();
             populateDropdowns();
             populateTemplateDropdown();
