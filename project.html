@@ -1042,29 +1042,21 @@
         // --- UPDATED AI SUGGESTION FUNCTION ---
         async function getAiSuggestions() {
             const aiContent = document.getElementById('ai-suggestion-content');
-            const apiKey = "AIzaSyDpehmvN237MFUJvHJTBDkXDNT0n3o0To8";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
+            
             aiContent.innerHTML = `
                 <div class="flex flex-col items-center justify-center p-8">
                     <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
                     <p class="mt-4 text-gray-600 font-medium">AI 正在分析數據並產生決策摘要，請稍候...</p>
                 </div>`;
 
-            // 1. Filter for relevant items (projects and tasks)
             const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
-            
-            // 2. Gather key metrics and data points
             const totalCount = projectsAndTasks.length;
             const overdueItems = projectsAndTasks.filter(p => p.status === 'overdue');
             const activeItems = projectsAndTasks.filter(p => p.status === 'active');
             const planningItems = projectsAndTasks.filter(p => p.status === 'planning');
             const completedItems = projectsAndTasks.filter(p => p.status === 'completed');
-
             const lowProgressItems = activeItems.filter(p => p.progress < 30);
             const stalledItems = activeItems.filter(p => (p.progress - (p.lastWeekProgress || 0)) === 0);
-            
-            // 3. Analyze resource workload
             const workload = {};
             overdueItems.forEach(item => {
                 item.assignees.forEach(assignee => {
@@ -1082,7 +1074,6 @@
                 .filter(([name, tasks]) => tasks.overdue > 1 || (tasks.overdue > 0 && tasks.active > 2))
                 .map(([name, tasks]) => `${name} (負責 ${tasks.overdue} 項逾期, ${tasks.active} 項進行中)`);
 
-            // 4. Construct a detailed, data-driven prompt
             const prompt = `
                 你是一位頂尖的專案管理顧問，請為一位高階經理人撰寫一份決策摘要。
                 請根據我提供的 **真實數據**，生成一個 JSON 物件，內容必須反映這些數據。
@@ -1102,7 +1093,7 @@
                 請基於以上數據，填充以下 JSON 結構，提供具體、可執行的分析與建議。
             `;
             
-            const payload = {
+            const geminiPayload = { // 這是要傳遞給 Gemini API 的 payload
                 contents: [{
                     role: "user",
                     parts: [{ text: prompt }]
@@ -1116,11 +1107,7 @@
                                 type: "OBJECT",
                                 properties: {
                                     summary: { type: "STRING", description: "基於數據，用1-2句話總結目前專案組合的整體健康度。" },
-                                    rag: {
-                                        type: "ARRAY",
-                                        items: { type: "STRING" },
-                                        description: "條列出數據中紅、黃、藍、綠四個燈號的項目數量與簡要說明。"
-                                    }
+                                    rag: { type: "ARRAY", items: { type: "STRING" }, description: "條列出數據中紅、黃、藍、綠四個燈號的項目數量與簡要說明。" }
                                 }
                             },
                             riskAssessment: {
@@ -1148,25 +1135,35 @@
                 }
             };
 
-
             try {
-                const response = await fetch(apiUrl, {
+                // --- 關鍵變更：呼叫您自己的 Google Apps Script 代理 ---
+                const response = await fetch(SCRIPT_URL, { // SCRIPT_URL 是您 GAS 的部署網址
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'getAiSuggestionProxy', // 告訴後端我們要執行哪個動作
+                        payload: geminiPayload         // 將要給 Gemini 的 payload 包裝起來傳給後端
+                    })
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`API 請求失敗: ${errorData.error ? errorData.error.message : response.statusText}`);
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    throw new Error(`代理伺服器請求失敗: ${errorData.message || response.statusText}`);
                 }
 
+                // GAS 會直接回傳 Gemini API 的原始回應，所以這裡的處理邏輯不變
                 const result = await response.json();
                 
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
                     const jsonText = result.candidates[0].content.parts[0].text;
                     const reportData = JSON.parse(jsonText);
                     aiContent.innerHTML = renderAiReport(reportData);
+                } else if (result.error) {
+                    // 如果 Gemini API 返回錯誤
+                    throw new Error(`AI API 錯誤: ${result.error.message}`);
                 } else {
                     throw new Error("AI 未能提供有效的建議。回應為空或格式不符。");
                 }
@@ -1182,7 +1179,6 @@
         }
 
         function renderAiReport(data) {
-            // **FIX:** Provide default values to prevent errors if the AI response is missing parts.
             const { healthOverview = {}, riskAssessment = [], recommendations = [] } = data;
             const rag = healthOverview.rag || [];
             const summary = healthOverview.summary || "無法生成總結。";
@@ -1196,7 +1192,13 @@
                 `;
             };
             
-            const renderList = (items) => items.map(item => `<div class="pl-8 flex items-start text-gray-800"><span class="mr-3 mt-1.5 text-gray-500 text-xs">●</span><span>${item}</span></div>`).join('');
+            // FIX: Make renderList robust against undefined or non-array inputs.
+            const renderList = (items) => {
+                if (!Array.isArray(items)) {
+                    return ''; // Return an empty string if items is not an array
+                }
+                return items.map(item => `<div class="pl-8 flex items-start text-gray-800"><span class="mr-3 mt-1.5 text-gray-500 text-xs">●</span><span>${item}</span></div>`).join('');
+            }
 
             const healthContent = `
                 <p class="pl-8 text-gray-800">${summary}</p>
