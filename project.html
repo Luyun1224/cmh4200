@@ -272,7 +272,6 @@
                     </div>
                     <div class="p-4">
                         <div id="teamMembers" class="space-y-2"></div>
-                        <div id="memberPopup" onmouseenter="clearTimeout(hidePopupTimer)" onmouseleave="hideMemberPopup()" class="hidden absolute bg-white border border-gray-200 rounded-lg shadow-xl p-4 text-center z-50"></div>
                     </div>
                 </div>
             </div>
@@ -327,7 +326,6 @@
         let staffData = [];
         
         const localProfileImages = { '盧英云': '盧英云.png' };
-        let hidePopupTimer;
         
         const groupData = {
             'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
@@ -601,7 +599,18 @@
                 const confettiHTML = isBirthday ? Array.from({length: 9}).map((_, i) => `<div class="confetti"></div>`).join('') : '';
 
                 return `
-                <div onclick="filterByMember('${name}')" onmouseenter="showMemberPopup(this,'${name}','${memberInfo.id}')" onmouseleave="hideMemberPopup()" class="relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}">
+                <div onclick="filterByMember('${name}')" class="group relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}">
+                    
+                    <!-- Pop-up Card -->
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30">
+                        <img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;">
+                        <p class="font-bold text-center text-gray-900 text-lg">${name}</p>
+                        <a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm mt-3">檢視個人歷程</a>
+                        <!-- Arrow pointing down -->
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-white"></div>
+                    </div>
+
+                    <!-- Original Visible Content -->
                     ${confettiHTML}
                     <div class="flex items-center min-w-0">
                         <div class="relative flex-shrink-0">
@@ -749,25 +758,6 @@
             renderYearFilter();
             renderMonthFilter();
             renderDashboard();
-        }
-
-        function showMemberPopup(elem, name, id) {
-            clearTimeout(hidePopupTimer);
-            const popup = document.getElementById('memberPopup');
-            const rect = elem.getBoundingClientRect();
-            const imgHtml = localProfileImages[name]
-                ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-20 h-20 rounded-full object-cover mx-auto mb-2" />`
-                : `<div class="w-20 h-20 bg-sky-500 rounded-full flex items-center justify-center text-white text-xl font-semibold mx-auto mb-2">${name.charAt(0)}</div>`;
-            popup.innerHTML = `${imgHtml}<p class="font-semibold">${name}</p><a href="Project-admin.html?user=${encodeURIComponent(name)}&id=${id}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">個人歷程檢視</a>`;
-            popup.style.top = (rect.top + window.scrollY) + 'px';
-            popup.style.left = (rect.right + 10 + window.scrollX) + 'px';
-            popup.classList.remove('hidden');
-        }
-
-        function hideMemberPopup() {
-            hidePopupTimer = setTimeout(() => {
-                document.getElementById('memberPopup').classList.add('hidden');
-            }, 100);
         }
 
         function setupLoginModal() {
@@ -950,17 +940,17 @@
                     const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
                     const isExpired = (item.deadline ? new Date(item.startDate) : new Date(item.startDate)) < today;
                     html += `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">
-                            ${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}
-                            <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
-                            <span class="text-xl font-bold text-purple-700">${day}</span>
-                            </div>
-                            <div class="flex-grow pt-1">
-                            <p class="font-semibold text-gray-800">${item.name}</p>
-                            <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>
-                            <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
-                            ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}
-                            </div>
-                            </li>`;
+                                ${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}
+                                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
+                                <span class="text-xl font-bold text-purple-700">${day}</span>
+                                </div>
+                                <div class="flex-grow pt-1">
+                                <p class="font-semibold text-gray-800">${item.name}</p>
+                                <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>
+                                <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                                ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}
+                                </div>
+                                </li>`;
                 });
                 if (currentKey) html += '</ul></div>';
                 return html;
@@ -1023,7 +1013,7 @@
         // --- UPDATED AI SUGGESTION FUNCTION ---
         async function getAiSuggestions() {
             const aiContent = document.getElementById('ai-suggestion-content');
-            const apiKey = "AIzaSyDpehmvN237MFUJvHJTBDkXDNT0n3o0To8"; // User provided API key
+            const apiKey = ""; // Leave this empty, it will be handled by the environment
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             aiContent.innerHTML = `
@@ -1032,39 +1022,55 @@
                     <p class="mt-4 text-gray-600 font-medium">AI 正在分析數據並產生決策摘要，請稍候...</p>
                 </div>`;
 
+            // 1. Filter for relevant items (projects and tasks)
             const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
-            const totalCount = projectsAndTasks.length;
-            const redCount = projectsAndTasks.filter(p => p.status === 'overdue').length;
-            const amberCount = projectsAndTasks.filter(p => p.status === 'active').length;
-            const blueCount = projectsAndTasks.filter(p => p.status === 'planning').length;
-            const greenCount = projectsAndTasks.filter(p => p.status === 'completed').length;
             
-            const overdueItems = projectsAndTasks.filter(p => p.status === 'overdue').map(p => `「${p.name}」 (進度${p.progress}%)`);
-            const lowProgressItems = projectsAndTasks.filter(p => p.status === 'active' && p.progress < 30).map(p => `「${p.name}」 (進度${p.progress}%)`);
+            // 2. Gather key metrics and data points
+            const totalCount = projectsAndTasks.length;
+            const overdueItems = projectsAndTasks.filter(p => p.status === 'overdue');
+            const activeItems = projectsAndTasks.filter(p => p.status === 'active');
+            const planningItems = projectsAndTasks.filter(p => p.status === 'planning');
+            const completedItems = projectsAndTasks.filter(p => p.status === 'completed');
 
-            // Resource concentration analysis
-            const resourceMap = {};
-            const next60days = new Date();
-            next60days.setDate(next60days.getDate() + 60);
-            projectsAndTasks.filter(p => p.deadline && new Date(p.deadline) <= next60days && p.status !== 'completed').forEach(p => {
-                const assigneeName = p.assignees[0];
-                const member = staffData.find(s => s.name === assigneeName);
-                const groupKey = member && member.group ? member.group : `[資料不匹配: ${assigneeName}]`;
-                if (!resourceMap[groupKey]) resourceMap[groupKey] = 0;
-                resourceMap[groupKey]++;
-            });
-            let resourceRiskItems = Object.entries(resourceMap)
-                .filter(([group, count]) => count > 2)
-                .map(([groupKey, count]) => {
-                    if (groupKey.startsWith('[資料不匹配')) return `${groupKey} 有 ${count} 個項目密集到期。`;
-                    return `「${groupData[groupKey] || groupKey}」在未來60天內有 ${count} 個項目密集到期，需注意團隊是否有過勞風險。`;
+            const lowProgressItems = activeItems.filter(p => p.progress < 30);
+            const stalledItems = activeItems.filter(p => (p.progress - (p.lastWeekProgress || 0)) === 0);
+            
+            // 3. Analyze resource workload
+            const workload = {};
+            overdueItems.forEach(item => {
+                item.assignees.forEach(assignee => {
+                    if (!workload[assignee]) workload[assignee] = { overdue: 0, active: 0 };
+                    workload[assignee].overdue++;
                 });
-            if (resourceRiskItems.length === 0) resourceRiskItems.push("目前無明顯資源集中風險。");
+            });
+            activeItems.forEach(item => {
+                item.assignees.forEach(assignee => {
+                    if (!workload[assignee]) workload[assignee] = { overdue: 0, active: 0 };
+                    workload[assignee].active++;
+                });
+            });
+            const overloadedMembers = Object.entries(workload)
+                .filter(([name, tasks]) => tasks.overdue > 1 || (tasks.overdue > 0 && tasks.active > 2))
+                .map(([name, tasks]) => `${name} (負責 ${tasks.overdue} 項逾期, ${tasks.active} 項進行中)`);
 
-
+            // 4. Construct a detailed, data-driven prompt
             const prompt = `
-                你是一位頂尖的專案管理顧問，請為一位高階經理人撰寫一份決策摘要，並使用繁體中文回覆。
-                請根據我提供的數據，生成一個 JSON 物件。
+                你是一位頂尖的專案管理顧問，請為一位高階經理人撰寫一份決策摘要。
+                請根據我提供的 **真實數據**，生成一個 JSON 物件，內容必須反映這些數據。
+
+                **當前專案數據摘要:**
+                - **總項目數:** ${totalCount}
+                - **燈號分析 (RAG):**
+                    - 紅燈 (逾期): ${overdueItems.length} 項
+                    - 黃燈 (進行中): ${activeItems.length} 項
+                    - 藍燈 (規劃中): ${planningItems.length} 項
+                    - 綠燈 (已完成): ${completedItems.length} 項
+                - **需立即關注的逾期項目:** ${overdueItems.length > 0 ? overdueItems.map(p => `"${p.name}" (負責人: ${p.assignees.join(', ')})`).join('; ') : '無'}
+                - **進度嚴重落後的項目 (<30%):** ${lowProgressItems.length > 0 ? lowProgressItems.map(p => `"${p.name}" (進度${p.progress}%, 負責人: ${p.assignees.join(', ')})`).join('; ') : '無'}
+                - **可能停滯的項目 (一週內無進展):** ${stalledItems.length > 0 ? stalledItems.map(p => `"${p.name}" (負責人: ${p.assignees.join(', ')})`).join('; ') : '無'}
+                - **潛在過勞成員 (需關注):** ${overloadedMembers.length > 0 ? overloadedMembers.join('; ') : '無'}
+
+                請基於以上數據，填充以下 JSON 結構，提供具體、可執行的分析與建議。
             `;
             
             const payload = {
@@ -1080,10 +1086,11 @@
                             healthOverview: {
                                 type: "OBJECT",
                                 properties: {
-                                    summary: { type: "STRING", description: "1-2句話總結目前專案組合的整體健康度" },
+                                    summary: { type: "STRING", description: "基於數據，用1-2句話總結目前專案組合的整體健康度。" },
                                     rag: {
                                         type: "ARRAY",
-                                        items: { type: "STRING", description: "條列出紅、黃、藍、綠四個燈號的項目數量與說明" }
+                                        items: { type: "STRING" },
+                                        description: "條列出數據中紅、黃、藍、綠四個燈號的項目數量與簡要說明。"
                                     }
                                 }
                             },
@@ -1092,8 +1099,8 @@
                                 items: {
                                     type: "OBJECT",
                                     properties: {
-                                        title: { type: "STRING", description: "風險次標題，例如 '已逾期專案 (立即處理)'" },
-                                        points: { type: "ARRAY", items: { type: "STRING" }, description: "該風險下的條列項目" }
+                                        title: { type: "STRING", description: "風險次標題，例如 '已逾期專案 (立即處理)'、'進度落後警示'、'資源瓶頸風險'。" },
+                                        points: { type: "ARRAY", items: { type: "STRING" }, description: "根據數據，列出該風險下的具體項目或人員。" }
                                     }
                                 }
                             },
@@ -1102,8 +1109,8 @@
                                 items: {
                                     type: "OBJECT",
                                     properties: {
-                                        title: { type: "STRING", description: "建議次標題，例如 '設定明確優先級'" },
-                                        points: { type: "ARRAY", items: { type: "STRING" }, description: "該建議下的條列項目" }
+                                        title: { type: "STRING", description: "建議次標題，例如 '召開緊急會議'、'重新分配資源'、'建立進度回報機制'。" },
+                                        points: { type: "ARRAY", items: { type: "STRING" }, description: "針對風險評估中的問題，提出具體、可操作的建議。" }
                                     }
                                 }
                             }
@@ -1127,12 +1134,12 @@
 
                 const result = await response.json();
                 
-                if (result.candidates && result.candidates.length > 0) {
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
                     const jsonText = result.candidates[0].content.parts[0].text;
                     const reportData = JSON.parse(jsonText);
                     aiContent.innerHTML = renderAiReport(reportData);
                 } else {
-                    throw new Error("AI 未能提供建議。");
+                    throw new Error("AI 未能提供有效的建議。回應為空或格式不符。");
                 }
 
             } catch (error) {
@@ -1163,29 +1170,29 @@
                 <p class="pl-8 text-gray-800">${healthOverview.summary}</p>
                 ${healthOverview.rag.map(item => {
                     let color = 'text-gray-600', i = 'fa-info-circle';
-                    if(item.includes('紅色')) { color = 'text-red-600'; i = 'fa-exclamation-circle'; }
-                    if(item.includes('黃色')) { color = 'text-yellow-600'; i = 'fa-eye'; }
-                    if(item.includes('藍色')) { color = 'text-blue-500'; i = 'fa-map'; }
-                    if(item.includes('綠色')) { color = 'text-green-600'; i = 'fa-check-circle'; }
+                    if(item.includes('紅') || item.includes('逾期')) { color = 'text-red-600'; i = 'fa-exclamation-circle'; }
+                    else if(item.includes('黃') || item.includes('進行中')) { color = 'text-yellow-600'; i = 'fa-eye'; }
+                    else if(item.includes('藍') || item.includes('規劃中')) { color = 'text-blue-500'; i = 'fa-map'; }
+                    else if(item.includes('綠') || item.includes('已完成')) { color = 'text-green-600'; i = 'fa-check-circle'; }
                     return `<div class="mt-2"><strong class="${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${item}</strong></div>`;
                 }).join('')}
             `;
 
             const riskContent = riskAssessment.map(section => {
-                 let color = 'text-gray-800', i = 'fa-lightbulb';
-                 if(section.title.includes('逾期')) { color = 'text-red-800'; i = 'fa-fire-alt'; }
-                 if(section.title.includes('落後')) { color = 'text-orange-600'; i = 'fa-ghost'; }
-                 if(section.title.includes('風險')) { color = 'text-purple-600'; i = 'fa-users'; }
-                 return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
+                let color = 'text-gray-800', i = 'fa-lightbulb';
+                if(section.title.includes('逾期')) { color = 'text-red-800'; i = 'fa-fire-alt'; }
+                else if(section.title.includes('落後') || section.title.includes('停滯')) { color = 'text-orange-600'; i = 'fa-ghost'; }
+                else if(section.title.includes('資源') || section.title.includes('瓶頸')) { color = 'text-purple-600'; i = 'fa-users'; }
+                return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
             }).join('');
 
             const recommendationContent = recommendations.map(section => {
-                 let color = 'text-green-800', i = 'fa-lightbulb';
-                 if(section.title.includes('優先級')) { i = 'fa-star'; }
-                 if(section.title.includes('檢討會')) { i = 'fa-comments'; }
-                 if(section.title.includes('支持')) { i = 'fa-lightbulb'; }
-                 if(section.title.includes('回報機制')) { i = 'fa-sync-alt'; }
-                 return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
+                let color = 'text-green-800', i = 'fa-lightbulb';
+                if(section.title.includes('優先') || section.title.includes('會議')) { i = 'fa-star'; }
+                else if(section.title.includes('資源') || section.title.includes('檢討')) { i = 'fa-comments'; }
+                else if(section.title.includes('支持') || section.title.includes('關懷')) { i = 'fa-hands-helping'; }
+                else if(section.title.includes('回報') || section.title.includes('追蹤')) { i = 'fa-sync-alt'; }
+                return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
             }).join('');
 
             let finalHtml = '<div class="space-y-6">';
@@ -1296,6 +1303,13 @@
             });
         };
         
+        function viewMemberHistory(name, event) {
+            event.stopPropagation(); // Prevent the filterByMember from being called
+            alert(`檢視 ${name} 的個人歷程 (功能開發中)`);
+            // In a real application, this would navigate to a user-specific page
+            // window.location.href = `/member-history?name=${encodeURIComponent(name)}`;
+        }
+
         // --- UPDATED CHATBOT REPORT FUNCTION ---
         function generateDashboardReportHTML() {
             const today = new Date();
