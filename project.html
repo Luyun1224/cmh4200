@@ -1192,42 +1192,50 @@
                 `;
             };
             
-            // FIX: Make renderList robust against undefined or non-array inputs.
+            // FIX: Make renderList robust against undefined or non-array inputs and improve layout.
             const renderList = (items) => {
-                if (!Array.isArray(items)) {
-                    return ''; // Return an empty string if items is not an array
+                if (!Array.isArray(items) || items.length === 0) {
+                    return '<p class="text-sm text-gray-500">無具體項目。</p>';
                 }
-                return items.map(item => `<div class="pl-8 flex items-start text-gray-800"><span class="mr-3 mt-1.5 text-gray-500 text-xs">●</span><span>${item}</span></div>`).join('');
-            }
+                let listHtml = '<ul class="list-none space-y-2">';
+                listHtml += items.map(item => `
+                    <li class="flex items-start">
+                        <span class="mr-3 text-gray-500 mt-1.5 text-xs">●</span>
+                        <span class="text-gray-800 flex-1 text-sm">${item}</span>
+                    </li>
+                `).join('');
+                listHtml += '</ul>';
+                return listHtml;
+            };
 
             const healthContent = `
-                <p class="pl-8 text-gray-800">${summary}</p>
+                <p class="pl-8 text-gray-800 text-sm">${summary}</p>
                 ${rag.map(item => {
                     let color = 'text-gray-600', i = 'fa-info-circle';
                     if(item.includes('紅') || item.includes('逾期')) { color = 'text-red-600'; i = 'fa-exclamation-circle'; }
                     else if(item.includes('黃') || item.includes('進行中')) { color = 'text-yellow-600'; i = 'fa-eye'; }
                     else if(item.includes('藍') || item.includes('規劃中')) { color = 'text-blue-500'; i = 'fa-map'; }
                     else if(item.includes('綠') || item.includes('已完成')) { color = 'text-green-600'; i = 'fa-check-circle'; }
-                    return `<div class="mt-2"><strong class="${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${item}</strong></div>`;
+                    return `<div class="mt-2 pl-8"><strong class="${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${item}</strong></div>`;
                 }).join('')}
             `;
 
-            const riskContent = riskAssessment.map(section => {
+            const riskContent = riskAssessment.length > 0 ? riskAssessment.map(section => {
                 let color = 'text-gray-800', i = 'fa-lightbulb';
                 if(section.title.includes('逾期')) { color = 'text-red-800'; i = 'fa-fire-alt'; }
                 else if(section.title.includes('落後') || section.title.includes('停滯')) { color = 'text-orange-600'; i = 'fa-ghost'; }
                 else if(section.title.includes('資源') || section.title.includes('瓶頸')) { color = 'text-purple-600'; i = 'fa-users'; }
-                return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
-            }).join('');
+                return `<div class="space-y-2"><strong class="font-bold ${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong><div class="pl-5">${renderList(section.points)}</div></div>`;
+            }).join('<hr class="my-4">') : '<p class="pl-5 text-gray-500">目前無重大風險。</p>';
 
-            const recommendationContent = recommendations.map(section => {
+            const recommendationContent = recommendations.length > 0 ? recommendations.map(section => {
                 let color = 'text-green-800', i = 'fa-lightbulb';
                 if(section.title.includes('優先') || section.title.includes('會議')) { i = 'fa-star'; }
                 else if(section.title.includes('資源') || section.title.includes('檢討')) { i = 'fa-comments'; }
                 else if(section.title.includes('支持') || section.title.includes('關懷')) { i = 'fa-hands-helping'; }
                 else if(section.title.includes('回報') || section.title.includes('追蹤')) { i = 'fa-sync-alt'; }
-                return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
-            }).join('');
+                return `<div class="space-y-2"><strong class="font-bold ${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong><div class="pl-5">${renderList(section.points)}</div></div>`;
+            }).join('<hr class="my-4">') : '<p class="pl-5 text-gray-500">目前無具體決策建議。</p>';
 
             let finalHtml = '<div class="space-y-6">';
             finalHtml += renderSection('1. 專案組合健康度速覽 (RAG 分析)', 'text-blue-700', 'fa-chart-pie', healthContent);
