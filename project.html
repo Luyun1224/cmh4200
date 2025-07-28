@@ -80,11 +80,38 @@
         .birthday-hat {
             position: absolute;
             top: -10px;
-            left: 28px;
-            font-size: 24px;
-            color: #f8b52c;
-            transform: rotate(-15deg);
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            background: repeating-linear-gradient(135deg, #f8b52c 0, #f8b52c 4px, #ffd166 4px, #ffd166 8px);
+            transform-origin: bottom center;
+            animation: hat-bounce 1.5s infinite;
             z-index: 10;
+        }
+        .birthday-hat::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: calc(50% - 4px);
+            width: 8px;
+            height: 8px;
+            background: #f15bb5;
+            border-radius: 50%;
+        }
+        .birthday-hat::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: -2px;
+            width: 22px;
+            height: 4px;
+            background: #ffffff;
+            border-radius: 2px;
+        }
+        @keyframes hat-bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-3px); }
         }
         @keyframes confetti-fall {
             0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
@@ -595,7 +622,7 @@
                 const isBirthday = memberInfo.birthday === todayStr;
                 
                 const birthdayContainerClass = isBirthday ? 'birthday-container' : '';
-                const birthdayHatHTML = isBirthday ? '<i class="fas fa-birthday-cake birthday-hat"></i>' : '';
+                const birthdayHatHTML = isBirthday ? '<div class="birthday-hat"></div>' : '';
                 const confettiHTML = isBirthday ? Array.from({length: 9}).map((_, i) => `<div class="confetti"></div>`).join('') : '';
 
                 return `
