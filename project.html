@@ -186,7 +186,7 @@
     </div>
     
     <div id="aiModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
                 <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-brain text-blue-500 mr-3"></i>AI 判讀與決策建議</h2>
                 <button id="closeAiModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
@@ -313,7 +313,7 @@
     <button id="scrollToTopBtn" title="回到頂部" class="hidden fixed bottom-5 right-5 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all z-50 hover:scale-110"><i class="fas fa-arrow-up"></i></button>
     <button id="openChatBot" title="詢問概況" class="hidden fixed bottom-5 right-20 bg-indigo-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 focus:outline-none z-50 transition-all hover:scale-110"><i class="fas fa-robot"></i></button>
     <div id="chatBotContainer" class="hidden fixed bottom-20 right-5 w-96 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col z-50">
-        <div class="flex justify-between items-center bg-indigo-600 text-white px-4 py-2 rounded-t-xl"><span class="font-semibold">小幫手</span><button id="closeChatBot" class="text-white text-xl leading-none">&times;</button></div>
+        <div class="flex justify-between items-center bg-indigo-600 text-white px-4 py-2 rounded-t-xl"><span class="font-semibold">戰隊小幫手</span><button id="closeChatBot" class="text-white text-xl leading-none">&times;</button></div>
         <div id="chatBotMessages" class="p-4 space-y-2 text-sm overflow-y-auto max-h-[60vh]"></div>
     </div>
 
@@ -927,7 +927,7 @@
                     }
                     const day = d.getDate();
                     const range = item.deadline && item.deadline !== item.startDate ? ` - ${formatDate(item.deadline)}` : '';
-                    const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
+                    const isExpired = (item.deadline ? new Date(item.startDate) : new Date(item.startDate)) < today;
                     html += `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">
                             ${isExpired ? '<span class="absolute top-1 right-1 text-xs bg-gray-200 text-gray-600 px-1 rounded">已過期</span>' : ''}
                             <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
@@ -999,8 +999,182 @@
             modal.classList.remove('hidden');
         }
 
-        function generateLocalAiSummary(){/*...omitted for brevity...*/};
-        async function getAiSuggestions(){/*...omitted for brevity...*/};
+        // --- UPDATED AI SUGGESTION FUNCTION ---
+        async function getAiSuggestions() {
+            const aiContent = document.getElementById('ai-suggestion-content');
+            const apiKey = "AIzaSyDpehmvN237MFUJvHJTBDkXDNT0n3o0To8"; // User provided API key
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            aiContent.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-8">
+                    <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
+                    <p class="mt-4 text-gray-600 font-medium">AI 正在分析數據並產生決策摘要，請稍候...</p>
+                </div>`;
+
+            const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
+            const totalCount = projectsAndTasks.length;
+            const redCount = projectsAndTasks.filter(p => p.status === 'overdue').length;
+            const amberCount = projectsAndTasks.filter(p => p.status === 'active').length;
+            const blueCount = projectsAndTasks.filter(p => p.status === 'planning').length;
+            const greenCount = projectsAndTasks.filter(p => p.status === 'completed').length;
+            
+            const overdueItems = projectsAndTasks.filter(p => p.status === 'overdue').map(p => `「${p.name}」 (進度${p.progress}%)`);
+            const lowProgressItems = projectsAndTasks.filter(p => p.status === 'active' && p.progress < 30).map(p => `「${p.name}」 (進度${p.progress}%)`);
+
+            // Resource concentration analysis
+            const resourceMap = {};
+            const next60days = new Date();
+            next60days.setDate(next60days.getDate() + 60);
+            projectsAndTasks.filter(p => p.deadline && new Date(p.deadline) <= next60days && p.status !== 'completed').forEach(p => {
+                const assigneeName = p.assignees[0];
+                const member = staffData.find(s => s.name === assigneeName);
+                const groupKey = member && member.group ? member.group : `[資料不匹配: ${assigneeName}]`;
+                if (!resourceMap[groupKey]) resourceMap[groupKey] = 0;
+                resourceMap[groupKey]++;
+            });
+            let resourceRiskItems = Object.entries(resourceMap)
+                .filter(([group, count]) => count > 2)
+                .map(([groupKey, count]) => {
+                    if (groupKey.startsWith('[資料不匹配')) return `${groupKey} 有 ${count} 個項目密集到期。`;
+                    return `「${groupData[groupKey] || groupKey}」在未來60天內有 ${count} 個項目密集到期，需注意團隊是否有過勞風險。`;
+                });
+            if (resourceRiskItems.length === 0) resourceRiskItems.push("目前無明顯資源集中風險。");
+
+
+            const prompt = `
+                你是一位頂尖的專案管理顧問，請為一位高階經理人撰寫一份決策摘要。
+                請根據我提供的數據，生成一個 JSON 物件。
+            `;
+            
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            healthOverview: {
+                                type: "OBJECT",
+                                properties: {
+                                    summary: { type: "STRING", description: "1-2句話總結目前專案組合的整體健康度" },
+                                    rag: {
+                                        type: "ARRAY",
+                                        items: { type: "STRING", description: "條列出紅、黃、藍、綠四個燈號的項目數量與說明" }
+                                    }
+                                }
+                            },
+                            riskAssessment: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        title: { type: "STRING", description: "風險次標題，例如 '已逾期專案 (立即處理)'" },
+                                        points: { type: "ARRAY", items: { type: "STRING" }, description: "該風險下的條列項目" }
+                                    }
+                                }
+                            },
+                            recommendations: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        title: { type: "STRING", description: "建議次標題，例如 '設定明確優先級'" },
+                                        points: { type: "ARRAY", items: { type: "STRING" }, description: "該建議下的條列項目" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API 請求失敗: ${errorData.error ? errorData.error.message : response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0) {
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    const reportData = JSON.parse(jsonText);
+                    aiContent.innerHTML = renderAiReport(reportData);
+                } else {
+                    throw new Error("AI 未能提供建議。");
+                }
+
+            } catch (error) {
+                console.error("AI Suggestion Error:", error);
+                aiContent.innerHTML = `
+                    <div class="p-4 bg-red-100 text-red-700 rounded-lg">
+                        <p class="font-bold">無法獲取 AI 建議</p>
+                        <p>${error.message}</p>
+                    </div>`;
+            }
+        }
+
+        function renderAiReport(data) {
+            const { healthOverview, riskAssessment, recommendations } = data;
+
+            const renderSection = (title, color, icon, content) => {
+                return `
+                    <div>
+                        <h3 class="text-xl font-bold ${color} flex items-center mb-3"><i class="fas ${icon} mr-3 fa-fw"></i>${title}</h3>
+                        <div class="pl-5 space-y-3">${content}</div>
+                    </div>
+                `;
+            };
+            
+            const renderList = (items) => items.map(item => `<div class="pl-8 flex items-start text-gray-800"><span class="mr-3 mt-1.5 text-gray-500 text-xs">●</span><span>${item}</span></div>`).join('');
+
+            const healthContent = `
+                <p class="pl-8 text-gray-800">${healthOverview.summary}</p>
+                ${healthOverview.rag.map(item => {
+                    let color = 'text-gray-600', i = 'fa-info-circle';
+                    if(item.includes('紅色')) { color = 'text-red-600'; i = 'fa-exclamation-circle'; }
+                    if(item.includes('黃色')) { color = 'text-yellow-600'; i = 'fa-eye'; }
+                    if(item.includes('藍色')) { color = 'text-blue-500'; i = 'fa-map'; }
+                    if(item.includes('綠色')) { color = 'text-green-600'; i = 'fa-check-circle'; }
+                    return `<div class="mt-2"><strong class="${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${item}</strong></div>`;
+                }).join('')}
+            `;
+
+            const riskContent = riskAssessment.map(section => {
+                 let color = 'text-gray-800', i = 'fa-lightbulb';
+                 if(section.title.includes('逾期')) { color = 'text-red-800'; i = 'fa-fire-alt'; }
+                 if(section.title.includes('落後')) { color = 'text-orange-600'; i = 'fa-ghost'; }
+                 if(section.title.includes('風險')) { color = 'text-purple-600'; i = 'fa-users'; }
+                 return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
+            }).join('');
+
+            const recommendationContent = recommendations.map(section => {
+                 let color = 'text-green-800', i = 'fa-lightbulb';
+                 if(section.title.includes('優先級')) { i = 'fa-star'; }
+                 if(section.title.includes('檢討會')) { i = 'fa-comments'; }
+                 if(section.title.includes('支持')) { i = 'fa-lightbulb'; }
+                 if(section.title.includes('回報機制')) { i = 'fa-sync-alt'; }
+                 return `<div><strong class="font-bold ${color} flex items-center"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong>${renderList(section.points)}</div>`;
+            }).join('');
+
+            let finalHtml = '<div class="space-y-6">';
+            finalHtml += renderSection('1. 專案組合健康度速覽 (RAG 分析)', 'text-blue-700', 'fa-chart-pie', healthContent);
+            finalHtml += renderSection('2. 風險評估與進度落後預警', 'text-red-700', 'fa-shield-alt', riskContent);
+            finalHtml += renderSection('3. 高階經理人決策建議', 'text-green-700', 'fa-user-tie', recommendationContent);
+            finalHtml += '</div>';
+
+            return finalHtml;
+        }
         
         function setupModal(modalId, openBtnId, closeBtnId) {
             const modal = document.getElementById(modalId);
@@ -1087,9 +1261,127 @@
             calendarHtml += `</div></div>`;
             return calendarHtml;
         };
-        function setupScrollToTop(){/*...omitted for brevity...*/};
-        function generateDashboardReportHTML(){/*...omitted for brevity...*/};
-        function setupChatBot(){/*...omitted for brevity...*/};
+        function setupScrollToTop(){
+            const btn = document.getElementById('scrollToTopBtn');
+            window.onscroll = () => {
+                if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+            };
+            btn.addEventListener('click', () => {
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            });
+        };
+        
+        // --- UPDATED CHATBOT REPORT FUNCTION ---
+        function generateDashboardReportHTML() {
+            const today = new Date();
+            const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+            const thisMonth = today.getMonth() + 1;
+            const thisYear = today.getFullYear();
+
+            const itemsThisMonth = allActivities.filter(item => {
+                const itemDate = new Date(item.startDate);
+                return itemDate.getFullYear() === thisYear && (itemDate.getMonth() + 1) === thisMonth;
+            });
+            
+            // Differentiate between projects and tasks
+            const completedProjectsThisMonth = itemsThisMonth.filter(i => i.status === 'completed' && i.type === 'project').length;
+            const completedTasksThisMonth = itemsThisMonth.filter(i => i.status === 'completed' && i.type === 'task').length;
+            const activeProjectsCount = allActivities.filter(i => i.status === 'active' && i.type === 'project').length;
+            const activeTasksCount = allActivities.filter(i => i.status === 'active' && i.type === 'task').length;
+            const overdueProjects = allActivities.filter(i => i.status === 'overdue');
+            
+            const recentlyCompleted = allActivities
+                .filter(i => i.status === 'completed' && new Date(i.deadline) <= today && i.type === 'project')
+                .sort((a, b) => new Date(b.deadline) - new Date(a.deadline));
+            const highlightProject = recentlyCompleted.length > 0 ? recentlyCompleted[0] : null;
+            
+            const milestonesCompleted = itemsThisMonth
+                .filter(i => i.status === 'completed' && i.type === 'task')
+                .map(i => i.name)
+                .slice(0, 2);
+
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
+            const upcomingEvents = allActivities
+                .filter(i => {
+                    const startDate = new Date(i.startDate);
+                    return i.status !== 'completed' && startDate > today && startDate <= nextWeek;
+                })
+                .map(i => `[${formatDate(i.startDate)}]: ${i.name}`);
+
+            let reportHTML = `<div class="p-2 space-y-4 text-gray-800">`;
+            reportHTML += `<p>您好！這是截至 <strong>${todayString}</strong> 的本月重點彙報。</p>`;
+
+            // Highlights Section
+            reportHTML += `<div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <h3 class="font-bold text-yellow-800">⭐ 本月亮點 (Highlights)</h3>
+                <ul class="list-none text-sm text-yellow-700 mt-2 space-y-1">`;
+            reportHTML += `<li><span class="font-semibold">🎉 專案達標：</span> 本月共完成 <strong>${completedProjectsThisMonth}</strong> 項專案、<strong>${completedTasksThisMonth}</strong> 項任務！</li>`;
+            if (highlightProject) {
+                reportHTML += `<li><span class="font-semibold">🚀 指標專案上線：</span> 「${highlightProject.name}」已於 ${formatDate(highlightProject.deadline)} 順利完成。</li>`;
+            } else {
+                 reportHTML += `<li><span class="font-semibold">🚀 指標專案上線：</span> 本月尚無指標專案完成。</li>`;
+            }
+            reportHTML += `</ul></div>`;
+
+            // Project Progress Section
+            reportHTML += `<div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 class="font-bold text-blue-800">⚙️ 專案進度 (Project Progress)</h3>
+                <ul class="list-none text-sm text-blue-700 mt-2 space-y-1">
+                    <li><strong>進行中專案：</strong> ${activeProjectsCount} 項</li>
+                    <li><strong>進行中任務：</strong> ${activeTasksCount} 項</li>
+                    <li><strong>本月完成里程碑：</strong> ${milestonesCompleted.length > 0 ? milestonesCompleted.join(', ') : '無'}</li>
+                </ul></div>`;
+
+            // Risk Alert Section
+            if (overdueProjects.length > 0) {
+                const riskProject = overdueProjects[0];
+                reportHTML += `<div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <h3 class="font-bold text-red-800">⚠️ 風險提示</h3>
+                    <p class="text-sm text-red-700 mt-1">「${riskProject.name}」目前處於逾期狀態，需專案經理 <strong>${riskProject.assignees.join(', ')}</strong> 重點關注。</p>
+                    </div>`;
+            }
+
+            // Coming Up Section
+            reportHTML += `<div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                <h3 class="font-bold text-green-800">🗓️ 下週重點預告 (Coming Up)</h3>`;
+            if (upcomingEvents.length > 0) {
+                reportHTML += `<ul class="list-none text-sm text-green-700 mt-2 space-y-1">
+                    ${upcomingEvents.map(e => `<li>${e}</li>`).join('')}
+                    </ul>`;
+            } else {
+                reportHTML += `<p class="text-sm text-green-700 mt-1">下週尚無排定重點事項。</p>`;
+            }
+            reportHTML += `</div>`;
+
+            reportHTML += `<p class="text-xs text-gray-500 text-center pt-2">希望這份彙報對您有幫助！</p>`;
+            reportHTML += `</div>`;
+
+            return reportHTML;
+        }
+
+        function setupChatBot() {
+            const openBtn = document.getElementById('openChatBot');
+            const closeBtn = document.getElementById('closeChatBot');
+            const container = document.getElementById('chatBotContainer');
+            const messagesDiv = document.getElementById('chatBotMessages');
+
+            openBtn.addEventListener('click', () => {
+                container.classList.remove('hidden');
+                messagesDiv.innerHTML = `<div class="p-4"><i class="fas fa-spinner fa-spin text-indigo-500"></i> 正在產生報告...</div>`;
+                setTimeout(() => {
+                    messagesDiv.innerHTML = generateDashboardReportHTML();
+                }, 100);
+            });
+
+            closeBtn.addEventListener('click', () => {
+                container.classList.add('hidden');
+            });
+        }
 
 
         document.addEventListener('DOMContentLoaded', async function() {
