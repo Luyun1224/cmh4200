@@ -1423,7 +1423,7 @@
                 const riskProject = overdueProjects[0];
                 reportHTML += `<div class="p-3 bg-red-50 rounded-lg border border-red-200">
                     <h3 class="font-bold text-red-800">⚠️ 風險提示</h3>
-                    <p class="text-sm text-red-700 mt-1">「${riskProject.name}」目前處於逾期狀態，需專案經理 <strong>${riskProject.assignees.join(', ')}</strong> 重點關注。</p>
+                    <p class="text-sm text-red-700 mt-1">「${riskProject.name}」目前處於逾期狀態，需負責人 <strong>${riskProject.assignees.join(', ')}</strong> 重點關注。</p>
                     </div>`;
             }
 
