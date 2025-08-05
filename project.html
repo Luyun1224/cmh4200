@@ -1266,10 +1266,26 @@
 
             const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
 
-            const completedThisWeek = projectsAndTasks.filter(item =>
-                item.status === 'completed' &&
-                (item.lastWeekProgress || 0) < 100 
-            );
+            // --- BUG FIX: More robust logic for "Completed This Week" ---
+            const completedThisWeek = projectsAndTasks.filter(item => {
+                // Condition 1: The item must be marked as 'completed'.
+                if (item.status !== 'completed') {
+                    return false;
+                }
+                
+                // Condition 2: The item's deadline (used as completion date) must be within the last 7 days.
+                const completionDate = item.deadline ? new Date(item.deadline) : null;
+                if (!completionDate) {
+                    return false; // If no date, can't determine if it was this week.
+                }
+                const isRecent = completionDate >= oneWeekAgo && completionDate <= today;
+
+                // Condition 3: The item should not have been completed *before* this week started.
+                // This handles cases where the trigger might have failed and prevents old items from reappearing.
+                const wasCompletedBefore = (item.lastWeekProgress || 0) === 100;
+
+                return isRecent && !wasCompletedBefore;
+            });
 
             const progressMade = projectsAndTasks.filter(item =>
                 item.status !== 'completed' &&
