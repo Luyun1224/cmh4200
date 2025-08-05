@@ -852,7 +852,7 @@
                         loginMessage.textContent = '登入成功！即將跳轉...';
                         loginMessage.className = 'text-center mb-4 font-medium text-green-500';
                         setTimeout(() => {
-                            window.location.href = `project-admin.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
+                            window.location.href = `https://luyun1224.github.io/cmh4200/Project-admin.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
                         }, 1500);
                     } else {
                         throw new Error(result.message || '帳號或密碼錯誤。');
