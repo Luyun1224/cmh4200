@@ -3,20 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>教學部-專案進度儀表板 (優化版)</title>
-    
-    <!-- [效能優化] 預先與外部服務建立連線，減少延遲 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://script.google.com">
-
+    <title>教學部-專案進度儀表板</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- [效能優化] 使用 <link> 取代 @import，避免阻塞渲染 -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f4f8; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .progress-bar { transition: width 0.5s ease-in-out; }
@@ -145,6 +136,7 @@
         .confetti:nth-child(7) { left: 70%; animation-delay: -3s; background-color: #106a3f; }
         .confetti:nth-child(8) { left: 80%; animation-delay: -3.5s; background-color: #1a3a6e; }
         .confetti:nth-child(9) { left: 90%; animation-delay: -4s; background-color: #a52326; }
+
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -357,6 +349,10 @@
     <script>
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec"; // **請務必更新為您最新的部署網址**
+        let allActivities = [];
+        const currentDate = new Date();
+        
+        let staffData = [];
         
         const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','廖家德': '廖家德.png'};
         
@@ -367,8 +363,6 @@
         };
         
         // --- State Variables ---
-        let allActivities = [];
-        let staffData = [];
         let currentUnitFilter = 'all'; 
         let currentGroupFilter = 'all';
         let currentStatusFilter = 'all';
@@ -379,20 +373,6 @@
         let calendarDate = new Date();
 
         // --- Helper Functions ---
-
-        /**
-         * [安全性強化] 新增 HTML 清理函式，防止 XSS 攻擊。
-         * 在將使用者提供的內容插入到 innerHTML 之前，必須先呼叫此函式。
-         * @param {string} str - 需要清理的原始字串。
-         * @returns {string} - 清理後的安全字串。
-         */
-        const sanitizeHTML = (str) => {
-            if (!str) return '';
-            const temp = document.createElement('div');
-            temp.textContent = str;
-            return temp.innerHTML;
-        };
-
         const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
         const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
         const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
@@ -409,10 +389,6 @@
 
         // --- API Communication ---
         
-        /**
-         * [錯誤修正] 恢復為獨立的 API 請求，以匹配您現有的後端指令。
-         * 這是為了解決 "無效的操作指令" 錯誤。
-         */
         async function fetchStaffData() {
             try {
                 const response = await fetch(SCRIPT_URL, {
@@ -433,8 +409,10 @@
                     unit: user.unit
                 }));
             } catch (error) {
-                console.error("獲取團隊成員資料失敗:", error);
-                throw error;
+                console.error("Failed to fetch staff data:", error);
+                staffData = [];
+                document.getElementById('errorMessage').textContent = `無法載入團隊成員列表: ${error.message}`;
+                document.getElementById('errorDisplay').classList.remove('hidden');
             }
         }
 
@@ -446,14 +424,14 @@
                     body: JSON.stringify({ action: 'getAllItems' }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-                if (!response.ok) throw new Error(`網路回應錯誤: ${response.statusText}`);
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
                 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0); 
 
-                allActivities = result.data.map(item => {
+                return result.data.map(item => {
                     const progress = parseInt(item.progress, 10) || 0;
                     const deadline = item.deadline ? new Date(item.deadline) : null;
                     let finalStatus = item.status || 'planning';
@@ -464,21 +442,22 @@
                         finalStatus = 'overdue';
                     }
 
+                    const checklist = Array.isArray(item.checklist) ? item.checklist : [];
+
                     return {
                         ...item,
                         progress: progress,
                         status: finalStatus,
                         lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
                         helpMessage: item.helpMessage || '',
-                        checklist: Array.isArray(item.checklist) ? item.checklist : []
+                        checklist: checklist 
                     };
                 });
             } catch (error) {
-                console.error("獲取所有項目失敗:", error);
+                console.error("Failed to fetch items:", error);
                 throw error;
             }
         }
-
 
         // --- Rendering Functions ---
         
@@ -564,20 +543,19 @@
                     ? checklist.map(cp => `
                         <li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}">
                             <span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span>
-                            <span>${sanitizeHTML(cp.name)}</span>
+                            <span>${cp.name}</span>
                         </li>`).join('')
                     : '<li>無定義的檢查點</li>';
-                
-                // [安全性強化] 使用 sanitizeHTML 清理所有來自資料庫的字串
+
                 return `
                 <div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}">
                     <div class="flex-grow">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex-1">
-                                <h4 class="font-bold text-lg text-gray-900 mb-1">${sanitizeHTML(item.name)} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>
-                                ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${sanitizeHTML(item.description)}</p>` : ''}
-                                <p class="text-sm text-gray-600">主要負責: ${sanitizeHTML(item.assignees.join(', '))}</p>
-                                ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${sanitizeHTML(item.collaborators.join(', '))}</p>` : ''}
+                                <h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>
+                                ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
+                                <p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>
+                                ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}
                             </div>
                             <div class="flex items-center space-x-2 ml-2">
                                 <span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
@@ -614,7 +592,7 @@
                             <span class="text-xl pt-1">😭</span>
                             <div>
                                 <p class="font-semibold text-red-800 text-sm">需要協助：</p>
-                                <p class="text-sm text-red-700 whitespace-pre-wrap">${sanitizeHTML(item.helpMessage)}</p>
+                                <p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p>
                             </div>
                         </div>
                         ` : ''}
@@ -655,7 +633,7 @@
                     <!-- Pop-up Card -->
                     <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-48 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30">
                         <img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;">
-                        <p class="font-bold text-center text-gray-900 text-lg">${sanitizeHTML(name)}</p>
+                        <p class="font-bold text-center text-gray-900 text-lg">${name}</p>
                         <a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm mt-3">檢視個人歷程</a>
                         <!-- Arrow pointing right -->
                         <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div>
@@ -669,7 +647,7 @@
                             ${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}
                         </div>
                         <div class="ml-3 min-w-0">
-                            <p class="font-medium text-gray-900 truncate">${sanitizeHTML(name)}</p>
+                            <p class="font-medium text-gray-900 truncate">${name}</p>
                             <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1">
                                 <span>專案: ${projectCount}</span>
                                 <span>任務: ${taskCount}</span>
@@ -754,7 +732,7 @@
             renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
         }
         
-        // --- Filtering Functions ---
+        // **NEW: Filter by Unit function**
         function filterByUnit(unit) {
             currentUnitFilter = unit;
             currentGroupFilter = 'all'; // Reset group filter when unit changes
@@ -804,7 +782,12 @@
             renderDashboard();
         }
 
-        // --- Event Setup and Modal Logic ---
+        async function refreshData() {
+            allActivities = await fetchAllItems();
+            renderYearFilter();
+            renderMonthFilter();
+            renderDashboard();
+        }
 
         function setupLoginModal() {
             const loginBtn = document.getElementById('loginBtn');
@@ -863,14 +846,12 @@
                     
                     const result = await response.json();
                     
-                    // [錯誤修正] 修改登入成功後的判斷條件，以匹配後端的回應格式
-                    if (result.status === 'success' && result.data.employeeId) {
+                    if (result.status === 'success') {
+                        // **MODIFIED: Handle the new response format from GS**
                         const loginData = result.data;
                         loginMessage.textContent = '登入成功！即將跳轉...';
                         loginMessage.className = 'text-center mb-4 font-medium text-green-500';
-                        
                         setTimeout(() => {
-                            // [錯誤修正] 恢復為使用 URL 參數進行跳轉
                             window.location.href = `https://luyun1224.github.io/cmh4200/Project-admin.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
                         }, 1500);
                     } else {
@@ -941,6 +922,8 @@
             });
         }
         
+        // --- MODAL AND UI FUNCTIONS ---
+        
         function openActivityModal(resetDate = true) {
             if (resetDate) calendarDate = new Date();
             const modal = document.getElementById('activityModal');
@@ -991,10 +974,10 @@
                                 <span class="text-xl font-bold text-purple-700">${day}</span>
                                 </div>
                                 <div class="flex-grow pt-1">
-                                <p class="font-semibold text-gray-800">${sanitizeHTML(item.name)}</p>
+                                <p class="font-semibold text-gray-800">${item.name}</p>
                                 <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}${range}</p>
-                                <p class="text-sm text-gray-500">負責人: ${sanitizeHTML(item.assignees.join(', '))}</p>
-                                ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${sanitizeHTML(item.collaborators.join(', '))}</p>` : ''}
+                                <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                                ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}
                                 </div>
                                 </li>`;
                 });
@@ -1043,8 +1026,8 @@
             } else {
                 contentEl.innerHTML = itemsToShow.map(item => `
                     <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100">
-                        <p class="font-semibold text-gray-800">${sanitizeHTML(item.name)}</p>
-                        <p class="text-sm text-gray-600">負責人: ${sanitizeHTML(item.assignees.join(', '))}</p>
+                        <p class="font-semibold text-gray-800">${item.name}</p>
+                        <p class="text-sm text-gray-600">負責人: ${item.assignees.join(', ')}</p>
                         <div class="flex justify-between items-center text-xs mt-1">
                             <span class="font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span>
                             <span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
@@ -1056,6 +1039,7 @@
             modal.classList.remove('hidden');
         }
 
+        // --- UPDATED AI SUGGESTION FUNCTION ---
         async function getAiSuggestions() {
             const aiContent = document.getElementById('ai-suggestion-content');
             
@@ -1152,9 +1136,8 @@
             };
 
             try {
-                // [說明] 呼叫 Google Apps Script 作為代理，以安全地呼叫 Gemini API。
-                // 這樣可以避免將 API Key 暴露在前端。
-                const response = await fetch(SCRIPT_URL, {
+                // --- 關鍵變更：呼叫您自己的 Google Apps Script 代理 ---
+                const response = await fetch(SCRIPT_URL, { // SCRIPT_URL 是您 GAS 的部署網址
                     method: 'POST',
                     mode: 'cors',
                     headers: {
@@ -1162,7 +1145,7 @@
                     },
                     body: JSON.stringify({
                         action: 'getAiSuggestionProxy', // 告訴後端我們要執行哪個動作
-                        payload: geminiPayload           // 將要給 Gemini 的 payload 包裝起來傳給後端
+                        payload: geminiPayload         // 將要給 Gemini 的 payload 包裝起來傳給後端
                     })
                 });
 
@@ -1171,6 +1154,7 @@
                     throw new Error(`代理伺服器請求失敗: ${errorData.message || response.statusText}`);
                 }
 
+                // GAS 會直接回傳 Gemini API 的原始回應，所以這裡的處理邏輯不變
                 const result = await response.json();
                 
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
@@ -1178,6 +1162,7 @@
                     const reportData = JSON.parse(jsonText);
                     aiContent.innerHTML = renderAiReport(reportData);
                 } else if (result.error) {
+                    // 如果 Gemini API 返回錯誤
                     throw new Error(`AI API 錯誤: ${result.error.message}`);
                 } else {
                     throw new Error("AI 未能提供有效的建議。回應為空或格式不符。");
@@ -1207,6 +1192,7 @@
                 `;
             };
             
+            // FIX: Make renderList robust against undefined or non-array inputs and improve layout.
             const renderList = (items) => {
                 if (!Array.isArray(items) || items.length === 0) {
                     return '<p class="text-sm text-gray-500">無具體項目。</p>';
@@ -1215,7 +1201,7 @@
                 listHtml += items.map(item => `
                     <li class="flex items-start">
                         <span class="mr-3 text-gray-500 mt-1.5 text-xs">●</span>
-                        <span class="text-gray-800 flex-1 text-sm">${sanitizeHTML(item)}</span>
+                        <span class="text-gray-800 flex-1 text-sm">${item}</span>
                     </li>
                 `).join('');
                 listHtml += '</ul>';
@@ -1223,14 +1209,14 @@
             };
 
             const healthContent = `
-                <p class="pl-8 text-gray-800 text-sm">${sanitizeHTML(summary)}</p>
+                <p class="pl-8 text-gray-800 text-sm">${summary}</p>
                 ${rag.map(item => {
                     let color = 'text-gray-600', i = 'fa-info-circle';
                     if(item.includes('紅') || item.includes('逾期')) { color = 'text-red-600'; i = 'fa-exclamation-circle'; }
                     else if(item.includes('黃') || item.includes('進行中')) { color = 'text-yellow-600'; i = 'fa-eye'; }
                     else if(item.includes('藍') || item.includes('規劃中')) { color = 'text-blue-500'; i = 'fa-map'; }
                     else if(item.includes('綠') || item.includes('已完成')) { color = 'text-green-600'; i = 'fa-check-circle'; }
-                    return `<div class="mt-2 pl-8"><strong class="${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${sanitizeHTML(item)}</strong></div>`;
+                    return `<div class="mt-2 pl-8"><strong class="${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${item}</strong></div>`;
                 }).join('')}
             `;
 
@@ -1239,7 +1225,7 @@
                 if(section.title.includes('逾期')) { color = 'text-red-800'; i = 'fa-fire-alt'; }
                 else if(section.title.includes('落後') || section.title.includes('停滯')) { color = 'text-orange-600'; i = 'fa-ghost'; }
                 else if(section.title.includes('資源') || section.title.includes('瓶頸')) { color = 'text-purple-600'; i = 'fa-users'; }
-                return `<div class="space-y-2"><strong class="font-bold ${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${sanitizeHTML(section.title)}</strong><div class="pl-5">${renderList(section.points)}</div></div>`;
+                return `<div class="space-y-2"><strong class="font-bold ${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong><div class="pl-5">${renderList(section.points)}</div></div>`;
             }).join('<hr class="my-4">') : '<p class="pl-5 text-gray-500">目前無重大風險。</p>';
 
             const recommendationContent = recommendations.length > 0 ? recommendations.map(section => {
@@ -1248,7 +1234,7 @@
                 else if(section.title.includes('資源') || section.title.includes('檢討')) { i = 'fa-comments'; }
                 else if(section.title.includes('支持') || section.title.includes('關懷')) { i = 'fa-hands-helping'; }
                 else if(section.title.includes('回報') || section.title.includes('追蹤')) { i = 'fa-sync-alt'; }
-                return `<div class="space-y-2"><strong class="font-bold ${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${sanitizeHTML(section.title)}</strong><div class="pl-5">${renderList(section.points)}</div></div>`;
+                return `<div class="space-y-2"><strong class="font-bold ${color} flex items-center text-sm"><i class="fas ${i} w-5 text-center mr-2"></i>${section.title}</strong><div class="pl-5">${renderList(section.points)}</div></div>`;
             }).join('<hr class="my-4">') : '<p class="pl-5 text-gray-500">目前無具體決策建議。</p>';
 
             let finalHtml = '<div class="space-y-6">';
@@ -1329,7 +1315,7 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const activitiesToday = activitiesByDay[day];
                 if (activitiesToday) {
-                    const tooltipHtml = activitiesToday.map(act => `<li class="truncate">${sanitizeHTML(act.name)}</li>`).join('');
+                    const tooltipHtml = activitiesToday.map(act => `<li class="truncate">${act.name}</li>`).join('');
                     calendarHtml += `<div class="relative group flex items-center justify-center">
                         <div class="mx-auto flex items-center justify-center w-8 h-8 rounded-full border-2 border-purple-400 text-purple-700 font-semibold cursor-pointer">${day}</div>
                         <span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full">${activitiesToday.length}</span>
@@ -1365,10 +1351,12 @@
                 window.open('https://qpig0218.github.io/Ying-Yun/', '_blank');
                 return;
             }
-            // 使用更現代的彈出視窗或 Modal 來取代 alert
-            showItemsInModal('custom', name);
+            alert(`檢視 ${name} 的個人歷程 (功能開發中)`);
+            // In a real application, this would navigate to a user-specific page
+            // window.location.href = `/member-history?name=${encodeURIComponent(name)}`;
         }
 
+        // --- UPDATED CHATBOT REPORT FUNCTION ---
         function generateDashboardReportHTML() {
             const today = new Date();
             const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1380,6 +1368,7 @@
                 return itemDate.getFullYear() === thisYear && (itemDate.getMonth() + 1) === thisMonth;
             });
             
+            // Differentiate between projects and tasks
             const completedProjectsThisMonth = itemsThisMonth.filter(i => i.status === 'completed' && i.type === 'project').length;
             const completedTasksThisMonth = itemsThisMonth.filter(i => i.status === 'completed' && i.type === 'task').length;
             const activeProjectsCount = allActivities.filter(i => i.status === 'active' && i.type === 'project').length;
@@ -1408,38 +1397,42 @@
             let reportHTML = `<div class="p-2 space-y-4 text-gray-800">`;
             reportHTML += `<p>您好！這是截至 <strong>${todayString}</strong> 的本月重點彙報。</p>`;
 
+            // Highlights Section
             reportHTML += `<div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                 <h3 class="font-bold text-yellow-800">⭐ 本月亮點 (Highlights)</h3>
                 <ul class="list-none text-sm text-yellow-700 mt-2 space-y-1">`;
             reportHTML += `<li><span class="font-semibold">🎉 專案達標：</span> 本月共完成 <strong>${completedProjectsThisMonth}</strong> 項專案、<strong>${completedTasksThisMonth}</strong> 項任務！</li>`;
             if (highlightProject) {
-                reportHTML += `<li><span class="font-semibold">🚀 指標專案上線：</span> 「${sanitizeHTML(highlightProject.name)}」已於 ${formatDate(highlightProject.deadline)} 順利完成。</li>`;
+                reportHTML += `<li><span class="font-semibold">🚀 指標專案上線：</span> 「${highlightProject.name}」已於 ${formatDate(highlightProject.deadline)} 順利完成。</li>`;
             } else {
                  reportHTML += `<li><span class="font-semibold">🚀 指標專案上線：</span> 本月尚無指標專案完成。</li>`;
             }
             reportHTML += `</ul></div>`;
 
+            // Project Progress Section
             reportHTML += `<div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <h3 class="font-bold text-blue-800">⚙️ 專案進度 (Project Progress)</h3>
                 <ul class="list-none text-sm text-blue-700 mt-2 space-y-1">
                     <li><strong>進行中專案：</strong> ${activeProjectsCount} 項</li>
                     <li><strong>進行中任務：</strong> ${activeTasksCount} 項</li>
-                    <li><strong>本月完成里程碑：</strong> ${milestonesCompleted.length > 0 ? sanitizeHTML(milestonesCompleted.join(', ')) : '無'}</li>
+                    <li><strong>本月完成里程碑：</strong> ${milestonesCompleted.length > 0 ? milestonesCompleted.join(', ') : '無'}</li>
                 </ul></div>`;
 
+            // Risk Alert Section
             if (overdueProjects.length > 0) {
                 const riskProject = overdueProjects[0];
                 reportHTML += `<div class="p-3 bg-red-50 rounded-lg border border-red-200">
                     <h3 class="font-bold text-red-800">⚠️ 風險提示</h3>
-                    <p class="text-sm text-red-700 mt-1">「${sanitizeHTML(riskProject.name)}」目前處於逾期狀態，需負責人 <strong>${sanitizeHTML(riskProject.assignees.join(', '))}</strong> 重點關注。</p>
+                    <p class="text-sm text-red-700 mt-1">「${riskProject.name}」目前處於逾期狀態，需負責人 <strong>${riskProject.assignees.join(', ')}</strong> 重點關注。</p>
                     </div>`;
             }
 
+            // Coming Up Section
             reportHTML += `<div class="p-3 bg-green-50 rounded-lg border border-green-200">
                 <h3 class="font-bold text-green-800">🗓️ 下週重點預告 (Coming Up)</h3>`;
             if (upcomingEvents.length > 0) {
                 reportHTML += `<ul class="list-none text-sm text-green-700 mt-2 space-y-1">
-                    ${upcomingEvents.map(e => `<li>${sanitizeHTML(e)}</li>`).join('')}
+                    ${upcomingEvents.map(e => `<li>${e}</li>`).join('')}
                     </ul>`;
             } else {
                 reportHTML += `<p class="text-sm text-green-700 mt-1">下週尚無排定重點事項。</p>`;
@@ -1471,7 +1464,7 @@
             });
         }
 
-        // --- Initialization ---
+
         document.addEventListener('DOMContentLoaded', async function() {
             const loadingOverlay = document.getElementById('loadingOverlay');
             const errorDisplay = document.getElementById('errorDisplay');
@@ -1479,7 +1472,6 @@
             const paramStatus = urlParams.get('status');
             if (paramStatus) currentStatusFilter = paramStatus;
             
-            // 先設定好所有靜態的 UI 事件監聽
             setupLoginModal();
             setupChangePasswordModal();
             setupAiModal();
@@ -1492,14 +1484,9 @@
 
             loadingOverlay.classList.remove('hidden');
             try {
-                // [錯誤修正] 恢復為兩個獨立的請求以匹配後端
                 await fetchStaffData();
-                await fetchAllItems();
-                
-                // 資料回來後，才開始渲染整個儀表板
                 renderUnitTabs();
-                renderYearFilter();
-                renderDashboard();
+                await refreshData();
                 
                 if (paramStatus) {
                     const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
