@@ -58,10 +58,10 @@
              </div>
              <!-- MODIFIED: Added a container for greeting and logout button -->
              <div class="flex items-center gap-3">
-                <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
-                <button id="logout-btn" title="登出" class="bg-white text-red-500 hover:bg-red-50 hover:text-red-700 px-3 py-2 rounded-lg transition-all text-sm font-medium shadow-md border border-slate-200">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
+               <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
+               <button id="logout-btn" title="登出" class="bg-white text-red-500 hover:bg-red-50 hover:text-red-700 px-3 py-2 rounded-lg transition-all text-sm font-medium shadow-md border border-slate-200">
+                   <i class="fas fa-sign-out-alt"></i>
+               </button>
             </div>
         </div>
 
@@ -216,21 +216,21 @@
                 </div>
              </div>
              <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">項目名稱</th>
-                            <th scope="col" class="px-6 py-3">所屬小組</th>
-                            <th scope="col" class="px-6 py-3">主要負責人</th>
-                            <th scope="col" class="px-6 py-3">協同人員</th>
-                            <th scope="col" class="px-6 py-3">狀態</th>
-                            <th scope="col" class="px-6 py-3 text-right">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="items-table-body">
-                        <!-- Table rows will be populated by JS -->
-                    </tbody>
-                </table>
+                 <table class="w-full text-sm text-left text-gray-500">
+                     <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                         <tr>
+                             <th scope="col" class="px-6 py-3">項目名稱</th>
+                             <th scope="col" class="px-6 py-3">所屬小組</th>
+                             <th scope="col" class="px-6 py-3">主要負責人</th>
+                             <th scope="col" class="px-6 py-3">協同人員</th>
+                             <th scope="col" class="px-6 py-3">狀態</th>
+                             <th scope="col" class="px-6 py-3 text-right">操作</th>
+                         </tr>
+                     </thead>
+                     <tbody id="items-table-body">
+                         <!-- Table rows will be populated by JS -->
+                     </tbody>
+                 </table>
              </div>
         </div>
     </div>
@@ -250,14 +250,22 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- Generic Message Modal -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-auto text-center">
+            <h3 id="message-modal-title" class="text-xl font-bold mb-4 text-gray-800"></h3>
+            <p id="message-modal-body" class="text-gray-600 mb-6"></p>
+            <button id="message-modal-close" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors font-medium">確定</button>
+        </div>
+    </div>
 
     <script>
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let activities = [];
         let staffData = []; // Will be fetched from backend
-        // MODIFIED: This will be populated from sessionStorage after authentication check
+        let checklistTemplates = {}; // NEW: Store templates fetched from the backend.
         let loggedInUser = null; 
 
         const groupData = {
@@ -334,6 +342,15 @@
                 staffData = users.map(u => ({ name: u.name }));
             }
         }
+        
+        // NEW: Function to fetch checklist templates from the backend
+        async function fetchChecklistTemplates() {
+            // Assuming the backend has a new action to fetch templates for the logged-in user
+            const templates = await handleApiRequest('getChecklistTemplates', { userId: loggedInUser.id });
+            if (templates) {
+                checklistTemplates = templates;
+            }
+        }
 
         async function loadItems() {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在載入您的專屬資料...</td></tr>`;
@@ -371,7 +388,8 @@
             if (!s && !e) return '';
             return e ? `${s} - ${e}` : s;
         }
-
+        
+        // MODIFIED: This function now also updates the assignee filter based on fetched items.
         function populateDropdowns() {
             groupSelect.innerHTML = '<option value="">-- 請選擇所屬小組 --</option>';
             Object.entries(groupData).forEach(([key, value]) => {
@@ -401,7 +419,16 @@
             staffData.forEach(staff => {
                 assigneesSelect.add(new Option(staff.name, staff.name));
                 collaboratorsSelect.add(new Option(staff.name, staff.name));
-                filterAssigneeSelect.add(new Option(staff.name, staff.name));
+            });
+
+            // NEW: Populate the assignee filter based on unique assignees from the current activities list
+            const allPeople = new Set();
+            activities.forEach(item => {
+                item.assignees.forEach(p => allPeople.add(p));
+                item.collaborators.forEach(p => allPeople.add(p));
+            });
+            allPeople.forEach(person => {
+                filterAssigneeSelect.add(new Option(person, person));
             });
         }
         
@@ -415,13 +442,13 @@
             return types[type] || '';
         }
 
-       function renderTable() {
+        function renderTable() {
             let filtered = activities;
             if (currentGroupFilter !== 'all') filtered = filtered.filter(i => i.group === currentGroupFilter);
-            if (currentAssigneeFilter !== 'all') filtered = filtered.filter(i => i.assignees.includes(currentAssigneeFilter));
+            if (currentAssigneeFilter !== 'all') filtered = filtered.filter(i => i.assignees.includes(currentAssigneeFilter) || i.collaborators.includes(currentAssigneeFilter));
             if (currentStatusFilter !== 'all') filtered = filtered.filter(i => i.status === currentStatusFilter);
 
-           tableBody.innerHTML = filtered.map(item => {
+            tableBody.innerHTML = filtered.map(item => {
                 const groupName = groupData[item.group] || item.group;
                 const assigneesText = item.assignees.join(', ') || 'N/A';
                 const collaboratorsText = item.collaborators.join(', ') || '無';
@@ -441,11 +468,11 @@
                         <button onclick="deleteItem(${item.id})" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
                     </td>
                 </tr>
-            `}).join('');
+                `}).join('');
             if (filtered.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">沒有符合條件的項目</td></tr>`;
             }
-       }
+        }
         
         function resetForm() {
             form.reset();
@@ -544,6 +571,25 @@
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
         }
+        
+        // NEW: A generic modal for messages or confirmation
+        function showMessageModal(title, message, onConfirm = null) {
+            const modal = document.getElementById('message-modal');
+            document.getElementById('message-modal-title').textContent = title;
+            document.getElementById('message-modal-body').textContent = message;
+            const closeBtn = document.getElementById('message-modal-close');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            closeBtn.onclick = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                if (onConfirm) {
+                    onConfirm();
+                }
+            };
+        }
 
         function getSelectedOptions(selectElement) {
             return Array.from(selectElement.options)
@@ -579,25 +625,16 @@
             checklistContainer.appendChild(itemDiv);
         }
 
-        // --- Template Functions ---
-        function getTemplates() {
-            return JSON.parse(localStorage.getItem('checklistTemplates') || '{}');
-        }
-
-        function saveTemplates(templates) {
-            localStorage.setItem('checklistTemplates', JSON.stringify(templates));
-        }
-
+        // --- Template Functions (MODIFIED to use backend) ---
         function populateTemplateDropdown() {
-            const templates = getTemplates();
             loadChecklistTemplateSelect.innerHTML = '<option value="">載入範本...</option>';
-            for (const name in templates) {
+            for (const name in checklistTemplates) {
                 const option = new Option(name, name);
                 loadChecklistTemplateSelect.add(option);
             }
         }
 
-        function saveChecklistTemplate() {
+        async function saveChecklistTemplate() {
             const checklistData = [];
             document.querySelectorAll('#checklist-container .checklist-item').forEach(itemDiv => {
                 const input = itemDiv.querySelector('input[type="text"]');
@@ -623,18 +660,26 @@
             const newOkBtn = okBtn.cloneNode(true);
             okBtn.parentNode.replaceChild(newOkBtn, okBtn);
 
-            newOkBtn.onclick = () => {
+            newOkBtn.onclick = async () => {
                 const templateName = input.value.trim();
                 if (!templateName) {
                     showToast('範本名稱不能為空！', 'error');
                     return;
                 }
+                
+                // NEW: Use backend API to save the template
+                const payload = {
+                    userId: loggedInUser.id,
+                    templateName: templateName,
+                    checklist: checklistData
+                };
+                const result = await handleApiRequest('saveChecklistTemplate', payload, newOkBtn);
 
-                const templates = getTemplates();
-                templates[templateName] = checklistData;
-                saveTemplates(templates);
-                populateTemplateDropdown();
-                showToast(`範本 "${templateName}" 已儲存！`, 'success');
+                if (result) {
+                    await fetchChecklistTemplates(); // Refresh templates from backend
+                    populateTemplateDropdown();
+                    showToast(`範本 "${templateName}" 已儲存！`, 'success');
+                }
                 
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
@@ -645,8 +690,7 @@
             const templateName = loadChecklistTemplateSelect.value;
             if (!templateName) return;
 
-            const templates = getTemplates();
-            const template = templates[templateName];
+            const template = checklistTemplates[templateName];
 
             if (template) {
                 checklistContainer.innerHTML = '';
@@ -655,7 +699,7 @@
             }
         }
         
-        function deleteChecklistTemplate() {
+        async function deleteChecklistTemplate() {
             const templateName = loadChecklistTemplateSelect.value;
             if (!templateName) {
                 showToast('請先從下拉選單中選擇一個要刪除的範本。', 'error');
@@ -679,12 +723,15 @@
             newOkBtn.textContent = originalOkText;
             confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
 
-            newOkBtn.onclick = () => {
-                const templates = getTemplates();
-                delete templates[templateName];
-                saveTemplates(templates);
-                populateTemplateDropdown();
-                showToast(`範本 "${templateName}" 已刪除！`, 'success');
+            newOkBtn.onclick = async () => {
+                // NEW: Use backend API to delete the template
+                const result = await handleApiRequest('deleteChecklistTemplate', { userId: loggedInUser.id, templateName: templateName }, newOkBtn);
+                if (result) {
+                    await fetchChecklistTemplates(); // Refresh templates from backend
+                    populateTemplateDropdown();
+                    showToast(`範本 "${templateName}" 已刪除！`, 'success');
+                }
+                
                 confirmModal.classList.add('hidden');
                 confirmModal.classList.remove('flex');
                 modalTitle.textContent = '確認刪除'; // Restore original modal text
@@ -804,11 +851,12 @@
                 showToast(result.message, 'success');
                 resetForm();
                 await loadItems();
+                populateDropdowns(); // Re-populate dropdowns after loading items
             } else {
                if(id) {
-                   saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
+                    saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
                } else {
-                   saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
+                    saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
                }
             }
         });
@@ -834,43 +882,38 @@
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // --- NEW: Authentication Check ---
-            // This is the core of the security fix.
-            // We check for user data in `sessionStorage`. This data should be set by your login page.
-            // If it's not present, it means the user hasn't logged in, so we redirect them.
             const loggedInUserData = sessionStorage.getItem('loggedInUser');
 
             if (!loggedInUserData) {
-                // You can show a message here before redirecting.
-                alert('您尚未登入或登入逾時，將返回登入頁面。');
-                // IMPORTANT: Replace with the actual URL of your login page.
-                window.location.href = 'https://luyun1224.github.io/cmh4200/project.html';
+                // MODIFIED: Use a custom modal instead of alert()
+                showMessageModal(
+                    '登入逾時',
+                    '您尚未登入或登入逾時，將返回登入頁面。',
+                    () => {
+                        window.location.href = 'https://luyun1224.github.io/cmh4200/project.html';
+                    }
+                );
                 return; // Stop executing any more code on this page.
             }
 
-            // If the user data exists, parse it and store it globally.
             loggedInUser = JSON.parse(loggedInUserData);
-
-            // Now, we can safely proceed with loading the page.
             document.getElementById('user-greeting').textContent = `${loggedInUser.name || '使用者'}, 您好！`;
 
-            // Add event listener for the new logout button
             document.getElementById('logout-btn').addEventListener('click', () => {
                 sessionStorage.removeItem('loggedInUser');
                 showToast('您已成功登出。', 'success');
                 setTimeout(() => {
-                    // IMPORTANT: Replace with the actual URL of your login page.
                     window.location.href = 'https://luyun1224.github.io/cmh4200/project.html';
                 }, 1500); // Wait a bit for the toast to be seen
             });
 
-
-            // --- Original Initialization Code ---
-            await fetchStaffData();
-            populateDropdowns();
+            // NEW: Fetch templates before loading other data.
+            await fetchChecklistTemplates(); 
             populateTemplateDropdown();
             setupTemplateNameModal();
+            await fetchStaffData();
             await loadItems();
+            populateDropdowns();
             updateProgressBarStyle();
         });
     </script>
