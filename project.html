@@ -234,13 +234,16 @@
         </div>
     </div>
 
+    <!-- UPDATED: Weekly Summary Modal -->
     <div id="weeklySummaryModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-clipboard-list text-green-500 mr-3"></i>本週重點</h2>
+                <h2 class="text-xl font-bold text-gray-800 flex items-center"><i class="fas fa-calendar-week text-green-500 mr-3"></i>本週重點回顧</h2>
                 <button id="closeWeeklySummaryBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
-            <div id="weekly-summary-content" class="overflow-y-auto text-gray-700 leading-relaxed space-y-2"></div>
+            <div id="weekly-summary-content" class="overflow-y-auto text-gray-700 leading-relaxed space-y-4">
+                <!-- Weekly summary content will be rendered here by JavaScript -->
+            </div>
         </div>
     </div>
     
@@ -272,6 +275,8 @@
                     </div>
                     <select id="yearFilter" onchange="filterByYear(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"></select>
                     <select id="monthFilter" onchange="filterByMonth(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"></select>
+                    <!-- ADDED: Weekly Summary Button -->
+                    <button id="weeklySummaryBtn" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-calendar-week mr-2"></i>本週回顧</button>
                     <button id="aiBtn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-brain mr-2"></i>AI 決策建議</button>
                     <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">管理者登入</button>
                 </div>
@@ -354,7 +359,7 @@
         
         let staffData = [];
         
-        const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png'};
+        const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png'};
         
         const groupData = {
             'teaching-center': '教學中心', 'fdc': '教師培育中心', 'resident': '住院醫師訓練小組',
@@ -532,12 +537,13 @@
                 const totalSteps = checklist.length;
                 const completedSteps = checklist.filter(c => c.completed).length;
 
+                // --- MODIFIED: Enhanced progress change indicator ---
                 const progressChange = item.progress - (item.lastWeekProgress || 0);
                 const progressChangeHTML = progressChange > 0
-                    ? `<span class="text-green-600 font-medium text-sm ml-2">▲ ${progressChange}%</span>`
+                    ? `<span class="bg-green-100 text-green-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▲ ${progressChange}%</span>`
                     : progressChange < 0
-                        ? `<span class="text-red-600 font-medium text-sm ml-2">▼ ${Math.abs(progressChange)}%</span>`
-                        : '';
+                        ? `<span class="bg-red-100 text-red-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▼ ${Math.abs(progressChange)}%</span>`
+                        : `<span class="text-gray-400 text-xs font-medium ml-2">—</span>`;
 
                 const checklistHTML = totalSteps > 0 
                     ? checklist.map(cp => `
@@ -1245,13 +1251,91 @@
 
             return finalHtml;
         }
+
+        // --- NEW: Weekly Summary Generation ---
+        function generateWeeklySummary() {
+            const modal = document.getElementById('weeklySummaryModal');
+            const content = document.getElementById('weekly-summary-content');
+            content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成本週回顧...</div>`;
+            
+            const today = new Date();
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(today.getDate() - 7);
+            const nextWeek = new Date();
+            nextWeek.setDate(today.getDate() + 7);
+
+            const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
+
+            const completedThisWeek = projectsAndTasks.filter(item =>
+                item.status === 'completed' &&
+                (item.lastWeekProgress || 0) < 100 
+            );
+
+            const progressMade = projectsAndTasks.filter(item =>
+                item.status !== 'completed' &&
+                item.progress > (item.lastWeekProgress || 0)
+            );
+
+            const newlyAdded = projectsAndTasks.filter(item =>
+                new Date(item.startDate) >= oneWeekAgo && new Date(item.startDate) <= today
+            );
+            
+            const stalled = projectsAndTasks.filter(item =>
+                item.status === 'active' &&
+                item.progress === (item.lastWeekProgress || 0)
+            );
+
+            const upcomingDeadlines = projectsAndTasks.filter(item =>
+                item.deadline &&
+                new Date(item.deadline) > today &&
+                new Date(item.deadline) <= nextWeek &&
+                item.status !== 'completed'
+            );
+            
+            const helpNeeded = projectsAndTasks.filter(item => item.helpMessage && item.helpMessage.trim() !== '');
+
+            let summaryHTML = '';
+
+            const renderSummarySection = (title, icon, color, items, emptyText) => {
+                let sectionHTML = `<div class="mb-4">
+                    <h3 class="text-lg font-bold ${color} flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>`;
+                if (items.length > 0) {
+                    sectionHTML += '<ul class="space-y-2 pl-5">';
+                    sectionHTML += items.map(item =>
+                        `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}">
+                            <strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${item.assignees.join(', ')}</span>
+                            ${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}
+                            ${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}
+                            ${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}
+                        </li>`
+                    ).join('');
+                    sectionHTML += '</ul>';
+                } else {
+                    sectionHTML += `<p class="pl-5 text-sm text-gray-500">${emptyText}</p>`;
+                }
+                sectionHTML += `</div>`;
+                return sectionHTML;
+            };
+
+            summaryHTML += renderSummarySection('本週完成項目', 'fa-check-circle', 'text-green-600', completedThisWeek, '本週沒有完成的項目。');
+            summaryHTML += renderSummarySection('本週進度更新', 'fa-rocket', 'text-blue-600', progressMade, '本週沒有項目取得進展。');
+            summaryHTML += renderSummarySection('本週新增項目', 'fa-lightbulb', 'text-purple-600', newlyAdded, '本週沒有新增項目。');
+            summaryHTML += renderSummarySection('下週到期項目', 'fa-clock', 'text-yellow-600', upcomingDeadlines, '下週沒有即將到期的項目。');
+            summaryHTML += renderSummarySection('進度停滯項目', 'fa-pause-circle', 'text-orange-500', stalled, '所有項目皆有進展，太棒了！');
+            summaryHTML += renderSummarySection('需要協助項目', 'fa-hands-helping', 'text-red-600', helpNeeded, '沒有項目發出求救信號。');
+
+            content.innerHTML = summaryHTML;
+        }
         
-        function setupModal(modalId, openBtnId, closeBtnId) {
+        function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
             const modal = document.getElementById(modalId);
             const openBtn = openBtnId ? document.getElementById(openBtnId) : null;
             const closeBtn = document.getElementById(closeBtnId);
 
-            const open = () => modal.classList.remove('hidden');
+            const open = () => {
+                modal.classList.remove('hidden');
+                if (openCallback) openCallback();
+            };
             const close = () => modal.classList.add('hidden');
 
             if (openBtn) openBtn.addEventListener('click', open);
@@ -1264,14 +1348,14 @@
         }
 
         function setupAiModal(){
-            setupModal('aiModal', 'aiBtn', 'closeAiModalBtn');
-            document.getElementById('aiBtn').addEventListener('click', getAiSuggestions);
+            setupModal('aiModal', 'aiBtn', 'closeAiModalBtn', getAiSuggestions);
         };
         function setupActivityModal(){
             setupModal('activityModal', null, 'closeActivityModalBtn');
         };
+        // UPDATED: Setup for weekly summary modal
         function setupWeeklySummaryModal(){
-            setupModal('weeklySummaryModal', null, 'closeWeeklySummaryBtn');
+            setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary);
         };
         function setupItemListModal(){
             setupModal('itemListModal', null, 'closeItemListModalBtn');
@@ -1472,11 +1556,12 @@
             const paramStatus = urlParams.get('status');
             if (paramStatus) currentStatusFilter = paramStatus;
             
+            // --- UPDATED: All modal setups are now grouped ---
             setupLoginModal();
             setupChangePasswordModal();
             setupAiModal();
             setupActivityModal();
-            setupWeeklySummaryModal();
+            setupWeeklySummaryModal(); // New setup call
             setupScrollToTop();
             setupItemListModal();
             renderMonthFilter();
