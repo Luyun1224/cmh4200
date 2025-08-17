@@ -140,13 +140,11 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center hidden z-50">
         <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
         <p class="mt-4 text-lg text-gray-700 font-medium">正在載入儀表板數據...</p>
     </div>
 
-    <!-- Error Display -->
     <div id="errorDisplay" class="hidden fixed inset-x-0 top-0 p-4 z-50">
         <div class="max-w-2xl mx-auto bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg shadow-lg" role="alert">
             <p class="font-bold">資料載入失敗</p>
@@ -154,7 +152,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
     <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-bold text-center text-slate-900 mb-6">管理者登入</h2>
@@ -185,7 +182,6 @@
         </div>
     </div>
 
-    <!-- Change Password Modal -->
     <div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-bold text-center text-slate-900 mb-6">更換密碼</h2>
@@ -214,14 +210,12 @@
         </div>
     </div>
     
-    <!-- AI Modal -->
     <div id="aiModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4 gap-4">
                 <h2 class="text-xl font-bold text-gray-800 flex items-center flex-shrink-0"><i class="fas fa-brain text-blue-500 mr-3"></i>AI 判讀與決策建議</h2>
                 <select id="aiMemberFilter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full max-w-xs p-2">
-                    <!-- Options will be populated by JS -->
-                </select>
+                    </select>
                 <button id="closeAiModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl flex-shrink-0">&times;</button>
             </div>
             <div id="ai-suggestion-content" class="overflow-y-auto text-gray-700 leading-relaxed ai-content"></div>
@@ -238,7 +232,6 @@
         </div>
     </div>
 
-    <!-- Weekly Summary Modal -->
     <div id="weeklySummaryModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -246,12 +239,10 @@
                 <button id="closeWeeklySummaryBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             <div id="weekly-summary-content" class="overflow-y-auto text-gray-700 leading-relaxed space-y-4">
-                <!-- Weekly summary content will be rendered here by JavaScript -->
-            </div>
+                </div>
         </div>
     </div>
     
-    <!-- Item List Modal -->
     <div id="itemListModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -259,12 +250,10 @@
                 <button id="closeItemListModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             <div id="itemListModalContent" class="overflow-y-auto max-h-[60vh] text-gray-700 leading-relaxed space-y-2">
-                <!-- Item list will be rendered here -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-white shadow-md border-b-2 border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -287,13 +276,10 @@
         </div>
     </header>
 
-    <!-- Filter Tabs Container -->
     <div class="bg-white shadow-sm sticky top-0 z-40">
-        <!-- Unit Filter Tabs -->
         <div class="container mx-auto px-4 sm:px-6 border-b">
             <div id="unitTabs" class="flex flex-wrap justify-center space-x-2 py-3"></div>
         </div>
-        <!-- Group Filter Tabs -->
         <div class="container mx-auto px-4 sm:px-6">
             <div id="groupTabs" class="flex flex-wrap justify-center space-x-2 py-3"></div>
         </div>
@@ -301,7 +287,6 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <!-- Left Panel: Team Members -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-lg border border-gray-100 h-full">
                     <div class="p-6 border-b-2 border-gray-100 bg-gradient-to-r from-blue-900 to-blue-600 rounded-t-xl">
@@ -313,9 +298,7 @@
                 </div>
             </div>
 
-            <!-- Right Panel: Dashboard Content -->
             <div class="lg:col-span-3 space-y-8">
-                <!-- Statistics Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
                     <div onclick="showItemsInModal('total')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600" title="專案/任務">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="text-blue-500 text-4xl stat-card-icon"><i class="fas fa-dragon"></i></div></div></div>
                     <div onclick="showItemsInModal('active')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-purple-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">進行中</p><p class="text-3xl font-bold text-purple-700" id="activeTasks">0</p></div><div class="text-purple-500 text-4xl stat-card-icon"><i class="fas fa-rocket"></i></div></div></div>
@@ -324,7 +307,6 @@
                     <div onclick="openActivityModal()" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-yellow-500 cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動總數</p><p class="text-3xl font-bold text-yellow-700" id="activityCount">0</p></div><div class="text-yellow-500 text-4xl stat-card-icon"><i class="fas fa-calendar-check"></i></div></div></div>
                 </div>
                 
-                <!-- Item List -->
                 <div class="bg-white rounded-xl shadow-lg border border-gray-100">
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -346,7 +328,6 @@
         </div>
     </main>
 
-    <!-- UI Elements -->
     <button id="scrollToTopBtn" title="回到頂部" class="hidden fixed bottom-5 right-5 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all z-50 hover:scale-110"><i class="fas fa-arrow-up"></i></button>
     <button id="openChatBot" title="詢問概況" class="hidden fixed bottom-5 right-20 bg-indigo-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 focus:outline-none z-50 transition-all hover:scale-110"><i class="fas fa-robot"></i></button>
     <div id="chatBotContainer" class="hidden fixed bottom-20 right-5 w-96 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col z-50">
@@ -396,76 +377,7 @@
         };
 
         // --- API Communication ---
-        
-        async function fetchStaffData() {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    body: JSON.stringify({ action: 'getAllUsers' }),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                });
-                if (!response.ok) throw new Error('無法獲取團隊成員資料');
-                const result = await response.json();
-                if (result.status !== 'success') throw new Error(result.message);
-                
-                staffData = result.data.map(user => ({
-                    id: user.employeeId,
-                    name: user.name,
-                    group: user.group,
-                    birthday: user.birthday,
-                    unit: user.unit
-                }));
-            } catch (error) {
-                console.error("Failed to fetch staff data:", error);
-                staffData = [];
-                document.getElementById('errorMessage').textContent = `無法載入團隊成員列表: ${error.message}`;
-                document.getElementById('errorDisplay').classList.remove('hidden');
-            }
-        }
-
-        async function fetchAllItems() {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    body: JSON.stringify({ action: 'getAllItems' }),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                });
-                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                const result = await response.json();
-                if (result.status !== 'success') throw new Error(result.message);
-                
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); 
-
-                return result.data.map(item => {
-                    const progress = parseInt(item.progress, 10) || 0;
-                    const deadline = item.deadline ? new Date(item.deadline) : null;
-                    let finalStatus = item.status || 'planning';
-
-                    if (progress >= 100) {
-                        finalStatus = 'completed';
-                    } else if (finalStatus !== 'completed' && deadline && deadline < today) {
-                        finalStatus = 'overdue';
-                    }
-
-                    const checklist = Array.isArray(item.checklist) ? item.checklist : [];
-
-                    return {
-                        ...item,
-                        progress: progress,
-                        status: finalStatus,
-                        lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
-                        helpMessage: item.helpMessage || '',
-                        checklist: checklist 
-                    };
-                });
-            } catch (error) {
-                console.error("Failed to fetch items:", error);
-                throw error;
-            }
-        }
+        // (The old fetchStaffData and fetchAllItems functions are removed as they are now combined)
 
         // --- Rendering Functions ---
         
@@ -778,7 +690,8 @@
         }
 
         async function refreshData() {
-            allActivities = await fetchAllItems();
+            // This function is now simplified, as data is pre-loaded.
+            // It just re-renders the page with current filters.
             renderYearFilter();
             renderMonthFilter();
             renderDashboard();
@@ -1583,15 +1496,91 @@
                 container.classList.add('hidden');
             });
         }
-
-
-        document.addEventListener('DOMContentLoaded', async function() {
+        
+        // --- ★★★ START: MODIFIED SCRIPT INITIALIZATION ★★★ ---
+        
+        /**
+         * NEW: This function handles the initial data fetching and rendering in a single step.
+         */
+        async function initializeDashboard() {
             const loadingOverlay = document.getElementById('loadingOverlay');
             const errorDisplay = document.getElementById('errorDisplay');
-            const urlParams = new URLSearchParams(window.location.search);
-            const paramStatus = urlParams.get('status');
-            if (paramStatus) currentStatusFilter = paramStatus;
-            
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                // Send a single request to get all necessary data
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify({ action: 'getDashboardData' }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+
+                // Populate global variables with the fetched data
+                const userData = result.data.staffData || [];
+                // This mapping is to ensure compatibility with the rest of the script that expects a different structure
+                staffData = userData.map(user => ({
+                    id: user.employeeId,
+                    name: user.name,
+                    group: user.group,
+                    birthday: user.birthday,
+                    unit: user.unit
+                }));
+                
+                const itemData = result.data.activities || [];
+                // Process items to set the correct status (e.g., overdue)
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); 
+                allActivities = itemData.map(item => {
+                    const progress = parseInt(item.progress, 10) || 0;
+                    const deadline = item.deadline ? new Date(item.deadline) : null;
+                    let finalStatus = item.status || 'planning';
+                    if (progress >= 100) {
+                        finalStatus = 'completed';
+                    } else if (finalStatus !== 'completed' && deadline && deadline < today) {
+                        finalStatus = 'overdue';
+                    }
+                    return {
+                        ...item,
+                        progress: progress,
+                        status: finalStatus,
+                        lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
+                        helpMessage: item.helpMessage || '',
+                        checklist: Array.isArray(item.checklist) ? item.checklist : [] 
+                    };
+                });
+
+                // --- Now, run all the rendering logic ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const paramStatus = urlParams.get('status');
+                if (paramStatus) currentStatusFilter = paramStatus;
+
+                renderUnitTabs();
+                renderYearFilter();
+                renderMonthFilter();
+                renderDashboard();
+                
+                if (paramStatus) {
+                    const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
+                    if (btn) filterItemsByStatus(paramStatus, { target: btn });
+                }
+                document.getElementById('openChatBot').classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Initialization failed:", error);
+                document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
+                errorDisplay.classList.remove('hidden');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Setup all modals and UI elements first
             setupLoginModal();
             setupChangePasswordModal();
             setupAiModal();
@@ -1599,27 +1588,14 @@
             setupWeeklySummaryModal();
             setupScrollToTop();
             setupItemListModal();
-            renderMonthFilter();
             setupChatBot();
 
-            loadingOverlay.classList.remove('hidden');
-            try {
-                await fetchStaffData();
-                renderUnitTabs();
-                await refreshData();
-                
-                if (paramStatus) {
-                    const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
-                    if (btn) filterItemsByStatus(paramStatus, { target: btn });
-                }
-                document.getElementById('openChatBot').classList.remove('hidden');
-            } catch (error) {
-                document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
-                errorDisplay.classList.remove('hidden');
-            } finally {
-                loadingOverlay.classList.add('hidden');
-            }
+            // Then, call the single function to fetch data and render the page
+            await initializeDashboard();
         });
+        
+        // --- ★★★ END: MODIFIED SCRIPT INITIALIZATION ★★★ ---
+
     </script>
 </body>
 </html>
