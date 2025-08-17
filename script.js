@@ -1,4 +1,4 @@
-// script.js
+// script.js (FINAL VERSION with Plan A implemented)
 // --- Configuration ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -604,11 +604,33 @@ function showItemsInModal(filterType) {
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
     
+    // --- START: 優化載入提示 ---
+    const loadingMessages = [
+        "正在準備您的專案數據...",
+        "已連線至 AI 引擎...",
+        "AI 正在分析風險與機會...",
+        "生成個人化決策建議中...",
+        "幾乎完成了..."
+    ];
+    let messageIndex = 0;
+
+    // 立即顯示第一個訊息
     aiContent.innerHTML = `
         <div class="flex flex-col items-center justify-center p-8">
             <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
-            <p class="mt-4 text-gray-600 font-medium">AI 正在為 ${memberName === 'all' ? '整個團隊' : memberName} 產生個人化決策摘要，請稍候...</p>
+            <p id="ai-loading-message" class="mt-4 text-gray-600 font-medium">${loadingMessages[0]}</p>
         </div>`;
+    
+    const loadingMessageElement = document.getElementById('ai-loading-message');
+
+    // 設定一個計時器來依序變換提示訊息
+    const intervalId = setInterval(() => {
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+        if(loadingMessageElement) {
+            loadingMessageElement.textContent = loadingMessages[messageIndex];
+        }
+    }, 1500); // 每 1.5 秒換一次
+    // --- END: 優化載入提示 ---
 
     let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type));
     let analysisTarget = "整個團隊";
@@ -760,6 +782,9 @@ async function getAiSuggestions(memberName = 'all') {
                 <p class="font-bold">無法獲取 AI 建議</p>
                 <p>${error.message}</p>
             </div>`;
+    } finally {
+        // 確保無論成功或失敗，都清除計時器
+        clearInterval(intervalId);
     }
 }
 
