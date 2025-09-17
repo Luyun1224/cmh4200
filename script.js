@@ -6,7 +6,7 @@ const currentDate = new Date();
 
 let staffData = [];
 
-const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
+const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png'};
 
 // --- State Variables ---
 let currentUnitFilter = 'all'; 
@@ -292,7 +292,7 @@ function openActivityModal(resetDate = true) {
         
         let listHtml = '';
         if (sortedItems.length > 0) {
-            listHtml = '<div class="space-y-6">' + sortedItems.map(item => {
+            listHtml = '<ul class="space-y-4">' + sortedItems.map(item => {
                 const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
                 return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">
                     <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
@@ -304,7 +304,7 @@ function openActivityModal(resetDate = true) {
                         <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
                     </div>
                 </li>`;
-            }).join('') + '</div>';
+            }).join('') + '</ul>';
         }
         content.innerHTML = calendarHTML + `<hr class="my-6"/>` + listHtml;
     }
