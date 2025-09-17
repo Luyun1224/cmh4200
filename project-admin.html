@@ -50,13 +50,13 @@
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-8 relative flex items-center justify-between">
              <a href="https://luyun1224.github.io/cmh4200/project.html" class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
-                 <i class="fas fa-arrow-left mr-2"></i>返回儀表板
+                  <i class="fas fa-arrow-left mr-2"></i>返回儀表板
              </a>
             
              <div class="text-center absolute left-1/2 -translate-x-1/2">
-                <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
-                <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
-            </div>
+                 <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
+                 <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
+             </div>
              <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
         </div>
 
@@ -115,7 +115,7 @@
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-6">
-                     <div>
+                      <div>
                         <label for="item-assignees" class="block text-sm font-medium text-gray-700 mb-2">主要負責人 (可複選)</label>
                         <select id="item-assignees" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5" required>
                             </select>
@@ -204,20 +204,20 @@
                 </div>
              </div>
              <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">項目名稱</th>
-                            <th scope="col" class="px-6 py-3">所屬小組</th>
-                            <th scope="col" class="px-6 py-3">主要負責人</th>
-                            <th scope="col" class="px-6 py-3">協同人員</th>
-                            <th scope="col" class="px-6 py-3">狀態</th>
-                            <th scope="col" class="px-6 py-3 text-right">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="items-table-body">
-                        </tbody>
-                </table>
+                 <table class="w-full text-sm text-left text-gray-500">
+                     <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                         <tr>
+                             <th scope="col" class="px-6 py-3">項目名稱</th>
+                             <th scope="col" class="px-6 py-3">所屬小組</th>
+                             <th scope="col" class="px-6 py-3">主要負責人</th>
+                             <th scope="col" class="px-6 py-3">協同人員</th>
+                             <th scope="col" class="px-6 py-3">狀態</th>
+                             <th scope="col" class="px-6 py-3 text-right">操作</th>
+                         </tr>
+                     </thead>
+                     <tbody id="items-table-body">
+                         </tbody>
+                 </table>
              </div>
         </div>
     </div>
@@ -231,9 +231,9 @@
             <p class="text-gray-600 mb-4">請為這個常用的檢查點清單命名：</p>
             <input type="text" id="template-name-input" placeholder="例如：新人訓練任務" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
              <div class="flex justify-end space-x-3 mt-6">
-                <button id="template-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button>
-                <button id="template-modal-ok" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">確認儲存</button>
-            </div>
+                 <button id="template-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button>
+                 <button id="template-modal-ok" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">確認儲存</button>
+             </div>
         </div>
     </div>
 
@@ -352,24 +352,44 @@
             return e ? `${s} - ${e}` : s;
         }
         
-        // ***** 2. 修改此處 *****
-        // 改為動態生成組別下拉選單
+        // ***** 2. 修改此處 (已更新為固定排序) *****
+        // 改為動態生成組別下拉選單，並使用固定順序
         function populateDropdowns() {
-            // 從 staffData 中提取所有不重複的組別名稱
-            const allGroups = staffData.map(staff => staff.group).filter(Boolean); // .filter(Boolean) 移除空值
-            const uniqueGroups = [...new Set(allGroups)].sort(); // 排序
+            // 1. 定義您希望的固定排序
+            const fixedGroupOrder = [
+                '教學行政組',
+                '一般科',
+                '臨床技能中心',
+                '教師培育中心',
+                '實證醫學暨醫療政策中心',
+                '視聽中心',
+                '圖書館'
+            ];
 
+            // 2. 從 staffData 中提取所有不重複的組別名稱
+            const allGroups = staffData.map(staff => staff.group).filter(Boolean);
+            const uniqueGroupsFromData = [...new Set(allGroups)];
+            
+            // 3. 找出不在固定排序中的其他組別，並對它們進行字母排序
+            const otherGroups = uniqueGroupsFromData
+                .filter(group => !fixedGroupOrder.includes(group))
+                .sort();
+
+            // 4. 將固定排序的組別與其他組別合併，形成最終的排序列表
+            const sortedUniqueGroups = [...fixedGroupOrder, ...otherGroups];
+
+            // 5. 根據新的排序列表填充下拉選單 (以下邏輯不變，只是使用新的排序陣列)
+            
             // 填充表單中的「所屬小組」下拉選單
             groupSelect.innerHTML = '<option value="">-- 請選擇所屬小組 --</option>';
-            uniqueGroups.forEach(groupName => {
-                // 選項的文字和值都使用組別的全名
+            sortedUniqueGroups.forEach(groupName => {
                 groupSelect.add(new Option(groupName, groupName));
             });
             groupSelect.add(new Option('-- 其他 (自行輸入) --', 'other'));
 
             // 填充篩選器中的「所屬小組」下拉選單
             filterGroupSelect.innerHTML = '<option value="all">全部</option>';
-            uniqueGroups.forEach(groupName => {
+            sortedUniqueGroups.forEach(groupName => {
                 filterGroupSelect.add(new Option(groupName, groupName));
             });
 
