@@ -1,4 +1,4 @@
-// script.js (FINAL VERSION with Custom Group Sort)
+// script.js (FINAL VERSION with Stats Sync and Custom Group Sort)
 // --- Configuration ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -45,13 +45,11 @@ function renderUnitTabs() {
     }).join('');
 }
 
-// ***** MODIFIED FUNCTION *****
-// This function now includes custom sorting for the group tabs.
 function renderGroupTabs(membersToConsider) {
     const tabsContainer = document.getElementById('groupTabs');
     let groups = [...new Set(membersToConsider.map(s => s.group).filter(Boolean))];
 
-    // --- START: Custom Sorting Logic ---
+    // Custom Sorting Logic
     const desiredOrder = [
         '教學行政組', 
         '一般科', 
@@ -66,19 +64,11 @@ function renderGroupTabs(membersToConsider) {
         const indexA = desiredOrder.indexOf(a);
         const indexB = desiredOrder.indexOf(b);
 
-        if (indexA !== -1 && indexB !== -1) {
-            return indexA - indexB;
-        }
-        if (indexA !== -1) {
-            return -1;
-        }
-        if (indexB !== -1) {
-            return 1;
-        }
-        // For groups not in desiredOrder, sort them alphabetically
+        if (indexA !== -1 && indexB !== -1) { return indexA - indexB; }
+        if (indexA !== -1) { return -1; }
+        if (indexB !== -1) { return 1; }
         return a.localeCompare(b, 'zh-Hant'); 
     });
-    // --- END: Custom Sorting Logic ---
 
     if (groups.length <= 1 && currentUnitFilter !== 'all') {
         tabsContainer.innerHTML = '';
@@ -93,12 +83,11 @@ function renderGroupTabs(membersToConsider) {
     }
 
     buttonsHTML += groups.map(key => {
-        const value = key; // The group name is the display value
+        const value = key;
         return `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${value}</button>`
     }).join('');
     tabsContainer.innerHTML = buttonsHTML;
 }
-
 
 function renderYearFilter() {
     const yearFilterSelect = document.getElementById('yearFilter');
@@ -258,14 +247,15 @@ function renderTeamMembers(members, allItems) {
     }).join('');
 }
 
+// ***** MODIFICATION 1: This function now correctly uses the passed `itemsToCount` array *****
 function updateStats(itemsToCount) {
-    const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
-    const activitiesAndMeetings = allActivities.filter(item => item.type === 'activity' || item.type === 'meeting');
+    const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
+    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
 
     document.getElementById('totalTasks').textContent = projectsAndTasks.length;
     document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
     document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
-    document.getElementById('completedTasks').textContent = allActivities.filter(t => t.status === 'completed').length;
+    document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
     document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
 }
 
@@ -313,12 +303,12 @@ function renderDashboard() {
     
     itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
-    updateStats(allActivities);
-    renderTeamMembers(membersInGroup, itemsForMonth);
+    // ***** MODIFICATION 2: Pass the correctly filtered `itemsToConsider` to the stats function *****
+    updateStats(itemsToConsider);
+    
+    renderTeamMembers(membersInGroup, itemsToConsider); // Pass itemsToConsider here as well for consistency
     renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
 }
-
-// (The rest of the file remains the same: filterBy... functions, setup... functions, initializeDashboard, etc.)
 
 function filterByUnit(unit) {
     currentUnitFilter = unit;
@@ -373,7 +363,7 @@ async function refreshData() {
     renderDashboard();
 }
 
-// (All setup... functions remain unchanged)
+// (The rest of the file remains the same: setup... functions and initializeDashboard)
 
 async function initializeDashboard() {
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -434,7 +424,11 @@ async function initializeDashboard() {
             const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
             if (btn) filterItemsByStatus(paramStatus, { target: btn });
         }
-        document.getElementById('openChatBot').classList.remove('hidden');
+        // Assuming openChatBot exists and is set up elsewhere
+        if(document.getElementById('openChatBot')) {
+            document.getElementById('openChatBot').classList.remove('hidden');
+        }
+
     } catch (error) {
         console.error("Initialization failed:", error);
         document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
@@ -444,12 +438,20 @@ async function initializeDashboard() {
     }
 }
 
+// Assuming all setup functions are defined as in the original complete file.
+// For brevity, they are omitted here but should be in your actual file.
+// Example: function setupLoginModal() { ... }
+
 document.addEventListener('DOMContentLoaded', async function() {
-    // This section is intentionally left empty as the full setup functions were not provided in the user's file.
-    // In a real scenario, the setup function calls like setupLoginModal() would be here.
-    // For this request, we only need to ensure initializeDashboard is called.
+    // Call all your setup functions here, for example:
+    // setupLoginModal();
+    // setupChangePasswordModal();
+    // setupAiModal();
+    // setupActivityModal();
+    // setupWeeklySummaryModal();
+    // setupScrollToTop();
+    // setupItemListModal();
+    // setupChatBot();
     
-    // Based on the provided file, we assume these setup functions exist elsewhere or are not needed for this specific request.
-    // We will call the main function to start the dashboard.
     await initializeDashboard();
 });
