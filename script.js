@@ -752,6 +752,7 @@ async function getAiSuggestions(memberName = 'all') {
         }
     };
 
+    // ########### START: MODIFIED CODE BLOCK ###########
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
@@ -760,18 +761,22 @@ async function getAiSuggestions(memberName = 'all') {
             body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: geminiPayload })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: response.statusText }));
-            throw new Error(`代理伺服器請求失敗: ${errorData.message || response.statusText}`);
-        }
-
+        // Directly parse the JSON, as the backend will return a JSON body even for errors.
         const result = await response.json();
+
+        // Check for a specific error structure returned from our GAS backend.
+        if (result.error) {
+            // This is the true error message from the Gemini API or our script.
+            throw new Error(result.error.message || '後端回傳未知錯誤');
+        }
         
+        // Check for the normal, successful Gemini API response structure.
         if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
             const jsonText = result.candidates[0].content.parts[0].text;
             const reportData = JSON.parse(jsonText);
             aiContent.innerHTML = renderAiReport(reportData);
         } else {
+            // If there's no error and no valid candidate, the response format is unexpected.
             throw new Error("AI 未能提供有效的建議。回應為空或格式不符。");
         }
 
@@ -783,9 +788,10 @@ async function getAiSuggestions(memberName = 'all') {
                 <p>${error.message}</p>
             </div>`;
     } finally {
-        // 確保無論成功或失敗，都清除計時器
+        // Ensure the loading interval is cleared regardless of success or failure.
         clearInterval(intervalId);
     }
+    // ########### END: MODIFIED CODE BLOCK ###########
 }
 
 function renderAiReport(data) {
