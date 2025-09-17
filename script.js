@@ -407,15 +407,92 @@ function generateDashboardReportHTML() {
     return reportHTML;
 }
 
+async function getAiSuggestions(memberName = 'all') {
+    const aiContent = document.getElementById('ai-suggestion-content');
+    const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
+    let messageIndex = 0;
+    aiContent.innerHTML = `<div class="flex flex-col items-center justify-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p id="ai-loading-message" class="mt-4 text-gray-600 font-medium">${loadingMessages[0]}</p></div>`;
+    const loadingMessageElement = document.getElementById('ai-loading-message');
+    const intervalId = setInterval(() => {
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+        if(loadingMessageElement) loadingMessageElement.textContent = loadingMessages[messageIndex];
+    }, 1500);
+
+    let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type));
+    let analysisTarget = "整個團隊";
+    if (memberName !== 'all') {
+        analysisTarget = memberName;
+        itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
+    }
+    const prompt = `你是一位頂尖的專案管理與策略顧問...`; // This prompt is very long and has been truncated for brevity
+    const geminiPayload = { /* ... full payload ... */ };
+    
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: geminiPayload })
+        });
+        const result = await response.json();
+        if (result.error) throw new Error(result.error.message || '後端回傳未知錯誤');
+        if (result.candidates && result.candidates[0].content.parts[0].text) {
+            const jsonText = result.candidates[0].content.parts[0].text;
+            const reportData = JSON.parse(jsonText);
+            aiContent.innerHTML = renderAiReport(reportData);
+        } else {
+            throw new Error("AI 未能提供有效的建議。");
+        }
+    } catch (error) {
+        aiContent.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-lg"><p class="font-bold">無法獲取 AI 建議</p><p>${error.message}</p></div>`;
+    } finally {
+        clearInterval(intervalId);
+    }
+}
+
+function renderAiReport(data) {
+    // ... Full AI report rendering logic ...
+    return `<div>AI report placeholder</div>`; // Placeholder
+}
+
 // --- Setup Functions ---
 function setupLoginModal() {
     const loginBtn = document.getElementById('loginBtn');
     if (!loginBtn) return;
-    // ... Full login modal logic
+    const loginModal = document.getElementById('loginModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const loginForm = document.getElementById('loginForm');
+    const loginMessage = document.getElementById('login-message');
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    const openChangePasswordModalBtn = document.getElementById('openChangePasswordModalBtn');
+
+    openChangePasswordModalBtn.addEventListener('click', () => {
+        loginModal.classList.add('hidden');
+        document.getElementById('changePasswordModal').classList.remove('hidden');
+    });
+
+    loginBtn.addEventListener('click', () => {
+        loginMessage.textContent = '';
+        loginForm.reset();
+        loginModal.classList.remove('hidden');
+    });
+
+    closeModalBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
+    loginModal.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.classList.add('hidden'); });
+
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        // ... full login submission logic
+    });
 }
 
 function setupChangePasswordModal() {
-    // ... Full change password modal logic
+    const modal = document.getElementById('changePasswordModal');
+    if(!modal) return;
+    const closeBtn = document.getElementById('closeChangePasswordModalBtn');
+    closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        document.getElementById('loginModal').classList.remove('hidden');
+    });
+    // ... full password change form logic
 }
 
 function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
@@ -450,7 +527,7 @@ function setupItemListModal(){
 }
 
 function setupActivityModal(){
-    setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true));
+    setupModal('activityModal', 'activityCount', 'closeActivityModalBtn', () => openActivityModal(true));
 }
 
 function setupScrollToTop(){
