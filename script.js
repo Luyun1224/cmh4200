@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - All features including guaranteed groups)
+// script.js (FINAL & COMPLETE - All feature logic restored)
 // --- Configuration ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -46,58 +46,29 @@ function renderUnitTabs() {
 
 function renderGroupTabs(membersToConsider) {
     const tabsContainer = document.getElementById('groupTabs');
-    
-    // 1. 定義一個「保證顯示」的組別列表
-    const guaranteedGroups = [
-        '實證醫學暨醫療政策中心'
-    ];
-
-    // 2. 正常地從現有成員中獲取他們的組別
-    const dynamicGroups = membersToConsider.map(s => s.group).filter(Boolean);
-
-    // 3. 將「保證顯示」和「動態獲取」的組合併，並用 Set 去除重複項
-    let groups = [...new Set(guaranteedGroups.concat(dynamicGroups))];
-
-    // (下方的自訂排序邏輯維持不變，它會繼續正常運作)
-    const desiredOrder = [
-        '教學行政組', 
-        '一般科', 
-        '臨床技能中心', 
-        '教師培育中心', 
-        '實證醫學暨醫療政策中心', 
-        '視聽中心', 
-        '圖書館'
-    ];
-
+    let groups = [...new Set(membersToConsider.map(s => s.group).filter(Boolean))];
+    const desiredOrder = ['教學行政組', '一般科', '臨床技能中心', '教師培育中心', '實證醫學暨醫療政策中心', '視聽中心', '圖書館'];
     groups.sort((a, b) => {
         const indexA = desiredOrder.indexOf(a);
         const indexB = desiredOrder.indexOf(b);
-
         if (indexA !== -1 && indexB !== -1) { return indexA - indexB; }
         if (indexA !== -1) { return -1; }
         if (indexB !== -1) { return 1; }
         return a.localeCompare(b, 'zh-Hant'); 
     });
-
     if (groups.length <= 1 && currentUnitFilter !== 'all') {
         tabsContainer.innerHTML = '';
         tabsContainer.style.padding = '0';
         return;
     }
     tabsContainer.style.padding = '0.75rem 0';
-    
     let buttonsHTML = '';
     if(groups.length > 0) {
         buttonsHTML += `<button onclick="filterByGroup('all')" id="tab-all" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${'all' === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">全部組別</button>`;
     }
-
-    buttonsHTML += groups.map(key => {
-        const value = key;
-        return `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${value}</button>`
-    }).join('');
+    buttonsHTML += groups.map(key => `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${key}</button>`).join('');
     tabsContainer.innerHTML = buttonsHTML;
 }
-
 
 function renderYearFilter() {
     const yearFilterSelect = document.getElementById('yearFilter');
