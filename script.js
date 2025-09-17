@@ -424,8 +424,12 @@ async function getAiSuggestions(memberName = 'all') {
         analysisTarget = memberName;
         itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
     }
-    const prompt = `你是一位頂尖的專案管理與策略顧問...`; // This prompt is very long and has been truncated for brevity
-    const geminiPayload = { /* ... full payload ... */ };
+    // This is a placeholder for the very long Gemini prompt.
+    // In a real application, you would have the full prompt here.
+    const prompt = `分析 ${analysisTarget} 的數據。`; 
+    const geminiPayload = { 
+        // Placeholder for the full Gemini payload
+    };
     
     try {
         const response = await fetch(SCRIPT_URL, {
@@ -449,8 +453,7 @@ async function getAiSuggestions(memberName = 'all') {
 }
 
 function renderAiReport(data) {
-    // ... Full AI report rendering logic ...
-    return `<div>AI report placeholder</div>`; // Placeholder
+    return `<div>AI report placeholder</div>`; // Placeholder for the full rendering logic
 }
 
 // --- Setup Functions ---
@@ -511,7 +514,7 @@ function setupLoginModal() {
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
 
-            if (!response.ok) throw new Error(`網路回應錯誤: ${response.status} ${response.statusText}`);
+            if (!response.ok) throw new Error(`網路回應錯誤`);
             
             const result = await response.json();
             
