@@ -463,11 +463,24 @@ function setupLoginModal() {
     const loginMessage = document.getElementById('login-message');
     const loginSubmitBtn = document.getElementById('loginSubmitBtn');
     const openChangePasswordModalBtn = document.getElementById('openChangePasswordModalBtn');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
 
-    openChangePasswordModalBtn.addEventListener('click', () => {
-        loginModal.classList.add('hidden');
-        document.getElementById('changePasswordModal').classList.remove('hidden');
-    });
+    if (togglePassword) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+    }
+
+    if(openChangePasswordModalBtn) {
+        openChangePasswordModalBtn.addEventListener('click', () => {
+            loginModal.classList.add('hidden');
+            document.getElementById('changePasswordModal').classList.remove('hidden');
+        });
+    }
 
     loginBtn.addEventListener('click', () => {
         loginMessage.textContent = '';
@@ -480,19 +493,102 @@ function setupLoginModal() {
 
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        // ... full login submission logic
+        const username = event.target.username.value;
+        const password = event.target.password.value;
+        const btnText = loginSubmitBtn.querySelector('.btn-text');
+        const btnSpinner = loginSubmitBtn.querySelector('.btn-spinner');
+
+        loginMessage.textContent = '';
+        btnText.textContent = '登入中...';
+        btnSpinner.classList.remove('hidden');
+        loginSubmitBtn.disabled = true;
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({ action: 'login', username, password }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+
+            if (!response.ok) throw new Error(`網路回應錯誤: ${response.status} ${response.statusText}`);
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                const loginData = result.data;
+                loginMessage.textContent = '登入成功！即將跳轉...';
+                loginMessage.className = 'text-center mb-4 font-medium text-green-500';
+                setTimeout(() => {
+                    window.location.href = `https://luyun1224.github.io/cmh4200/project-admin.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
+                }, 1500);
+            } else {
+                throw new Error(result.message || '帳號或密碼錯誤。');
+            }
+        } catch (error) {
+            console.error("Login Error Details:", error);
+            loginMessage.textContent = error.message;
+            loginMessage.className = 'text-center mb-4 font-medium text-red-500';
+        } finally {
+            btnText.textContent = '登入';
+            btnSpinner.classList.add('hidden');
+            loginSubmitBtn.disabled = false;
+        }
     });
 }
 
 function setupChangePasswordModal() {
     const modal = document.getElementById('changePasswordModal');
     if(!modal) return;
+    const form = document.getElementById('changePasswordForm');
+    const messageDiv = document.getElementById('change-password-message');
+    const submitBtn = document.getElementById('changePasswordSubmitBtn');
     const closeBtn = document.getElementById('closeChangePasswordModalBtn');
+
     closeBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
         document.getElementById('loginModal').classList.remove('hidden');
     });
-    // ... full password change form logic
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const employeeId = form.elements.employeeId.value;
+        const oldPassword = form.elements.oldPassword.value;
+        const newPassword = form.elements.newPassword.value;
+        
+        messageDiv.textContent = '';
+        submitBtn.disabled = true;
+        submitBtn.querySelector('.btn-text').textContent = '處理中...';
+        submitBtn.querySelector('.btn-spinner').classList.remove('hidden');
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({ action: 'updatePassword', employeeId, oldPassword, newPassword }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+
+            if (!response.ok) throw new Error('網路回應錯誤');
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                messageDiv.textContent = '密碼更新成功！';
+                messageDiv.className = 'text-center mb-4 font-medium text-green-500';
+                form.reset();
+            } else {
+                throw new Error(result.message || '更新失敗');
+            }
+        } catch (error) {
+            messageDiv.textContent = error.message;
+            messageDiv.className = 'text-center mb-4 font-medium text-red-500';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.querySelector('.btn-text').textContent = '確認更換';
+            submitBtn.querySelector('.btn-spinner').classList.add('hidden');
+        }
+    });
 }
 
 function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
@@ -527,7 +623,7 @@ function setupItemListModal(){
 }
 
 function setupActivityModal(){
-    setupModal('activityModal', 'activityCount', 'closeActivityModalBtn', () => openActivityModal(true));
+    setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true));
 }
 
 function setupScrollToTop(){
