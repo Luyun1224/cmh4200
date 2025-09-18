@@ -123,13 +123,14 @@
     <header class="bg-white shadow-md border-b-2 border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-4 text-center sm:text-left">
-                    <img src="4200logo.png" alt="4200logo" class="w-20 h-20 object-contain mx-auto sm:mx-0">
+                <div class="flex flex-row items-center gap-4 text-center sm:text-left">
+                    <img src="4200logo.png" alt="4200logo" class="w-20 h-20 object-contain mx-auto sm:mx-0 flex-shrink-0">
                     <div>
-                        <h1 class="text-3xl font-black text-gray-900 tracking-wider">教學部-專案儀表板</h1>
+                        <h1 class="text-3xl font-black text-gray-900 tracking-wider whitespace-nowrap">教學部-專案儀表板</h1>
                         <p class="text-sm text-gray-500 mt-1">即時追蹤所有進行中的專案與任務</p>
                     </div>
                 </div>
+
                 <div class="flex flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-4">
                     <div class="relative">
                         <input type="search" id="searchInput" oninput="filterBySearch(this.value)" placeholder="搜尋項目..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 pl-8">
@@ -140,11 +141,12 @@
                     <button id="weeklySummaryBtn" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-calendar-week mr-2"></i>本週回顧</button>
                     <button id="aiBtn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-brain mr-2"></i>AI 決策建議</button>
                     
+                    <a href="project-admin.html" id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">管理者登入</a>
+                    
                     <div id="user-info-container" class="flex items-center gap-3">
                         <span id="welcome-message" class="font-semibold text-gray-800 hidden"></span>
                         <button id="logoutBtn" class="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg hidden">登出</button>
-                        <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">管理者登入</button>
-                    </div>
+                        </div>
                 </div>
             </div>
         </div>
