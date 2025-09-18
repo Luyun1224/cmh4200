@@ -3,237 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>奇美醫院教學中心 - 同仁個人歷程</title>
+    <title>教學部專案儀表板 - 登入</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f8fafc; /* bg-slate-50 */
+            background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
         }
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .tab-button {
-             transition: all 0.3s ease;
-        }
-        .tab-active {
-            background-color: #e0f2fe; /* bg-sky-100 */
-            color: #0369a1; /* text-sky-700 */
-        }
-        #loginModal {
-            z-index: 50;
+        .backdrop-blur-md {
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body class="min-h-screen">
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-2xl font-bold text-center text-slate-900 mb-6">管理者登入</h2>
-            <div id="login-message" class="text-center mb-4 font-medium"></div>
-            <form id="loginForm">
-                <div class="mb-4">
-                    <label for="username" class="block text-slate-700 mb-2">帳號</label>
-                    <input type="text" id="username" name="username" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" required>
-                </div>
-                <div class="mb-6">
-                     <label for="password" class="block text-slate-700 mb-2">密碼</label>
-                    <input type="password" id="password" name="password" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" required>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                    <button type="button" id="closeModalBtn" class="w-full bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors duration-300">關閉</button>
-                    <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors duration-300">登入</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen">
 
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200">
-        <div class="container mx-auto px-6 py-6 flex justify-between items-center">
+    <div class="w-full max-w-md mx-auto p-8 bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">專案儀表板登入</h1>
+            <p class="text-gray-600 mt-2">請使用您的人事號進行登入</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
             <div>
-                <h1 class="text-3xl font-bold text-slate-800">奇美醫院教學中心</h1>
-                <p class="text-md text-slate-500">同仁個人歷程展示平台</p>
+                <label for="username" class="block text-sm font-medium text-gray-700">人事號</label>
+                <div class="mt-1 relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </span>
+                    <input type="text" id="username" name="username" required
+                           class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
             </div>
-            <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:bg-slate-900 transition-colors duration-300">
-                管理者登入
-            </button>
-        </div>
-    </header>
 
-    <!-- Navigation Tabs -->
-    <div class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="container mx-auto px-6">
-            <div class="flex flex-wrap justify-center space-x-2 py-4">
-                <button onclick="showGroup('all')" id="tab-all" class="tab-button px-4 py-2 rounded-full font-medium mb-2">全部</button>
-                <button onclick="showGroup('teaching-center')" id="tab-teaching-center" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">教學中心</button>
-                <button onclick="showGroup('pgy')" id="tab-pgy" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">PGY訓練組</button>
-                <button onclick="showGroup('clerk')" id="tab-clerk" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">實習醫學生組</button>
-                <button onclick="showGroup('resident')" id="tab-resident" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">住院醫師組</button>
-                <button onclick="showGroup('csc')" id="tab-csc" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">臨床技能中心</button>
-                <button onclick="showGroup('fdc')" id="tab-fdc" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">教師培育中心</button>
-                <button onclick="showGroup('allied-health')" id="tab-allied-health" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">醫事人員組</button>
-                <button onclick="showGroup('chart-review')" id="tab-chart-review" class="tab-button px-4 py-2 rounded-full font-medium mb-2 bg-slate-100 hover:bg-slate-200">病歷審查組</button>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">密碼</label>
+                <div class="mt-1 relative">
+                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fas fa-lock text-gray-400"></i>
+                    </span>
+                    <input type="password" id="password" name="password" required
+                           class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
             </div>
-        </div>
+
+            <div id="login-message" class="text-center font-medium"></div>
+
+            <div>
+                <button type="submit" id="loginSubmitBtn"
+                        class="w-full flex justify-center items-center px-4 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform duration-150 ease-in-out hover:scale-105 shadow-lg">
+                    <span class="btn-text">安全登入</span>
+                     <i class="fas fa-spinner fa-spin ml-2 hidden btn-spinner"></i>
+                </button>
+            </div>
+        </form>
     </div>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
-        <div id="staff-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            
-            <!-- Card Template Function will generate cards here -->
-
-        </div>
-    </main>
 
     <script>
-        const staffData = [
-            { name: '廖家德', group: 'teaching-center', page: 'Ader.html', color: 'blue', icon: '🏆' },
-            { name: '劉雯', group: 'teaching-center', page: 'Liu-Wen.html', color: 'blue', icon: '🏆' },
-            { name: '楊依玲', group: 'teaching-center', page: 'I-Ling.html', color: 'blue', icon: '🏆' },
-            { name: '吳曉琪', group: 'pgy', title: '畢業後一般醫學訓練組', page: 'Hsiao-Chi.html', color: 'green', icon: '👥' },
-            { name: '王嬿茹', group: 'pgy', title: '畢業後一般醫學訓練組', page: 'Yen-Ju.html', color: 'green', icon: '👥' },
-            { name: '許淑怡', group: 'clerk', title: '實習醫學生訓練組', page: 'Shu-Yi.html', color: 'yellow', icon: '🎓' },
-            { name: '侯昱瑾', group: 'clerk', title: '實習醫學生訓練組', page: 'Yu-Jin.html', color: 'yellow', icon: '🎓' },
-            { name: '林淑雅', group: 'resident', title: '住院醫師訓練組', page: 'Shu-Ya.html', color: 'red', icon: '❤️' },
-            { name: '盧英云', group: 'csc', title: '臨床技能中心', page: 'Ying-Yun.html', color: 'sky', icon: '<img src="Lulu.JPG" alt="盧英云" class="w-full h-full object-cover rounded-full" />' },
-            { name: '黃惠津', group: 'csc', title: '臨床技能中心', page: 'Hei-Gen.html', color: 'sky', icon: '🏥' },
-            { name: '林汶秀', group: 'fdc', title: '教師培育中心', page: 'Wen-Hsiu.html', color: 'purple', icon: '👨‍🏫' },
-            { name: '楊宜婷', group: 'allied-health', title: '醫事人員訓練組', page: 'Yi-Ting.html', color: 'fuchsia', icon: '✨' },
-            { name: '陳詩芸', group: 'allied-health', title: '醫事人員訓練組', page: 'Shi-Yun.html', color: 'fuchsia', icon: '✨' },
-            { name: '高瑞穗', group: 'teaching-center', title: '教學中心', page: 'JUI-SUI.html', color: 'blue', icon: '📹' },
-            { name: '李迎真', group: 'chart-review', title: '病歷審查組', page: 'Ying-Jen.html', color: 'orange', icon: '📋' },
-            { name: '林盟淦', group: 'chart-review', title: '病歷審查組', page: 'Meng-Gann.html', color: 'orange', icon: '📋' },
-        ];
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
+        // 假設您的主儀表板檔案名稱是 project.html
+        const DASHBOARD_URL = 'project.html'; 
 
-        const groupTitles = {
-            'teaching-center': '教學中心',
-            'pgy': '畢業後一般醫學訓練組',
-            'clerk': '實習醫學生訓練組',
-            'resident': '住院醫師訓練組',
-            'csc': '臨床技能中心',
-            'fdc': '教師培育中心',
-            'allied-health': '醫事人員訓練組',
-            'chart-review': '病歷審查組'
-        };
-
-        const colorPalette = {
-            blue: { bg: 'bg-blue-100', text: 'text-blue-700', button: 'bg-blue-500', hover: 'hover:bg-blue-600' },
-            green: { bg: 'bg-green-100', text: 'text-green-700', button: 'bg-green-500', hover: 'hover:bg-green-600' },
-            yellow: { bg: 'bg-yellow-100', text: 'text-yellow-700', button: 'bg-yellow-500', hover: 'hover:bg-yellow-600' },
-            red: { bg: 'bg-red-100', text: 'text-red-700', button: 'bg-red-500', hover: 'hover:bg-red-600' },
-            sky: { bg: 'bg-sky-100', text: 'text-sky-700', button: 'bg-sky-500', hover: 'hover:bg-sky-600' },
-            purple: { bg: 'bg-purple-100', text: 'text-purple-700', button: 'bg-purple-500', hover: 'hover:bg-purple-600' },
-            fuchsia: { bg: 'bg-fuchsia-100', text: 'text-fuchsia-700', button: 'bg-fuchsia-500', hover: 'hover:bg-fuchsia-600' },
-            amber: { bg: 'bg-amber-100', text: 'text-amber-700', button: 'bg-amber-500', hover: 'hover:bg-amber-600' },
-            orange: { bg: 'bg-orange-100', text: 'text-orange-700', button: 'bg-orange-500', hover: 'hover:bg-orange-600' },
-        };
-
-        function createStaffCard(staff) {
-            const colors = colorPalette[staff.color] || colorPalette.blue;
-            const title = groupTitles[staff.group] || '教學中心';
-            return `
-                <div class="staff-card card-hover bg-white rounded-xl shadow-md overflow-hidden" data-group="${staff.group}">
-                    <div class="${colors.bg} h-28 relative flex items-center justify-center">
-                        <div class="w-20 h-20 bg-white/50 rounded-full flex items-center justify-center text-3xl backdrop-blur-sm">${staff.icon}</div>
-                    </div>
-                    <div class="p-6 text-center">
-                        <h3 class="text-xl font-semibold text-slate-800 mb-1">${staff.name}</h3>
-                        <p class="${colors.text} font-medium">${title}</p>
-                        <a href="${staff.page}" class="w-full inline-block mt-4 ${colors.button} ${colors.hover} text-white py-2 px-4 rounded-lg transition-colors duration-300">查看詳細歷程</a>
-                    </div>
-                </div>
-            `;
+        // 檢查是否已經登入，如果是，直接跳轉
+        if (sessionStorage.getItem('dashboardUser')) {
+            window.location.href = DASHBOARD_URL;
         }
 
-        function renderCards() {
-            const grid = document.getElementById('staff-grid');
-            grid.innerHTML = staffData.map(createStaffCard).join('');
-        }
-        
-        function showGroup(group) {
-            const cards = document.querySelectorAll('.staff-card');
-            const tabs = document.querySelectorAll('.tab-button');
-            
-            tabs.forEach(tab => {
-                tab.classList.remove('tab-active', 'bg-sky-100', 'text-sky-700');
-                tab.classList.add('bg-slate-100', 'hover:bg-slate-200');
-            });
-            
-            const activeTab = document.getElementById(`tab-${group}`);
-            activeTab.classList.add('tab-active');
-            activeTab.classList.remove('bg-slate-100', 'hover:bg-slate-200');
-            
-            cards.forEach(card => {
-                if (group === 'all' || card.dataset.group === group) {
-                    card.style.display = 'block';
-                    card.style.animation = 'fadeIn 0.5s ease-in-out';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        // --- Login Modal Logic ---
-        const loginBtn = document.getElementById('loginBtn');
-        const loginModal = document.getElementById('loginModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
         const loginForm = document.getElementById('loginForm');
         const loginMessage = document.getElementById('login-message');
+        const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+        const btnText = loginSubmitBtn.querySelector('.btn-text');
+        const btnSpinner = loginSubmitBtn.querySelector('.btn-spinner');
 
-        loginBtn.addEventListener('click', () => {
-            loginModal.classList.remove('hidden');
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            loginModal.classList.add('hidden');
-        });
-
-        loginModal.addEventListener('click', (event) => {
-            if (event.target === loginModal) {
-                loginModal.classList.add('hidden');
-            }
-        });
-
-        loginForm.addEventListener('submit', (event) => {
+        loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const username = event.target.username.value;
             const password = event.target.password.value;
 
-            if (username === '4200' && password === '4200') {
-                loginMessage.textContent = '登入成功！';
-                loginMessage.className = 'text-center mb-4 font-medium text-green-500';
-                localStorage.setItem('dashboardLoggedIn', 'true');
+            loginMessage.textContent = '';
+            btnText.textContent = '驗證中...';
+            btnSpinner.classList.remove('hidden');
+            loginSubmitBtn.disabled = true;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify({ action: 'login', username, password }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+
+                if (!response.ok) throw new Error(`網路回應錯誤: ${response.status}`);
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const userData = result.data;
+                    if (!userData.role) {
+                         throw new Error('登入成功，但無法獲取您的角色資訊，請聯繫管理員。');
+                    }
+                    
+                    sessionStorage.setItem('dashboardUser', JSON.stringify(userData));
+                    
+                    loginMessage.textContent = '登入成功！即將跳轉...';
+                    loginMessage.className = 'text-center font-medium text-green-600';
+                    
+                    setTimeout(() => {
+                        window.location.href = DASHBOARD_URL;
+                    }, 1000);
+
+                } else {
+                    throw new Error(result.message || '帳號或密碼錯誤。');
+                }
+            } catch (error) {
+                loginMessage.textContent = error.message;
+                loginMessage.className = 'text-center font-medium text-red-500';
+            } finally {
                 setTimeout(() => {
-                    loginModal.classList.add('hidden');
-                    window.location.href = 'admin.html';
-                }, 1500);
-            } else {
-                loginMessage.textContent = '帳號或密碼錯誤。';
-                loginMessage.className = 'text-center mb-4 font-medium text-red-500';
+                    btnText.textContent = '安全登入';
+                    btnSpinner.classList.add('hidden');
+                    loginSubmitBtn.disabled = false;
+                }, 1000);
             }
         });
-
-        // --- Initial Load ---
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        window.onload = () => {
-            renderCards();
-            showGroup('all');
-        };
     </script>
 </body>
 </html>
