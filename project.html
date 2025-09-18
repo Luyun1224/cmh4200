@@ -9,7 +9,7 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center hidden z-50">
+    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
         <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
         <p class="mt-4 text-lg text-gray-700 font-medium">正在載入儀表板數據...</p>
     </div>
@@ -21,64 +21,6 @@
         </div>
     </div>
 
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4 z-[60]">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-2xl font-bold text-center text-slate-900 mb-6">管理者登入</h2>
-             <div id="login-message" class="text-center mb-4 font-medium h-auto min-h-[1.5rem] text-red-500"></div>
-            <form id="loginForm">
-                <div class="mb-4">
-                    <label for="username" class="block text-slate-700 mb-2">人事號</label>
-                    <input type="text" id="username" name="username" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div class="mb-4 relative">
-                    <label for="password" class="block text-slate-700 mb-2">密碼</label>
-                    <input type="password" id="password" name="password" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                     <span id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 pt-7 cursor-pointer">
-                        <i class="fa fa-eye-slash text-gray-400" aria-hidden="true"></i>
-                    </span>
-                </div>
-                 <div class="flex items-center justify-between gap-4 mt-6">
-                    <button type="button" id="closeLoginModalBtn" class="w-full bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors duration-300">關閉</button>
-                    <button type="submit" id="loginSubmitBtn" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center">
-                        <span class="btn-text">登入</span>
-                         <i class="fas fa-spinner fa-spin ml-2 hidden btn-spinner"></i>
-                    </button>
-                </div>
-            </form>
-            <div class="text-center mt-4">
-               <button id="openChangePasswordModalBtn" class="text-sm text-blue-600 hover:underline">更換密碼</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4 z-[60]">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-2xl font-bold text-center text-slate-900 mb-6">更換密碼</h2>
-            <div id="change-password-message" class="text-center mb-4 font-medium h-6"></div>
-             <form id="changePasswordForm">
-                <div class="mb-4">
-                    <label for="cp-employeeId" class="block text-slate-700 mb-2">人事號</label>
-                    <input type="text" id="cp-employeeId" name="employeeId" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                 </div>
-                <div class="mb-4">
-                    <label for="cp-oldPassword" class="block text-slate-700 mb-2">舊密碼</label>
-                    <input type="password" id="cp-oldPassword" name="oldPassword" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                 <div class="mb-6">
-                    <label for="cp-newPassword" class="block text-slate-700 mb-2">新密碼</label>
-                    <input type="password" id="cp-newPassword" name="newPassword" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                    <button type="button" id="closeChangePasswordModalBtn" class="w-full bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors duration-300">返回登入</button>
-                    <button type="submit" id="changePasswordSubmitBtn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300 flex items-center justify-center">
-                        <span class="btn-text">確認更換</span>
-                         <i class="fas fa-spinner fa-spin ml-2 hidden btn-spinner"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
     <div id="aiModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4 gap-4">
@@ -89,7 +31,6 @@
             <div id="ai-suggestion-content" class="overflow-y-auto text-gray-700 leading-relaxed ai-content"></div>
         </div>
     </div>
-
     <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -99,7 +40,6 @@
             <div id="activity-content" class="overflow-y-auto text-gray-700 leading-relaxed activity-content"></div>
         </div>
     </div>
-
     <div id="weeklySummaryModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -109,7 +49,6 @@
              <div id="weekly-summary-content" class="overflow-y-auto text-gray-700 leading-relaxed space-y-4"></div>
         </div>
     </div>
-    
     <div id="itemListModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden p-4">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -130,7 +69,6 @@
                          <p class="text-sm text-gray-500 mt-1">即時追蹤所有進行中的專案與任務</p>
                     </div>
                 </div>
-
                 <div class="flex flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-4">
                      <div class="relative">
                         <input type="search" id="searchInput" oninput="filterBySearch(this.value)" placeholder="搜尋項目..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 pl-8">
@@ -141,10 +79,10 @@
                     <button id="weeklySummaryBtn" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-calendar-week mr-2"></i>本週回顧</button>
                      <button id="aiBtn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-brain mr-2"></i>AI 決策建議</button>
                     
-                    <div id="user-auth-container" class="flex items-center gap-3">
-                        <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">管理者登入</button>
-                        <span id="welcome-message" class="font-semibold text-gray-800 hidden"></span>
-                        <button id="logoutBtn" class="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg hidden">登出</button>
+                    <div id="user-info-container" class="flex items-center gap-3">
+                        <span id="welcome-message" class="font-semibold text-gray-800"></span>
+                        <a id="admin-link" href="#" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">後台管理</a>
+                        <button id="logoutBtn" class="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">登出</button>
                      </div>
                 </div>
             </div>
@@ -172,7 +110,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="lg:col-span-3 space-y-8">
                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
                     <div onclick="showItemsInModal('total')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600" title="專案/任務">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="text-blue-500 text-4xl stat-card-icon"><i class="fas fa-dragon"></i></div></div></div>
@@ -181,7 +118,6 @@
                     <div onclick="showItemsInModal('completed')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-green-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">已完成</p><p class="text-3xl font-bold text-green-700" id="completedTasks">0</p></div><div class="text-green-500 text-4xl stat-card-icon"><i class="fas fa-trophy"></i></div></div></div>
                     <div onclick="openActivityModal()" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-yellow-500 cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">活動總數</p><p class="text-3xl font-bold text-yellow-700" id="activityCount">0</p></div><div class="text-yellow-500 text-4xl stat-card-icon"><i class="fas fa-calendar-check"></i></div></div></div>
                 </div>
-                
                 <div class="bg-white rounded-xl shadow-lg border border-gray-100">
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
