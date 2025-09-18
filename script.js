@@ -407,6 +407,9 @@ function generateDashboardReportHTML() {
     return reportHTML;
 }
 
+// ###############################################################
+// ############# 這裡是本次的修改點 #############
+// ###############################################################
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
     const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
@@ -424,12 +427,65 @@ async function getAiSuggestions(memberName = 'all') {
         analysisTarget = memberName;
         itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
     }
-    const prompt = `你是一位頂尖的專案管理與策略顧問...`; // This prompt is very long and has been truncated for brevity
-    const geminiPayload = { /* ... full payload ... */ };
+    
+    // 1. 定義您的指令 (Prompt)
+    // 為了安全與彈性，只選擇性地傳送必要欄位
+    const sanitizedItems = itemsToAnalyze.map(({ name, description, status, progress, assignees, deadline, helpMessage }) => 
+        ({ name, description, status, progress, assignees, deadline, helpMessage }));
+    
+    const prompt = `你是一位頂尖的專案管理與策略顧問，名叫「賈維斯」。你的任務是根據我提供的 JSON 格式的專案資料，為指定的分析對象「${analysisTarget}」提供一份專業、簡潔、帶有鼓勵性質，且僅包含繁體中文的週報分析。
+
+請嚴格遵循以下 JSON 格式輸出你的分析報告，不要有任何多餘的文字或 markdown 符號:
+{
+  "greeting": "string",
+  "overall_status": {
+    "title": "整體狀況分析",
+    "emoji": "string (一個能代表整體狀況的表情符號)",
+    "summary": "string (一句話總結整體狀況)"
+  },
+  "key_insights": [
+    {
+      "title": "亮點與成就",
+      "emoji": "✨",
+      "points": ["string (條列式說明，最多3點)"]
+    },
+    {
+      "title": "潛在風險",
+      "emoji": "⚠️",
+      "points": ["string (條列式說明，最多3點)"]
+    }
+  ],
+  "actionable_advice": {
+    "title": "賈維斯的下一步行動建議",
+    "emoji": "🚀",
+    "advice": "string (一段具體、可行的策略建議)"
+  }
+}`;
+    
+    // 2. 要給 AI 分析的資料
+    const dataToAnalyze = JSON.stringify(sanitizedItems, null, 2);
+
+    // 3. 組合成符合 Gemini 格式的 Payload
+    const geminiPayload = {
+      "contents": [
+        {
+          "parts": [
+            { "text": prompt },
+            { "text": "\n\n請分析以下 JSON 資料：\n" },
+            { "text": dataToAnalyze }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "responseMimeType": "application/json",
+        "temperature": 0.5,
+        "maxOutputTokens": 8192
+      }
+    };
     
     try {
         const response = await fetch(SCRIPT_URL, {
-            method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text-plain;charset=utf-8' },
+            method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: geminiPayload })
         });
         const result = await response.json();
@@ -439,19 +495,47 @@ async function getAiSuggestions(memberName = 'all') {
             const reportData = JSON.parse(jsonText);
             aiContent.innerHTML = renderAiReport(reportData);
         } else {
-            throw new Error("AI 未能提供有效的建議。");
+            // 當 AI 回應不符合預期格式時，顯示原始回應以供除錯
+            const rawResponse = JSON.stringify(result, null, 2);
+            throw new Error(`AI 回應格式不符。收到的原始資料：\n<pre class="whitespace-pre-wrap text-xs">${rawResponse}</pre>`);
         }
     } catch (error) {
-        aiContent.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-lg"><p class="font-bold">無法獲取 AI 建議</p><p>${error.message}</p></div>`;
+        aiContent.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-lg"><p class="font-bold">無法獲取 AI 建議</p><p class="mt-2">${error.message}</p></div>`;
     } finally {
         clearInterval(intervalId);
     }
 }
+// ###############################################################
 
 function renderAiReport(data) {
-    // ... Full AI report rendering logic ...
-    return `<div>AI report placeholder</div>`; // Placeholder
+    const renderPoints = (points) => {
+        if (!points || points.length === 0) {
+            return '<p class="text-sm text-gray-500 pl-5">無特別事項。</p>';
+        }
+        return '<ul class="space-y-2 pl-5">' + points.map(point => `<li class="text-sm text-gray-800">${point}</li>`).join('') + '</ul>';
+    };
+
+    return `
+        <div class="p-2 space-y-4 text-gray-800">
+            <p>${data.greeting}</p>
+            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 class="font-bold text-blue-800">${data.overall_status.emoji} ${data.overall_status.title}</h3>
+                <p class="text-sm text-blue-700 mt-1">${data.overall_status.summary}</p>
+            </div>
+            ${data.key_insights.map(insight => `
+                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800">${insight.emoji} ${insight.title}</h3>
+                    ${renderPoints(insight.points)}
+                </div>
+            `).join('')}
+            <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                <h3 class="font-bold text-green-800">${data.actionable_advice.emoji} ${data.actionable_advice.title}</h3>
+                <p class="text-sm text-green-700 mt-1">${data.actionable_advice.advice}</p>
+            </div>
+        </div>
+    `;
 }
+
 
 // --- Setup Functions ---
 function setupLoginModal() {
@@ -465,7 +549,6 @@ function setupLoginModal() {
     const openChangePasswordModalBtn = document.getElementById('openChangePasswordModalBtn');
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
-
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -487,10 +570,8 @@ function setupLoginModal() {
         loginForm.reset();
         loginModal.classList.remove('hidden');
     });
-
     closeModalBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
     loginModal.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.classList.add('hidden'); });
-
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const username = event.target.username.value;
@@ -544,12 +625,10 @@ function setupChangePasswordModal() {
     const messageDiv = document.getElementById('change-password-message');
     const submitBtn = document.getElementById('changePasswordSubmitBtn');
     const closeBtn = document.getElementById('closeChangePasswordModalBtn');
-
     closeBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
         document.getElementById('loginModal').classList.remove('hidden');
     });
-
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const employeeId = form.elements.employeeId.value;
