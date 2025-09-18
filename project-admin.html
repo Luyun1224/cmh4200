@@ -24,42 +24,50 @@
              <a href="project.html" class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
                   <i class="fas fa-arrow-left mr-2"></i>返回儀表板
              </a>
-             <div class="text-center absolute left-1/2 -translate-x-1/2">
+  
+           <div class="text-center absolute left-1/2 -translate-x-1/2">
                  <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
                  <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
              </div>
              <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-2xl p-6 mb-8 border border-slate-200">
+ 
+       <div class="bg-white rounded-xl shadow-2xl p-6 mb-8 border border-slate-200">
             <h2 id="form-title" class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">新增項目</h2>
             <form id="item-form" class="space-y-6">
                 <input type="hidden" id="item-id">
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div>
+               
+                 <div>
                         <label for="item-name" class="block text-sm font-medium text-gray-700 mb-2">項目名稱 (必填)</label>
                         <input type="text" id="item-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
-                    <div>
+         
+                   <div>
                         <label for="item-group" class="block text-sm font-medium text-gray-700 mb-2">所屬小組 (必填)</label>
                         <select id="item-group" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                         </select>
                         <div id="other-group-wrapper" class="mt-2 hidden">
                              <input type="text" id="other-group-name" placeholder="請輸入新的小組名稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
-                    </div>
+         
+                   </div>
                     <div>
                         <label for="item-type" class="block text-sm font-medium text-gray-700 mb-2">類型 (必填)</label>
                         <select id="item-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                            <option value="task">任務</option>
+    
+                             <option value="task">任務</option>
                             <option value="project">專案</option>
                             <option value="activity">活動</option>
-                            <option value="meeting">會議</option>
+                 
+                           <option value="meeting">會議</option>
                         </select>
                     </div>
                 </div>
                 <div>
-                    <label for="item-description" class="block text-sm font-medium text-gray-700 mb-2">項目備註說明</label>
+            
+                 <label for="item-description" class="block text-sm font-medium text-gray-700 mb-2">項目備註說明</label>
                     <textarea id="item-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="請輸入此項目的詳細說明或備註..."></textarea>
                 </div>
 
@@ -68,60 +76,74 @@
                         <label class="block text-sm font-medium text-gray-700">檢查點 (Checklist)</label>
                         <div class="flex items-center gap-2">
                             <select id="load-checklist-template" class="text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 p-1">
-                                <option value="">載入範本...</option>
+       
+                                 <option value="">載入範本...</option>
                                 </select>
                             <button type="button" id="save-checklist-template-btn" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                                <i class="fas fa-save mr-1"></i> 存為範本
+        
+                                 <i class="fas fa-save mr-1"></i> 存為範本
                             </button>
                             <button type="button" id="delete-checklist-template-btn" class="text-sm text-red-600 hover:text-red-800 font-medium">
-                                 <i class="fas fa-trash-alt mr-1"></i> 刪除範本
+          
+                                <i class="fas fa-trash-alt mr-1"></i> 刪除範本
                             </button>
                         </div>
                     </div>
-                    <div id="checklist-container" class="space-y-2 border p-4 rounded-lg bg-gray-50">
+ 
+                   <div id="checklist-container" class="space-y-2 border p-4 rounded-lg bg-gray-50">
                         </div>
                     <button type="button" id="add-checklist-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
-                        <i class="fas fa-plus-circle mr-1"></i> 新增檢查點
+                        
+                         <i class="fas fa-plus-circle mr-1"></i> 新增檢查點
                     </button>
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-6">
                       <div>
-                        <label for="item-assignees" class="block text-sm font-medium text-gray-700 mb-2">主要負責人 (可複選)</label>
+                   
+                         <label for="item-assignees" class="block text-sm font-medium text-gray-700 mb-2">主要負責人 (可複選)</label>
                         <select id="item-assignees" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5" required>
                             </select>
                     </div>
-                    <div>
+    
+                     <div>
                         <label for="item-collaborators" class="block text-sm font-medium text-gray-700 mb-2">協同人員 (可複選)</label>
                         <select id="item-collaborators" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5">
-                        </select>
+                  
+                       </select>
                     </div>
                 </div>
                 <div class="grid md:grid-cols-3 gap-6">
                     <div>
-                        <div class="flex items-center justify-between mb-2">
+                   
+                         <div class="flex items-center justify-between mb-2">
                             <label for="item-status" class="block text-sm font-medium text-gray-700">狀態 (必填)</label>
                         </div>
                          <select id="item-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                             <option value="planning">規劃中</option>
                             <option value="active">進行中</option>
                             <option value="completed">已完成</option>
-                             <option value="overdue">逾期</option>
+           
+                                 <option value="overdue">逾期</option>
                         </select>
                     </div>
                     <div>
-                        <label for="item-priority" class="block text-sm font-medium text-gray-700 mb-2">優先級 (必填)</label>
+                 
+                       <label for="item-priority" class="block text-sm font-medium text-gray-700 mb-2">優先級 (必填)</label>
                         <select id="item-priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                             <option value="low">低</option>
-                            <option value="medium">中</option>
+                       
+                             <option value="medium">中</option>
                             <option value="high">高</option>
                         </select>
                     </div>
                     <div>
+ 
                         <label for="item-start-date" class="block text-sm font-medium text-gray-700 mb-2">開始日期 (必填)</label>
                         <input type="date" id="item-start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
-                </div>
+               
+                 </div>
                 <div class="grid md:grid-cols-3 gap-6">
                     <div>
                         <label for="item-deadline" class="block text-sm font-medium text-gray-700 mb-2">截止日期 (非必填)</label>
@@ -130,19 +152,23 @@
                 </div>
                 <div class="pt-2">
                     <label for="item-progress" class="block text-sm font-medium text-gray-700 mb-2">進度 (%)</label>
-                    <div class="flex items-center space-x-4">
+               
+                     <div class="flex items-center space-x-4">
                         <input type="range" id="item-progress" min="0" max="100" step="10" value="0" class="flex-grow">
                         <span id="progress-value" class="font-semibold text-gray-700 w-12 text-center">0%</span>
                         <div class="flex space-x-2">
-                            <button type="button" id="decrease-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">-10</button>
+      
+                               <button type="button" id="decrease-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">-10</button>
                             <button type="button" id="increase-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">+10</button>
                         </div>
-                    </div>
+          
+                   </div>
                 </div>
                 <div class="pt-2">
                     <label for="item-comments" class="block text-sm font-medium text-gray-700">留言板 (求救訊息)</label>
                     <textarea id="item-comments" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="專案進度說明(停滯原因...等)"></textarea>
-                </div>
+  
+               </div>
                 <div class="flex justify-end space-x-4 pt-4">
                     <button type="button" id="cancel-edit-btn" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors hidden">取消編輯</button>
                     <button type="submit" id="save-item-btn" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-2 rounded-lg font-medium transition-all shadow-md hover:shadow-lg hover:scale-105">
@@ -153,7 +179,8 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-2xl p-6 border border-slate-200">
-             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-4">我的項目列表</h2>
+   
+          <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-4">我的項目列表</h2>
              <div class="flex flex-col md:flex-row gap-4 mb-4">
                  <div>
                     <label for="filter-group" class="block text-sm font-medium text-gray-700 mb-1">所屬小組</label>
@@ -162,16 +189,19 @@
                     </select>
                 </div>
                  <div>
-                    <label for="filter-assignee" class="block text-sm font-medium text-gray-700 mb-1">負責人</label>
+                  
+                   <label for="filter-assignee" class="block text-sm font-medium text-gray-700 mb-1">負責人</label>
                     <select id="filter-assignee" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
                     </select>
                  </div>
+   
                  <div>
                     <label for="filter-status" class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
                     <select id="filter-status" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
-                    </select>
+        
+                     </select>
                 </div>
              </div>
              <div class="overflow-x-auto">
@@ -180,13 +210,16 @@
                          <tr>
                              <th scope="col" class="px-6 py-3">項目名稱</th>
                              <th scope="col" class="px-6 py-3">所屬小組</th>
-                             <th scope="col" class="px-6 py-3">主要負責人</th>
+          
+                           <th scope="col" class="px-6 py-3">主要負責人</th>
                              <th scope="col" class="px-6 py-3">協同人員</th>
                              <th scope="col" class="px-6 py-3">狀態</th>
-                             <th scope="col" class="px-6 py-3 text-right">操作</th>
+              
+                               <th scope="col" class="px-6 py-3 text-right">操作</th>
                          </tr>
                      </thead>
                      <tbody id="items-table-body">
+             
                      </tbody>
                  </table>
              </div>
@@ -201,6 +234,7 @@
             <h3 class="text-lg font-semibold mb-4">儲存檢查點範本</h3>
             <p class="text-gray-600 mb-4">請為這個常用的檢查點清單命名：</p>
             <input type="text" id="template-name-input" placeholder="例如：新人訓練任務" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+         
              <div class="flex justify-end space-x-3 mt-6">
                  <button id="template-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button>
                  <button id="template-modal-ok" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">確認儲存</button>
@@ -211,9 +245,10 @@
 
     <script>
         // --- Configuration ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
+  
+       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let activities = [];
-        let staffData = []; 
+        let staffData = [];
         let loggedInUser = { name: '', id: '' };
         
         const statusData = { 'planning': '規劃中', 'active': '進行中', 'completed': '已完成', 'overdue': '逾期' };
@@ -256,7 +291,8 @@
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'cors',
-                    body: JSON.stringify({ action, ...payload }),
+                 
+                   body: JSON.stringify({ action, ...payload }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
                 const result = await response.json();
@@ -280,6 +316,7 @@
 
         async function loadItems() {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在載入您的專屬資料...</td></tr>`;
+            // IMPORTANT: Get items for the logged-in user
             const items = await handleApiRequest('getAllItems', { userId: loggedInUser.id });
             if (items) {
                 activities = items;
@@ -329,12 +366,10 @@
             filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
             filterStatusSelect.innerHTML = '<option value="all">全部</option>';
             Object.entries(statusData).forEach(([key, value]) => filterStatusSelect.add(new Option(value, key)));
-            
             const allStaffOption1 = new Option('全體同仁', '全體同仁');
             const allStaffOption2 = new Option('全體同仁', '全體同仁');
             assigneesSelect.add(allStaffOption1);
             collaboratorsSelect.add(allStaffOption2);
-            
             staffData.forEach(staff => {
                 assigneesSelect.add(new Option(staff.name, staff.name));
                 collaboratorsSelect.add(new Option(staff.name, staff.name));
@@ -358,26 +393,30 @@
                 const assigneesText = (item.assignees || []).join(', ') || 'N/A';
                 const collaboratorsText = (item.collaborators || []).join(', ') || '無';
                 const typeDisplay = getTypeDisplay(item.type);
+          
                 const dateRange = formatDateRange(item.startDate, item.deadline);
                 const dateRangeHtml = dateRange ? `<div class="text-xs text-gray-500 mt-1">${dateRange}</div>` : '';
 
                 return `
                 <tr class="bg-white border-b hover:bg-gray-50">
                     <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${typeDisplay}${dateRangeHtml}</td>
-                    <td class="px-6 py-4">${groupName}</td>
+  
+                   <td class="px-6 py-4">${groupName}</td>
                     <td class="px-6 py-4">${assigneesText}</td>
                     <td class="px-6 py-4">${collaboratorsText}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-800' : item.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${statusData[item.status] || item.status}</span></td>
                     <td class="px-6 py-4 text-right">
                         <button onclick="editItem('${item.id}')" class="font-medium text-blue-600 hover:underline mr-4"><i class="fas fa-edit"></i> 編輯</button>
                         <button onclick="deleteItem('${item.id}')" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
-                    </td>
+ 
+                   </td>
                 </tr>
             `}).join('');
             if (filtered.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">沒有符合條件的項目</td></tr>`;
             }
-        }
+   
+         }
         
         function resetForm() {
             form.reset();
@@ -385,7 +424,8 @@
             commentsInput.value = '';
             document.getElementById('item-id').value = '';
             formTitle.textContent = '新增項目';
-            saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
+           
+             saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
             cancelBtn.classList.add('hidden');
             otherGroupWrapper.classList.add('hidden');
             otherGroupNameInput.value = '';
@@ -442,7 +482,6 @@
 
             confirmModal.classList.remove('hidden');
             confirmModal.classList.add('flex');
-            
             confirmOkBtn.onclick = async () => {
                 confirmOkBtn.disabled = true;
                 confirmOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
@@ -542,7 +581,6 @@
 
             const newOkBtn = okBtn.cloneNode(true);
             okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-            
             newOkBtn.onclick = () => {
                 const templateName = input.value.trim();
                 if (!templateName) {
@@ -583,7 +621,6 @@
             const modalTitle = confirmModal.querySelector('h3');
             const modalMessage = confirmModal.querySelector('p');
             const originalOkText = '確認刪除';
-            
             modalTitle.textContent = '確認刪除範本';
             modalMessage.textContent = `您確定要刪除範本 "${templateName}" 嗎？此操作無法復原。`;
             confirmModal.classList.remove('hidden');
@@ -592,7 +629,6 @@
             const newOkBtn = confirmOkBtn.cloneNode(true);
             newOkBtn.textContent = originalOkText;
             confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
-            
             newOkBtn.onclick = () => {
                 const templates = getTemplates();
                 delete templates[templateName];
@@ -604,7 +640,6 @@
                 modalTitle.textContent = '確認刪除';
                 modalMessage.textContent = '您確定要刪除這個項目嗎？此操作無法復原。';
             };
-            
             confirmCancelBtn.onclick = () => {
                 confirmModal.classList.add('hidden');
                 confirmModal.classList.remove('flex');
@@ -648,14 +683,14 @@
             if (selectedAssignees.length === 0) {
                 showToast('「主要負責人」為必填欄位！', 'error');
                 return;
-            }
+             }
 
             let groupValue = groupSelect.value;
             if (groupValue === 'other') {
                 groupValue = otherGroupNameInput.value.trim();
                 if (!groupValue) {
                     showToast('請輸入新的小組名稱！', 'error');
-                    return;
+                     return;
                 }
             }
 
@@ -667,7 +702,7 @@
                     checklistData.push({
                         name: input.value.trim(),
                         completed: checkbox.checked
-                    });
+                   });
                 }
             });
             
@@ -685,22 +720,20 @@
                 deadline: document.getElementById('item-deadline').value,
                 progress: parseInt(progressInput.value),
                 helpMessage: commentsInput.value,
-                checklist: JSON.stringify(checklistData),
+                checklist: checklistData, // Keep it as an array
                 createdBy: loggedInUser.id
             };
+            // Note: The backend will stringify the checklist.
             
+            const originalButtonHTML = id ? '<i class="fas fa-save mr-2"></i>儲存變更' : '<i class="fas fa-plus mr-2"></i>新增項目';
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
             
+            saveBtn.innerHTML = originalButtonHTML; // Restore button text immediately
+
             if (result) {
                 showToast(result.message, 'success');
                 resetForm();
                 await loadItems();
-            } else {
-               if(id) {
-                   saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
-               } else {
-                   saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
-               }
             }
         });
         
@@ -728,13 +761,15 @@
             const userName = urlParams.get('user');
             const userId = urlParams.get('id');
 
+            // --- SECURITY CHECK ---
             if (!userName || !userId) {
-                console.warn("User info not in URL. Bypassing auth for development.");
-                // window.location.href = 'project.html'; 
+                alert("無效的存取，將返回儀表板。");
+                window.location.href = 'project.html'; 
+                return; // Stop further execution
             }
 
             loggedInUser = { name: userName, id: userId };
-            document.getElementById('user-greeting').textContent = `${userName || '使用者'}, 您好！`;
+            document.getElementById('user-greeting').textContent = `${userName}, 您好！`;
 
             await fetchStaffData();
             populateDropdowns();
