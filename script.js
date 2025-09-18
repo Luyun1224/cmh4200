@@ -200,7 +200,7 @@ function filterItemsByStatus(statusFilter, event) {
     renderDashboard();
 }
 
-// --- START: All Feature Functions Restored ---
+// --- Feature Functions (Modals, etc.) ---
 function viewMemberHistory(name, event) {
     event.stopPropagation();
     if (name === '盧英云') {
@@ -384,139 +384,25 @@ function generateDashboardReportHTML() {
 }
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
-    const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
-    let messageIndex = 0;
-    aiContent.innerHTML = `<div class="flex flex-col items-center justify-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p id="ai-loading-message" class="mt-4 text-gray-600 font-medium">${loadingMessages[0]}</p></div>`;
-    const loadingMessageElement = document.getElementById('ai-loading-message');
-    const intervalId = setInterval(() => {
-        messageIndex = (messageIndex + 1) % loadingMessages.length;
-        if(loadingMessageElement) loadingMessageElement.textContent = loadingMessages[messageIndex];
-    }, 1500);
-    let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type));
-    let analysisTarget = "整個團隊";
-    if (memberName !== 'all') {
-        analysisTarget = memberName;
-        itemsToAnalyze = itemsToAnalyze.filter(item => (item.assignees || []).includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
+    aiContent.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-700 rounded-lg"><p class="font-bold">AI 功能展示</p><p>此處將顯示對 ${memberName} 的分析與建議。</p></div>`;
+}
+
+// --- Setup Functions ---
+function setupUserInfo() {
+    const welcomeMessageEl = document.getElementById('welcome-message');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const adminLink = document.getElementById('admin-link');
+    const userDataString = sessionStorage.getItem('dashboardUser');
+    
+    if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        welcomeMessageEl.textContent = `${userData.name} 您好`;
+        adminLink.href = `project-admin.html?user=${encodeURIComponent(userData.name)}&id=${encodeURIComponent(userData.employeeId)}`;
+        logoutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('dashboardUser');
+            window.location.href = 'index.html'; 
+        });
     }
-    // This function for AI suggestions is kept for integrity, though not directly part of the requested changes.
-    // The implementation details are omitted here for brevity as they are unchanged.
-    // In a real file, the full function would be here.
-    aiContent.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-700 rounded-lg"><p class="font-bold">AI 功能展示</p><p>此處將顯示對 ${analysisTarget} 的分析與建議。</p></div>`;
-    clearInterval(intervalId);
-}
-function renderAiReport(data) { /* Unchanged */ }
-
-// --- Setup and Authentication Functions ---
-function setupLoginModal() {
-    const loginBtn = document.getElementById('loginBtn');
-    const loginModal = document.getElementById('loginModal');
-    const closeLoginModalBtn = document.getElementById('closeLoginModalBtn');
-    const loginForm = document.getElementById('loginForm');
-    const loginMessage = document.getElementById('login-message');
-    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-
-    loginBtn.addEventListener('click', () => loginModal.classList.remove('hidden'));
-    closeLoginModalBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
-    loginModal.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.classList.add('hidden'); });
-
-    loginForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const username = loginForm.elements.username.value;
-        const password = loginForm.elements.password.value;
-        loginMessage.textContent = '';
-        loginSubmitBtn.disabled = true;
-        loginSubmitBtn.querySelector('.btn-text').textContent = '登入中...';
-        loginSubmitBtn.querySelector('.btn-spinner').classList.remove('hidden');
-
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST', mode: 'cors',
-                body: JSON.stringify({ action: 'login', username, password }),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            });
-
-            if (!response.ok) throw new Error('網路回應錯誤');
-            const result = await response.json();
-
-            if (result.status === 'success' && result.data) {
-                sessionStorage.setItem('dashboardUser', JSON.stringify(result.data));
-                // Redirect to admin page with user info in URL params
-                window.location.href = `project-admin.html?user=${encodeURIComponent(result.data.name)}&id=${encodeURIComponent(result.data.employeeId)}`;
-            } else {
-                throw new Error(result.message || '登入失敗');
-            }
-        } catch (error) {
-            loginMessage.textContent = error.message;
-        } finally {
-            loginSubmitBtn.disabled = false;
-            loginSubmitBtn.querySelector('.btn-text').textContent = '登入';
-            loginSubmitBtn.querySelector('.btn-spinner').classList.add('hidden');
-        }
-    });
-    
-    // Password visibility toggle
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    togglePassword.addEventListener('click', function () {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.querySelector('i').classList.toggle('fa-eye');
-        this.querySelector('i').classList.toggle('fa-eye-slash');
-    });
-}
-function setupChangePasswordModal() {
-    const modal = document.getElementById('changePasswordModal');
-    if(!modal) return;
-    const openBtn = document.getElementById('openChangePasswordModalBtn');
-    const closeBtn = document.getElementById('closeChangePasswordModalBtn');
-    const loginModal = document.getElementById('loginModal');
-    
-    openBtn.addEventListener('click', () => {
-        modal.classList.remove('hidden');
-        loginModal.classList.add('hidden');
-    });
-    closeBtn.addEventListener('click', () => {
-        modal.classList.add('hidden');
-        loginModal.classList.remove('hidden');
-    });
-    
-    // The rest of the password change logic remains the same
-    const form = document.getElementById('changePasswordForm');
-    const messageDiv = document.getElementById('change-password-message');
-    const submitBtn = document.getElementById('changePasswordSubmitBtn');
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const employeeId = form.elements.employeeId.value;
-        const oldPassword = form.elements.oldPassword.value;
-        const newPassword = form.elements.newPassword.value;
-        messageDiv.textContent = '';
-        submitBtn.disabled = true;
-        submitBtn.querySelector('.btn-text').textContent = '處理中...';
-        submitBtn.querySelector('.btn-spinner').classList.remove('hidden');
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST', mode: 'cors',
-                body: JSON.stringify({ action: 'updatePassword', employeeId, oldPassword, newPassword }),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            });
-            if (!response.ok) throw new Error('網路回應錯誤');
-            const result = await response.json();
-            if (result.status === 'success') {
-                messageDiv.textContent = '密碼更新成功！';
-                messageDiv.className = 'text-center mb-4 font-medium text-green-500';
-                form.reset();
-            } else {
-                throw new Error(result.message || '更新失敗');
-            }
-        } catch (error) {
-            messageDiv.textContent = error.message;
-            messageDiv.className = 'text-center mb-4 font-medium text-red-500';
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.querySelector('.btn-text').textContent = '確認更換';
-            submitBtn.querySelector('.btn-spinner').classList.add('hidden');
-        }
-    });
 }
 function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
     const modal = document.getElementById(modalId);
@@ -572,8 +458,11 @@ function setupScrollToTop(){
     const btn = document.getElementById('scrollToTopBtn');
     if(!btn) return;
     window.onscroll = () => {
-        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) btn.classList.remove('hidden');
-        else btn.classList.add('hidden');
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            btn.classList.remove('hidden');
+        } else {
+            btn.classList.add('hidden');
+        }
     };
     btn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
 }
@@ -590,35 +479,12 @@ function setupChatBot() {
     });
     closeBtn.addEventListener('click', () => container.classList.add('hidden'));
 }
-function setupUserInfo() {
-    const welcomeMessageEl = document.getElementById('welcome-message');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loginBtn = document.getElementById('loginBtn');
-    
-    const userDataString = sessionStorage.getItem('dashboardUser');
-    if (userDataString) {
-        const userData = JSON.parse(userDataString);
-        welcomeMessageEl.textContent = `${userData.name} 您好`;
-        welcomeMessageEl.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-        loginBtn.classList.add('hidden');
-    } else {
-        welcomeMessageEl.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
-        loginBtn.classList.remove('hidden');
-    }
-
-    logoutBtn.addEventListener('click', () => {
-        sessionStorage.removeItem('dashboardUser');
-        // Redirect to index.html or refresh the current page to update UI
-        window.location.href = 'index.html'; 
-    });
-}
 
 // --- Initial Load ---
 async function initializeDashboard() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const errorDisplay = document.getElementById('errorDisplay');
+    // Keep loading overlay visible while we fetch data
     loadingOverlay.classList.remove('hidden');
     try {
         const response = await fetch(SCRIPT_URL, {
@@ -645,19 +511,11 @@ async function initializeDashboard() {
             return { ...item, progress, status: finalStatus, lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0, helpMessage: item.helpMessage || '', checklist: Array.isArray(item.checklist) ? item.checklist : [] };
         });
         
-        const urlParams = new URLSearchParams(window.location.search);
-        const paramStatus = urlParams.get('status');
-        if (paramStatus) currentStatusFilter = paramStatus;
-        
         renderUnitTabs();
         renderYearFilter();
         renderMonthFilter();
         renderDashboard();
         
-        if (paramStatus) {
-            const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
-            if (btn) filterItemsByStatus(paramStatus, { target: btn });
-        }
         document.getElementById('openChatBot').classList.remove('hidden');
     } catch (error) {
         console.error("Initialization failed:", error);
@@ -669,14 +527,30 @@ async function initializeDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    // =======================================================
+    // NEW & CRITICAL: SECURITY CHECK
+    // This protects the page and ensures the correct workflow.
+    // =======================================================
+    if (!sessionStorage.getItem('dashboardUser')) {
+        // If user data is NOT in sessionStorage, they are not logged in.
+        // Redirect them to the login page.
+        window.location.href = 'index.html';
+        return; // Stop any further script execution on this page.
+    }
+
+    // --- The following code will ONLY run if the user is logged in ---
+    
+    // 1. Setup user info (Welcome message, Admin link, Logout button)
     setupUserInfo();
-    setupLoginModal();
-    setupChangePasswordModal();
+
+    // 2. Setup all modals and other interactive features
     setupAiModal();
     setupActivityModal();
     setupWeeklySummaryModal();
     setupScrollToTop();
     setupItemListModal();
     setupChatBot();
+    
+    // 3. Load all the dashboard data from the backend
     await initializeDashboard();
 });
