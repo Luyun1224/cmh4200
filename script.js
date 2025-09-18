@@ -3,11 +3,8 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
 const currentDate = new Date();
-
 let staffData = [];
-
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
-
 // --- State Variables ---
 let currentUnitFilter = 'all';
 let currentGroupFilter = 'all';
@@ -17,7 +14,6 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
-
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
@@ -43,7 +39,6 @@ function renderUnitTabs() {
         return `<button onclick="filterByUnit('${unit}')" id="tab-unit-${unit}" class="unit-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${unit === currentUnitFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${unitName}</button>`;
     }).join('');
 }
-
 function renderGroupTabs(membersToConsider) {
     const tabsContainer = document.getElementById('groupTabs');
     let groups = [...new Set(membersToConsider.map(s => s.group).filter(Boolean))];
@@ -69,21 +64,18 @@ function renderGroupTabs(membersToConsider) {
     buttonsHTML += groups.map(key => `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${key}</button>`).join('');
     tabsContainer.innerHTML = buttonsHTML;
 }
-
 function renderYearFilter() {
     const yearFilterSelect = document.getElementById('yearFilter');
     const years = ['all', ...new Set(allActivities.map(item => item.startDate ? new Date(item.startDate).getFullYear() : null).filter(Boolean))].sort();
     yearFilterSelect.innerHTML = years.map(year => `<option value="${year}">${year === 'all' ? '全部年份' : `${year}年`}</option>`).join('');
     yearFilterSelect.value = currentYearFilter;
 }
-
 function renderMonthFilter() {
     const monthFilterSelect = document.getElementById('monthFilter');
     const months = ['all', 1,2,3,4,5,6,7,8,9,10,11,12];
     monthFilterSelect.innerHTML = months.map(m => `<option value="${m}">${m === 'all' ? '全部月份' : `${m}月`}</option>`).join('');
     monthFilterSelect.value = currentMonthFilter;
 }
-
 function renderItems(itemsToRender) {
     const itemsList = document.getElementById('itemsList');
     let filteredItems = itemsToRender;
@@ -101,10 +93,9 @@ function renderItems(itemsToRender) {
         const progressChange = item.progress - (item.lastWeekProgress || 0);
         const progressChangeHTML = progressChange > 0 ? `<span class="bg-green-100 text-green-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▲ ${progressChange}%</span>` : progressChange < 0 ? `<span class="bg-red-100 text-red-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▼ ${Math.abs(progressChange)}%</span>` : `<span class="text-gray-400 text-xs font-medium ml-2">—</span>`;
         const checklistHTML = totalSteps > 0 ? checklist.map(cp => `<li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}"><span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span><span>${cp.name}</span></li>`).join('') : '<li>無定義的檢查點</li>';
-        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}"><div class="flex-grow"><div class="flex justify-between items-start mb-3"><div class="flex-1"><h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}<p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}</div><div class="flex items-center space-x-2 ml-2"><span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div></div><div class="mt-auto border-t border-gray-100 pt-3"><div class="mb-3"><div class="flex justify-between items-center text-sm mb-1"><span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>${progressChangeHTML}</div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div><div class="relative group"><p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p><div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"><h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4><ul class="space-y-1 mt-2">${checklistHTML}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div></div><div class="flex justify-between items-center text-xs text-gray-500"><span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '無'}</span>${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}</div></div>`;
+        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}"><div class="flex-grow"><div class="flex justify-between items-start mb-3"><div class="flex-1"><h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}<p class="text-sm text-gray-600">主要負責: ${(item.assignees || []).join(', ')}</p>${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}</div><div class="flex items-center space-x-2 ml-2"><span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div></div><div class="mt-auto border-t border-gray-100 pt-3"><div class="mb-3"><div class="flex justify-between items-center text-sm mb-1"><span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>${progressChangeHTML}</div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div><div class="relative group"><p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p><div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"><h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4><ul class="space-y-1 mt-2">${checklistHTML}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div></div><div class="flex justify-between items-center text-xs text-gray-500"><span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '無'}</span>${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}</div></div>`;
     }).join('');
 }
-
 function renderTeamMembers(members, allItems) {
     const teamMembersDiv = document.getElementById('teamMembers');
     if (!members || members.length === 0) {
@@ -115,7 +106,7 @@ function renderTeamMembers(members, allItems) {
     const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
     teamMembersDiv.innerHTML = members.map(memberInfo => {
         const name = memberInfo.name;
-        const memberItems = allItems.filter(t => t.assignees.includes(name) || (t.collaborators && t.collaborators.includes(name)));
+        const memberItems = allItems.filter(t => (t.assignees || []).includes(name) || (t.collaborators && t.collaborators.includes(name)));
         const overdueCount = memberItems.filter(t => t.status === 'overdue').length;
         const projectCount = memberItems.filter(item => item.type === 'project').length;
         const taskCount = memberItems.filter(item => item.type === 'task').length;
@@ -127,7 +118,6 @@ function renderTeamMembers(members, allItems) {
         return `<div onclick="filterByMember('${name}')" class="group relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}"><div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-48 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30"><img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;"><p class="font-bold text-center text-gray-900 text-lg">${name}</p><a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm mt-3">檢視個人歷程</a><div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div></div>${confettiHTML}<div class="flex items-center min-w-0"><div class="relative flex-shrink-0">${birthdayHatHTML}${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}</div><div class="ml-3 min-w-0"><p class="font-medium text-gray-900 truncate">${name}</p><div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1"><span>專案: ${projectCount}</span><span>任務: ${taskCount}</span></div></div></div><div class="text-right flex-shrink-0 ml-2">${overdueCount > 0 ? `<span class="text-xs font-bold text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center">${overdueCount}</span>` : ''}</div></div>`;
     }).join('');
 }
-
 function updateStats(itemsToCount) {
     const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
     const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
@@ -137,7 +127,6 @@ function updateStats(itemsToCount) {
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
     document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
 }
-
 function renderDashboard() {
     let itemsForYear = allActivities;
     if (currentYearFilter !== 'all') {
@@ -154,14 +143,14 @@ function renderDashboard() {
     renderGroupTabs(membersAfterUnitFilter);
     const membersInGroup = currentGroupFilter === 'all' ? membersAfterUnitFilter : membersAfterUnitFilter.filter(s => s.group === currentGroupFilter);
     const finalVisibleMemberNames = membersInGroup.map(m => m.name);
-    let itemsToConsider = itemsForMonth.filter(item => item.assignees.some(assignee => finalVisibleMemberNames.includes(assignee)) || (item.collaborators && item.collaborators.some(collaborator => finalVisibleMemberNames.includes(collaborator))));
+    let itemsToConsider = itemsForMonth.filter(item => (item.assignees || []).some(assignee => finalVisibleMemberNames.includes(assignee)) || (item.collaborators && item.collaborators.some(collaborator => finalVisibleMemberNames.includes(collaborator))));
     if (currentSearchTerm) {
         const lowerCaseTerm = currentSearchTerm.toLowerCase();
         itemsToConsider = itemsToConsider.filter(item => item.name.toLowerCase().includes(lowerCaseTerm) || (item.description && item.description.toLowerCase().includes(lowerCaseTerm)));
     }
     let itemsToDisplay = itemsToConsider;
     if (currentMemberFilter !== 'all') {
-        itemsToDisplay = itemsToConsider.filter(item => item.assignees.includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
+        itemsToDisplay = itemsToConsider.filter(item => (item.assignees || []).includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
     }
     itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
     updateStats(itemsToConsider);
@@ -181,11 +170,9 @@ function filterByUnit(unit) {
     });
     renderDashboard();
 }
-
 function filterBySearch(term) { currentSearchTerm = term; renderDashboard(); }
 function filterByYear(year) { currentYearFilter = year; renderDashboard(); }
 function filterByMonth(month) { currentMonthFilter = month; renderDashboard(); }
-
 function filterByGroup(groupKey) {
     currentGroupFilter = groupKey;
     currentMemberFilter = 'all';
@@ -194,12 +181,10 @@ function filterByGroup(groupKey) {
     });
     renderDashboard();
 }
-
 function filterByMember(memberName) {
     currentMemberFilter = (currentMemberFilter === memberName) ? 'all' : memberName;
     renderDashboard();
 }
-
 function filterItemsByStatus(statusFilter, event) {
     currentStatusFilter = statusFilter;
     const colorMap = {'all': ['bg-blue-100', 'text-blue-700'], 'planning': ['bg-yellow-100', 'text-yellow-700'], 'active': ['bg-purple-100', 'text-purple-700'], 'completed': ['bg-green-100', 'text-green-700'], 'overdue': ['bg-red-100', 'text-red-700']};
@@ -213,7 +198,6 @@ function filterItemsByStatus(statusFilter, event) {
 }
 
 // --- START: All Feature Functions Restored ---
-
 function viewMemberHistory(name, event) {
     event.stopPropagation();
     if (name === '盧英云') {
@@ -222,7 +206,6 @@ function viewMemberHistory(name, event) {
     }
     alert(`檢視 ${name} 的個人歷程 (功能開發中)`);
 }
-
 function showItemsInModal(filterType) {
     const modal = document.getElementById('itemListModal');
     const titleEl = document.getElementById('itemListModalTitle');
@@ -249,7 +232,6 @@ function showItemsInModal(filterType) {
             modalTitle = '已完成項目列表';
             break;
     }
-
     titleEl.innerHTML = `<i class="fas fa-list-check mr-3"></i> ${modalTitle} (${itemsToShow.length})`;
     if (itemsToShow.length === 0) {
         contentEl.innerHTML = '<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>';
@@ -257,7 +239,7 @@ function showItemsInModal(filterType) {
         contentEl.innerHTML = itemsToShow.map(item => `
             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100">
                 <p class="font-semibold text-gray-800">${item.name}</p>
-                <p class="text-sm text-gray-600">負責人: ${item.assignees.join(', ')}</p>
+                <p class="text-sm text-gray-600">負責人: ${(item.assignees || []).join(', ')}</p>
                 <div class="flex justify-between items-center text-xs mt-1">
                     <span class="font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span>
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
@@ -267,14 +249,12 @@ function showItemsInModal(filterType) {
     }
     modal.classList.remove('hidden');
 }
-
 function openActivityModal(resetDate = true) {
     if (resetDate) calendarDate = new Date();
     const modal = document.getElementById('activityModal');
     const content = document.getElementById('activity-content');
     const itemsForDisplay = allActivities.filter(item => item.type && (item.type.toLowerCase() === 'activity' || item.type.toLowerCase() === 'meeting'));
     const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay);
-
     if (itemsForDisplay.length === 0) {
         content.innerHTML = calendarHTML + `<p class="text-center text-gray-500 mt-4">目前沒有任何活動。</p>`;
     } else {
@@ -299,7 +279,7 @@ function openActivityModal(resetDate = true) {
                     <div class="flex-grow pt-1">
                         <p class="font-semibold text-gray-800">${item.name}</p>
                         <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}</p>
-                        <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
+                        <p class="text-sm text-gray-500">負責人: ${(item.assignees || []).join(', ')}</p>
                     </div>
                 </li>`;
             }).join('') + '</ul>';
@@ -308,7 +288,6 @@ function openActivityModal(resetDate = true) {
     }
     modal.classList.remove('hidden');
 }
-
 function generateCalendarHTML(year, month, activities){
     const activitiesByDay = {};
     activities.forEach(item => {
@@ -343,7 +322,6 @@ function navigateCalendar(offset){
     calendarDate.setMonth(calendarDate.getMonth() + offset);
     openActivityModal(false);
 };
-
 function generateWeeklySummary() {
     const content = document.getElementById('weekly-summary-content');
     content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成本週回顧...</div>`;
@@ -368,7 +346,7 @@ function generateWeeklySummary() {
         if (items.length > 0) {
             sectionHTML += '<ul class="space-y-2 pl-5">' + items.map(item =>
                 `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}">
-                    <strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${item.assignees.join(', ')}</span>
+                    <strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${(item.assignees || []).join(', ')}</span>
                     ${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}
                     ${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}
                     ${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}
@@ -388,21 +366,19 @@ function generateWeeklySummary() {
     summaryHTML += renderSummarySection('需要協助項目', 'fa-hands-helping', 'text-red-600', helpNeeded, '沒有項目發出求救信號。');
     content.innerHTML = summaryHTML;
 }
-
 function generateDashboardReportHTML() {
     const today = new Date();
     const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
     const overdueProjects = allActivities.filter(i => i.status === 'overdue');
     let reportHTML = `<div class="p-2 space-y-4 text-gray-800"><p>您好！這是截至 <strong>${todayString}</strong> 的重點彙報。</p>`;
     if (overdueProjects.length > 0) {
-        reportHTML += `<div class="p-3 bg-red-50 rounded-lg border border-red-200"><h3 class="font-bold text-red-800">⚠️ 風險提示</h3><p class="text-sm text-red-700 mt-1">「${overdueProjects[0].name}」目前處於逾期狀態，需負責人 <strong>${overdueProjects[0].assignees.join(', ')}</strong> 重點關注。</p></div>`;
+        reportHTML += `<div class="p-3 bg-red-50 rounded-lg border border-red-200"><h3 class="font-bold text-red-800">⚠️ 風險提示</h3><p class="text-sm text-red-700 mt-1">「${overdueProjects[0].name}」目前處於逾期狀態，需負責人 <strong>${(overdueProjects[0].assignees || []).join(', ')}</strong> 重點關注。</p></div>`;
     } else {
         reportHTML += `<div class="p-3 bg-green-50 rounded-lg border border-green-200"><h3 class="font-bold text-green-800">✅ 目前所有項目皆在掌控中！</h3></div>`;
     }
     reportHTML += `<p class="text-xs text-gray-500 text-center pt-2">希望這份彙報對您有幫助！</p></div>`;
     return reportHTML;
 }
-
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
     const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
@@ -417,70 +393,15 @@ async function getAiSuggestions(memberName = 'all') {
     let analysisTarget = "整個團隊";
     if (memberName !== 'all') {
         analysisTarget = memberName;
-        itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
+        itemsToAnalyze = itemsToAnalyze.filter(item => (item.assignees || []).includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
     }
-
-    const sanitizedItems = itemsToAnalyze.map(({ name, group, description, status, progress, assignees, deadline, helpMessage }) =>
-        ({ name, group, description, status, progress, assignees, deadline, helpMessage }));
-
-    const prompt = `你是一位專業的AI決策經理人，名叫「賈維斯」，專責協助分析「教學部」的業務狀況並提供決策建議。
-
-【分析對象】
-${analysisTarget}
-
-【輸入資料】
-以下是從專案儀表板上擷取的 JSON 數據，涵蓋教學部七個部門（教學行政組、一般科、臨床技能中心、教師培育中心、實證醫學暨醫療政策中心、視聽中心、圖書館）的相關專案與任務。數據包含工作進度、狀態、負責人、挑戰與風險標註等。
-
-【任務要求】
-1. 如果分析對象是「整個團隊」，請先逐一部門分析，然後再統整。如果分析對象是個人，請直接分析個人狀況。
-2. 分析的角度需包含：業務概況摘要、延遲/落後部分、風險與瓶頸。
-3. 統整為一個「整體視角」（若是團隊分析）。
-4. 最後，請以「AI 經理人」身份，提出具體的決策建議（短期、中期、長期）。
-
-【輸出格式】
-請嚴格遵循以下 JSON 格式輸出，不要有任何多餘的文字或 markdown 符號:
-{
-  "greeting": "string (一句給 ${analysisTarget} 的溫暖問候語)",
-  "analysis_sections": [
-    {
-      "title": "string (例如：教學行政組 業務分析 或 ${analysisTarget} 個人狀況分析)",
-      "summary": "string (業務概況摘要)",
-      "delays": ["string (條列式說明延遲/落後部分，若無則為空陣列)"],
-      "risks": ["string (條列式說明風險與瓶頸，若無則為空陣列)"]
-    }
-  ],
-  "holistic_summary": {
-    "title": "整體教學部摘要 (若為個人分析則省略此項)",
-    "common_issues": ["string (部門間的共同問題)"],
-    "priorities": ["string (哪些部門或任務需優先關注)"],
-    "benchmarks": ["string (哪些部門或個人表現最佳)"]
-  },
-  "recommendations": {
-    "title": "賈維斯的決策建議",
-    "short_term": ["string (立即可行的改善措施)"],
-    "medium_term": ["string (需一季到半年調整的策略)"],
-    "long_term": ["string (一年以上的制度性規劃)"]
-  }
-}`;
+    const sanitizedItems = itemsToAnalyze.map(({ name, group, description, status, progress, assignees, deadline, helpMessage }) => ({ name, group, description, status, progress, assignees, deadline, helpMessage }));
+    const prompt = `你是一位專業的AI決策經理人，名叫「賈維斯」，專責協助分析「教學部」的業務狀況並提供決策建議。【分析對象】\n${analysisTarget}\n\n【輸入資料】\n以下是從專案儀表板上擷取的 JSON 數據，涵蓋教學部七個部門（教學行政組、一般科、臨床技能中心、教師培育中心、實證醫學暨醫療政策中心、視聽中心、圖書館）的相關專案與任務。數據包含工作進度、狀態、負責人、挑戰與風險標註等。\n\n【任務要求】\n1. 如果分析對象是「整個團隊」，請先逐一部門分析，然後再統整。如果分析對象是個人，請直接分析個人狀況。\n2. 分析的角度需包含：業務概況摘要、延遲/落後部分、風險與瓶頸。\n3. 統整為一個「整體視角」（若是團隊分析）。\n4. 最後，請以「AI 經理人」身份，提出具體的決策建議（短期、中期、長期）。\n\n【輸出格式】\n請嚴格遵循以下 JSON 格式輸出，不要有任何多餘的文字或 markdown 符號:\n{\n  "greeting": "string (一句給 ${analysisTarget} 的溫暖問候語)",\n  "analysis_sections": [\n    {\n      "title": "string (例如：教學行政組 業務分析 或 ${analysisTarget} 個人狀況分析)",\n      "summary": "string (業務概況摘要)",\n      "delays": ["string (條列式說明延遲/落後部分，若無則為空陣列)"],\n      "risks": ["string (條列式說明風險與瓶頸，若無則為空陣列)"]\n    }\n  ],\n  "holistic_summary": {\n    "title": "整體教學部摘要 (若為個人分析則省略此項)",\n    "common_issues": ["string (部門間的共同問題)"],\n    "priorities": ["string (哪些部門或任務需優先關注)"],\n    "benchmarks": ["string (哪些部門或個人表現最佳)"]\n  },\n  "recommendations": {\n    "title": "賈維斯的決策建議",\n    "short_term": ["string (立即可行的改善措施)"],\n    "medium_term": ["string (需一季到半年調整的策略)"],\n    "long_term": ["string (一年以上的制度性規劃)"]\n  }\n}`;
     const dataToAnalyze = JSON.stringify(sanitizedItems, null, 2);
-
     const geminiPayload = {
-      "contents": [
-        {
-          "parts": [
-            { "text": prompt },
-            { "text": "\n\n請分析以下 JSON 資料：\n" },
-            { "text": dataToAnalyze }
-          ]
-        }
-      ],
-      "generationConfig": {
-        "responseMimeType": "application/json",
-        "temperature": 0.4,
-        "maxOutputTokens": 8192
-      }
+      "contents": [ { "parts": [ { "text": prompt }, { "text": "\n\n請分析以下 JSON 資料：\n" }, { "text": dataToAnalyze } ] } ],
+      "generationConfig": { "responseMimeType": "application/json", "temperature": 0.4, "maxOutputTokens": 8192 }
     };
-
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -502,58 +423,16 @@ ${analysisTarget}
         clearInterval(intervalId);
     }
 }
-
 function renderAiReport(data) {
     const renderPoints = (points) => {
-        if (!points || points.length === 0) {
-            return '<p class="text-sm text-gray-500 pl-5">無特別事項。</p>';
-        }
+        if (!points || points.length === 0) { return '<p class="text-sm text-gray-500 pl-5">無特別事項。</p>'; }
         return '<ul class="space-y-2 pl-5 list-disc list-inside">' + points.map(point => `<li class="text-sm text-gray-800">${point}</li>`).join('') + '</ul>';
     };
-
     let holisticHtml = '';
     if (data.holistic_summary && data.holistic_summary.title) {
-        holisticHtml = `
-            <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                <h3 class="font-bold text-indigo-800">📊 ${data.holistic_summary.title}</h3>
-                <div class="mt-2 space-y-2">
-                    <p class="text-sm text-indigo-700"><strong>共同議題:</strong> ${data.holistic_summary.common_issues.join(', ') || '無'}</p>
-                    <p class="text-sm text-indigo-700"><strong>優先關注:</strong> ${data.holistic_summary.priorities.join(', ') || '無'}</p>
-                    <p class="text-sm text-indigo-700"><strong>表現標竿:</strong> ${data.holistic_summary.benchmarks.join(', ') || '無'}</p>
-                </div>
-            </div>
-        `;
+        holisticHtml = `<div class="p-3 bg-indigo-50 rounded-lg border border-indigo-200"><h3 class="font-bold text-indigo-800">📊 ${data.holistic_summary.title}</h3><div class="mt-2 space-y-2"><p class="text-sm text-indigo-700"><strong>共同議題:</strong> ${data.holistic_summary.common_issues.join(', ') || '無'}</p><p class="text-sm text-indigo-700"><strong>優先關注:</strong> ${data.holistic_summary.priorities.join(', ') || '無'}</p><p class="text-sm text-indigo-700"><strong>表現標竿:</strong> ${data.holistic_summary.benchmarks.join(', ') || '無'}</p></div></div>`;
     }
-
-    return `
-        <div class="p-2 space-y-4 text-gray-800">
-            <p>${data.greeting}</p>
-            ${data.analysis_sections.map(section => `
-                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <h3 class="font-bold text-gray-800">📝 ${section.title}</h3>
-                    <p class="text-sm text-gray-600 my-2"><strong>概況:</strong> ${section.summary}</p>
-                    <p class="text-sm text-gray-600 font-semibold"><strong>延遲項目:</strong></p>
-                    ${renderPoints(section.delays)}
-                    <p class="text-sm text-gray-600 font-semibold mt-2"><strong>潛在風險:</strong></p>
-                    ${renderPoints(section.risks)}
-                </div>
-            `).join('')}
-
-            ${holisticHtml}
-
-            <div class="p-3 bg-green-50 rounded-lg border border-green-200">
-                <h3 class="font-bold text-green-800">🚀 ${data.recommendations.title}</h3>
-                <div class="mt-2 space-y-2">
-                    <p class="text-sm text-green-700"><strong>短期建議:</strong></p>
-                    ${renderPoints(data.recommendations.short_term)}
-                    <p class="text-sm text-green-700 mt-2"><strong>中期建議:</strong></p>
-                    ${renderPoints(data.recommendations.medium_term)}
-                    <p class="text-sm text-green-700 mt-2"><strong>長期建議:</strong></p>
-                    ${renderPoints(data.recommendations.long_term)}
-                </div>
-            </div>
-        </div>
-    `;
+    return `<div class="p-2 space-y-4 text-gray-800"><p>${data.greeting}</p>${data.analysis_sections.map(section => `<div class="p-3 bg-gray-50 rounded-lg border border-gray-200"><h3 class="font-bold text-gray-800">📝 ${section.title}</h3><p class="text-sm text-gray-600 my-2"><strong>概況:</strong> ${section.summary}</p><p class="text-sm text-gray-600 font-semibold"><strong>延遲項目:</strong></p>${renderPoints(section.delays)}<p class="text-sm text-gray-600 font-semibold mt-2"><strong>潛在風險:</strong></p>${renderPoints(section.risks)}</div>`).join('')}${holisticHtml}<div class="p-3 bg-green-50 rounded-lg border border-green-200"><h3 class="font-bold text-green-800">🚀 ${data.recommendations.title}</h3><div class="mt-2 space-y-2"><p class="text-sm text-green-700"><strong>短期建議:</strong></p>${renderPoints(data.recommendations.short_term)}<p class="text-sm text-green-700 mt-2"><strong>中期建議:</strong></p>${renderPoints(data.recommendations.medium_term)}<p class="text-sm text-green-700 mt-2"><strong>長期建議:</strong></p>${renderPoints(data.recommendations.long_term)}</div></div></div>`;
 }
 
 // --- Setup Functions ---
@@ -568,7 +447,6 @@ function setupLoginModal() {
     const openChangePasswordModalBtn = document.getElementById('openChangePasswordModalBtn');
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
-
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -577,14 +455,12 @@ function setupLoginModal() {
             this.querySelector('i').classList.toggle('fa-eye-slash');
         });
     }
-
     if(openChangePasswordModalBtn) {
         openChangePasswordModalBtn.addEventListener('click', () => {
             loginModal.classList.add('hidden');
             document.getElementById('changePasswordModal').classList.remove('hidden');
         });
     }
-
     loginBtn.addEventListener('click', () => {
         loginMessage.textContent = '';
         loginForm.reset();
@@ -592,42 +468,30 @@ function setupLoginModal() {
     });
     closeModalBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
     loginModal.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.classList.add('hidden'); });
-
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const username = event.target.username.value;
         const password = event.target.password.value;
         const btnText = loginSubmitBtn.querySelector('.btn-text');
         const btnSpinner = loginSubmitBtn.querySelector('.btn-spinner');
-
         loginMessage.textContent = '';
         btnText.textContent = '登入中...';
         btnSpinner.classList.remove('hidden');
         loginSubmitBtn.disabled = true;
-
         try {
             const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'cors',
+                method: 'POST', mode: 'cors',
                 body: JSON.stringify({ action: 'login', username, password }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
-
             if (!response.ok) throw new Error(`網路回應錯誤: ${response.status} ${response.statusText}`);
             const result = await response.json();
-
             if (result.status === 'success') {
                 const loginData = result.data;
-                // 將登入資訊存到 sessionStorage
                 sessionStorage.setItem('dashboardUser', JSON.stringify(loginData));
-
                 loginMessage.textContent = '登入成功！正在重新載入...';
                 loginMessage.className = 'text-center mb-4 font-medium text-green-500';
-
-                setTimeout(() => {
-                    // 重新載入頁面，setupUserInfo 會處理後續
-                    window.location.reload();
-                }, 1000);
+                setTimeout(() => { window.location.reload(); }, 1000);
             } else {
                 throw new Error(result.message || '帳號或密碼錯誤。');
             }
@@ -642,7 +506,6 @@ function setupLoginModal() {
         }
     });
 }
-
 function setupChangePasswordModal() {
     const modal = document.getElementById('changePasswordModal');
     if(!modal) return;
@@ -650,34 +513,27 @@ function setupChangePasswordModal() {
     const messageDiv = document.getElementById('change-password-message');
     const submitBtn = document.getElementById('changePasswordSubmitBtn');
     const closeBtn = document.getElementById('closeChangePasswordModalBtn');
-
     closeBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
         document.getElementById('loginModal').classList.remove('hidden');
     });
-
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const employeeId = form.elements.employeeId.value;
         const oldPassword = form.elements.oldPassword.value;
         const newPassword = form.elements.newPassword.value;
-
         messageDiv.textContent = '';
         submitBtn.disabled = true;
         submitBtn.querySelector('.btn-text').textContent = '處理中...';
         submitBtn.querySelector('.btn-spinner').classList.remove('hidden');
-
         try {
             const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'cors',
+                method: 'POST', mode: 'cors',
                 body: JSON.stringify({ action: 'updatePassword', employeeId, oldPassword, newPassword }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
-
             if (!response.ok) throw new Error('網路回應錯誤');
             const result = await response.json();
-
             if (result.status === 'success') {
                 messageDiv.textContent = '密碼更新成功！';
                 messageDiv.className = 'text-center mb-4 font-medium text-green-500';
@@ -695,7 +551,6 @@ function setupChangePasswordModal() {
         }
     });
 }
-
 function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
@@ -710,17 +565,13 @@ function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
     if(closeBtn) closeBtn.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
 }
-
 function populateAiMemberFilter() {
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect && staffData.length > 0) {
-        filterSelect.innerHTML = '<option value="all">針對 整個團隊 分析</option>'; // 清空並加入預設選項
-
-        // 根據 staffData 填充下拉選單
+        filterSelect.innerHTML = '<option value="all">針對 整個團隊 分析</option>';
         const membersInGroup = staffData
             .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
             .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter);
-
         membersInGroup.forEach(member => {
             const option = document.createElement('option');
             option.value = member.name;
@@ -729,34 +580,27 @@ function populateAiMemberFilter() {
         });
     }
 }
-
 function setupAiModal(){
     setupModal('aiModal', 'aiBtn', 'closeAiModalBtn', () => {
-        populateAiMemberFilter(); // 打開 modal 時，重新填充下拉選單
+        populateAiMemberFilter();
         getAiSuggestions('all');
     });
-
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect) {
-        // 移除舊的監聽器避免重複綁定
         const newSelect = filterSelect.cloneNode(true);
         filterSelect.parentNode.replaceChild(newSelect, filterSelect);
         newSelect.addEventListener('change', (e) => getAiSuggestions(e.target.value));
     }
 }
-
 function setupWeeklySummaryModal(){
     setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary);
 }
-
 function setupItemListModal(){
     setupModal('itemListModal', null, 'closeItemListModalBtn');
 }
-
 function setupActivityModal(){
     setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true));
 }
-
 function setupScrollToTop(){
     const btn = document.getElementById('scrollToTopBtn');
     if(!btn) return;
@@ -766,14 +610,12 @@ function setupScrollToTop(){
     };
     btn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
 }
-
 function setupChatBot() {
     const openBtn = document.getElementById('openChatBot');
     if(!openBtn) return;
     const closeBtn = document.getElementById('closeChatBot');
     const container = document.getElementById('chatBotContainer');
     const messagesDiv = document.getElementById('chatBotMessages');
-
     openBtn.addEventListener('click', () => {
         container.classList.remove('hidden');
         messagesDiv.innerHTML = `<div class="p-4"><i class="fas fa-spinner fa-spin text-indigo-500"></i> 正在產生報告...</div>`;
@@ -783,7 +625,10 @@ function setupChatBot() {
 }
 
 
-// --- NEW: Function to handle user info display and logout (MODIFIED) ---
+// ############# 這裡是本次的核心修改點 #############
+/**
+ * 根據 sessionStorage 狀態設定使用者資訊和按鈕可見性
+ */
 function setupUserInfo() {
     const welcomeMessageEl = document.getElementById('welcome-message');
     const loginBtn = document.getElementById('loginBtn');
@@ -794,22 +639,17 @@ function setupUserInfo() {
         // User is logged in
         const userData = JSON.parse(userDataString);
         welcomeMessageEl.textContent = `${userData.name} 您好`;
-        welcomeMessageEl.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-        loginBtn.classList.add('hidden');
-
-        logoutBtn.addEventListener('click', () => {
-            sessionStorage.removeItem('dashboardUser');
-            // Redirect to index.html (or your login page)
-            window.location.href = 'index.html';
-        });
+        welcomeMessageEl.classList.remove('hidden'); // 顯示歡迎訊息
+        logoutBtn.classList.remove('hidden');      // 顯示登出按鈕
+        loginBtn.classList.remove('hidden');     // 【修改】確保管理者登入按鈕依然顯示
     } else {
         // User is not logged in
         welcomeMessageEl.classList.add('hidden');
         logoutBtn.classList.add('hidden');
-        loginBtn.classList.remove('hidden');
+        loginBtn.classList.remove('hidden');       // 只顯示管理者登入按鈕
     }
 }
+
 
 // --- Initial Load ---
 async function initializeDashboard() {
@@ -818,8 +658,7 @@ async function initializeDashboard() {
     loadingOverlay.classList.remove('hidden');
     try {
         const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'cors',
+            method: 'POST', mode: 'cors',
             body: JSON.stringify({ action: 'getDashboardData' }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
@@ -869,10 +708,7 @@ async function initializeDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // Setup UI elements based on login status first
     setupUserInfo();
-
-    // Then setup all modals and interactive elements
     setupLoginModal();
     setupChangePasswordModal();
     setupAiModal();
@@ -881,7 +717,5 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupScrollToTop();
     setupItemListModal();
     setupChatBot();
-
-    // Finally, load all the data from the backend
     await initializeDashboard();
 });
