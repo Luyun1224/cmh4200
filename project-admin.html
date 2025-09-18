@@ -49,10 +49,10 @@
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-8 relative flex items-center justify-between">
-             <a href="https://luyun1224.github.io/cmh4200/project.html" class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
+             <a href="project.html" class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
                   <i class="fas fa-arrow-left mr-2"></i>返回儀表板
              </a>
-            
+           
              <div class="text-center absolute left-1/2 -translate-x-1/2">
                  <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
                  <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
@@ -72,7 +72,7 @@
                     <div>
                         <label for="item-group" class="block text-sm font-medium text-gray-700 mb-2">所屬小組 (必填)</label>
                         <select id="item-group" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                            </select>
+                        </select>
                         <div id="other-group-wrapper" class="mt-2 hidden">
                              <input type="text" id="other-group-name" placeholder="請輸入新的小組名稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
@@ -103,7 +103,7 @@
                                 <i class="fas fa-save mr-1"></i> 存為範本
                             </button>
                             <button type="button" id="delete-checklist-template-btn" class="text-sm text-red-600 hover:text-red-800 font-medium">
-                                <i class="fas fa-trash-alt mr-1"></i> 刪除範本
+                                 <i class="fas fa-trash-alt mr-1"></i> 刪除範本
                             </button>
                         </div>
                     </div>
@@ -123,7 +123,7 @@
                     <div>
                         <label for="item-collaborators" class="block text-sm font-medium text-gray-700 mb-2">協同人員 (可複選)</label>
                         <select id="item-collaborators" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5">
-                            </select>
+                        </select>
                     </div>
                 </div>
                 <div class="grid md:grid-cols-3 gap-6">
@@ -131,11 +131,11 @@
                         <div class="flex items-center justify-between mb-2">
                             <label for="item-status" class="block text-sm font-medium text-gray-700">狀態 (必填)</label>
                         </div>
-                        <select id="item-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                         <select id="item-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                             <option value="planning">規劃中</option>
                             <option value="active">進行中</option>
                             <option value="completed">已完成</option>
-                            <option value="overdue">逾期</option>
+                             <option value="overdue">逾期</option>
                         </select>
                     </div>
                     <div>
@@ -146,7 +146,7 @@
                             <option value="high">高</option>
                         </select>
                     </div>
-                     <div>
+                    <div>
                         <label for="item-start-date" class="block text-sm font-medium text-gray-700 mb-2">開始日期 (必填)</label>
                         <input type="date" id="item-start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
@@ -195,7 +195,7 @@
                     <select id="filter-assignee" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
                     </select>
-                </div>
+                 </div>
                  <div>
                     <label for="filter-status" class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
                     <select id="filter-status" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
@@ -216,7 +216,7 @@
                          </tr>
                      </thead>
                      <tbody id="items-table-body">
-                         </tbody>
+                     </tbody>
                  </table>
              </div>
         </div>
@@ -242,17 +242,10 @@
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let activities = [];
-        let staffData = []; // Will be fetched from backend
-        let loggedInUser = { name: '', id: '' }; // To store logged-in user info
-
-        // 已移除寫死的 groupData 物件
+        let staffData = []; 
+        let loggedInUser = { name: '', id: '' };
         
-        const statusData = {
-            'planning': '規劃中',
-            'active': '進行中',
-            'completed': '已完成',
-            'overdue': '逾期'
-        };
+        const statusData = { 'planning': '規劃中', 'active': '進行中', 'completed': '已完成', 'overdue': '逾期' };
         let currentGroupFilter = 'all';
         let currentAssigneeFilter = 'all';
         let currentStatusFilter = 'all';
@@ -303,17 +296,14 @@
             } finally {
                 if (buttonElement) {
                     buttonElement.disabled = false;
-                    // Reset button text in the calling function
                 }
             }
         }
         
-        // ***** 1. 修改此處 *****
-        // 載入完整的 staffData，而不僅僅是名字
         async function fetchStaffData() {
             const users = await handleApiRequest('getAllUsers');
             if (users) {
-                staffData = users; // 載入包含 name, group 等資訊的完整陣列
+                staffData = users;
             }
         }
 
@@ -341,10 +331,7 @@
             }
         }
 
-        function formatDate(dateString) {
-            return dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
-        }
-
+        function formatDate(dateString) { return dateString ? new Date(dateString).toLocaleDateString('zh-TW') : ''; }
         function formatDateRange(start, end) {
             const s = formatDate(start);
             const e = formatDate(end);
@@ -352,59 +339,31 @@
             return e ? `${s} - ${e}` : s;
         }
         
-        // ***** 2. 修改此處 (已更新為固定排序) *****
-        // 改為動態生成組別下拉選單，並使用固定順序
         function populateDropdowns() {
-            // 1. 定義您希望的固定排序
-            const fixedGroupOrder = [
-                '教學行政組',
-                '一般科',
-                '臨床技能中心',
-                '教師培育中心',
-                '實證醫學暨醫療政策中心',
-                '視聽中心',
-                '圖書館'
-            ];
-
-            // 2. 從 staffData 中提取所有不重複的組別名稱
+            const fixedGroupOrder = [ '教學行政組', '一般科', '臨床技能中心', '教師培育中心', '實證醫學暨醫療政策中心', '視聽中心', '圖書館' ];
             const allGroups = staffData.map(staff => staff.group).filter(Boolean);
             const uniqueGroupsFromData = [...new Set(allGroups)];
-            
-            // 3. 找出不在固定排序中的其他組別，並對它們進行字母排序
-            const otherGroups = uniqueGroupsFromData
-                .filter(group => !fixedGroupOrder.includes(group))
-                .sort();
-
-            // 4. 將固定排序的組別與其他組別合併，形成最終的排序列表
+            const otherGroups = uniqueGroupsFromData.filter(group => !fixedGroupOrder.includes(group)).sort();
             const sortedUniqueGroups = [...fixedGroupOrder, ...otherGroups];
-
-            // 5. 根據新的排序列表填充下拉選單 (以下邏輯不變，只是使用新的排序陣列)
             
-            // 填充表單中的「所屬小組」下拉選單
             groupSelect.innerHTML = '<option value="">-- 請選擇所屬小組 --</option>';
-            sortedUniqueGroups.forEach(groupName => {
-                groupSelect.add(new Option(groupName, groupName));
-            });
+            sortedUniqueGroups.forEach(groupName => groupSelect.add(new Option(groupName, groupName)));
             groupSelect.add(new Option('-- 其他 (自行輸入) --', 'other'));
 
-            // 填充篩選器中的「所屬小組」下拉選單
             filterGroupSelect.innerHTML = '<option value="all">全部</option>';
-            sortedUniqueGroups.forEach(groupName => {
-                filterGroupSelect.add(new Option(groupName, groupName));
-            });
-
-            // 填充負責人、協同人員、狀態等下拉選單 (邏輯不變)
+            sortedUniqueGroups.forEach(groupName => filterGroupSelect.add(new Option(groupName, groupName)));
+            
             assigneesSelect.innerHTML = '';
             collaboratorsSelect.innerHTML = '';
             filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
             filterStatusSelect.innerHTML = '<option value="all">全部</option>';
-            Object.entries(statusData).forEach(([key, value]) => {
-                filterStatusSelect.add(new Option(value, key));
-            });
+            Object.entries(statusData).forEach(([key, value]) => filterStatusSelect.add(new Option(value, key)));
+            
             const allStaffOption1 = new Option('全體同仁', '全體同仁');
             const allStaffOption2 = new Option('全體同仁', '全體同仁');
             assigneesSelect.add(allStaffOption1);
             collaboratorsSelect.add(allStaffOption2);
+            
             staffData.forEach(staff => {
                 assigneesSelect.add(new Option(staff.name, staff.name));
                 collaboratorsSelect.add(new Option(staff.name, staff.name));
@@ -413,17 +372,10 @@
         }
         
         function getTypeDisplay(type) {
-            const types = {
-                project: '<span class="text-xs font-normal text-blue-500">(專案)</span>',
-                task: '<span class="text-xs font-normal text-green-500">(任務)</span>',
-                activity: '<span class="text-xs font-normal text-purple-500">(活動)</span>',
-                meeting: '<span class="text-xs font-normal text-indigo-500">(會議)</span>'
-            };
+            const types = { project: '<span class="text-xs font-normal text-blue-500">(專案)</span>', task: '<span class="text-xs font-normal text-green-500">(任務)</span>', activity: '<span class="text-xs font-normal text-purple-500">(活動)</span>', meeting: '<span class="text-xs font-normal text-indigo-500">(會議)</span>' };
             return types[type] || '';
         }
 
-       // ***** 3. 修改此處 *****
-       // 簡化 groupName 的獲取方式
        function renderTable() {
             let filtered = activities;
             if (currentGroupFilter !== 'all') filtered = filtered.filter(i => i.group === currentGroupFilter);
@@ -431,7 +383,7 @@
             if (currentStatusFilter !== 'all') filtered = filtered.filter(i => i.status === currentStatusFilter);
             
             tableBody.innerHTML = filtered.map(item => {
-                const groupName = item.group; // 直接使用 item.group 作為顯示名稱
+                const groupName = item.group;
                 const assigneesText = item.assignees.join(', ') || 'N/A';
                 const collaboratorsText = item.collaborators.join(', ') || '無';
                 const typeDisplay = getTypeDisplay(item.type);
@@ -471,8 +423,6 @@
             [...collaboratorsSelect.options].forEach(opt => opt.selected = false);
         }
 
-        // ***** 4. 修改此處 *****
-        // 更新 editItem 函式中判斷「其他」組別的邏輯
         function editItem(id) {
             const item = activities.find(i => i.id === id);
             if (!item) return;
@@ -480,8 +430,6 @@
             document.getElementById('item-id').value = item.id;
             document.getElementById('item-name').value = item.name;
             document.getElementById('item-description').value = item.description || '';
-            
-            // 檢查 item.group 是否存在於下拉選單的選項中
             const groupExistsInDropdown = [...groupSelect.options].some(opt => opt.value === item.group);
 
             if (groupExistsInDropdown) {
@@ -556,9 +504,7 @@
         }
 
         function getSelectedOptions(selectElement) {
-            return Array.from(selectElement.options)
-                        .filter(option => option.selected)
-                        .map(option => option.value);
+            return Array.from(selectElement.options).filter(option => option.selected).map(option => option.value);
         }
 
         // --- Interactive Checklist & Template Functions ---
