@@ -14,6 +14,7 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
+
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
@@ -563,20 +564,16 @@ function setupUserInfo() {
     const welcomeMessageEl = document.getElementById('welcome-message');
     const logoutBtn = document.getElementById('logoutBtn');
     const userDataString = sessionStorage.getItem('dashboardUser');
-
     if (userDataString) {
         const userData = JSON.parse(userDataString);
         welcomeMessageEl.textContent = `${userData.name} 您好`;
         welcomeMessageEl.classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
     } else {
-        // This case should not be reached due to the security check below,
-        // but it's good practice to keep it.
         welcomeMessageEl.classList.add('hidden');
         logoutBtn.classList.add('hidden');
     }
 }
-
 
 // --- Initial Load ---
 async function initializeDashboard() {
