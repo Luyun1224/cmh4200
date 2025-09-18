@@ -52,7 +52,7 @@
              <a href="project.html" class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
                   <i class="fas fa-arrow-left mr-2"></i>返回儀表板
              </a>
-             
+           
              <div class="text-center absolute left-1/2 -translate-x-1/2">
                  <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
                  <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
@@ -296,6 +296,7 @@
             } finally {
                 if (buttonElement) {
                     buttonElement.disabled = false;
+                    // Reset button text in the calling function
                 }
             }
         }
@@ -398,8 +399,8 @@
                     <td class="px-6 py-4">${collaboratorsText}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-800' : item.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${statusData[item.status] || item.status}</span></td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="editItem(${item.id})" class="font-medium text-blue-600 hover:underline mr-4"><i class="fas fa-edit"></i> 編輯</button>
-                        <button onclick="deleteItem(${item.id})" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
+                        <button onclick="editItem('${item.id}')" class="font-medium text-blue-600 hover:underline mr-4"><i class="fas fa-edit"></i> 編輯</button>
+                        <button onclick="deleteItem('${item.id}')" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
                     </td>
                 </tr>
             `}).join('');
@@ -424,7 +425,7 @@
         }
 
         function editItem(id) {
-            const item = activities.find(i => i.id === id);
+            const item = activities.find(i => String(i.id) === String(id));
             if (!item) return;
             
             document.getElementById('item-id').value = item.id;
@@ -454,8 +455,8 @@
                 item.checklist.forEach(cp => addChecklistItem(cp.name, cp.completed));
             }
 
-            [...assigneesSelect.options].forEach(opt => { opt.selected = item.assignees.includes(opt.value); });
-            [...collaboratorsSelect.options].forEach(opt => { opt.selected = item.collaborators.includes(opt.value); });
+            [...assigneesSelect.options].forEach(opt => { opt.selected = (item.assignees || []).includes(opt.value); });
+            [...collaboratorsSelect.options].forEach(opt => { opt.selected = (item.collaborators || []).includes(opt.value); });
 
             formTitle.textContent = `編輯項目: ${item.name}`;
             saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存變更';
@@ -701,7 +702,7 @@
             });
             
             const itemData = {
-                id: id ? parseInt(id) : Date.now(),
+                id: id ? id : String(Date.now()),
                 name: document.getElementById('item-name').value,
                 description: document.getElementById('item-description').value,
                 group: groupValue,
@@ -714,7 +715,7 @@
                 deadline: document.getElementById('item-deadline').value,
                 progress: parseInt(progressInput.value),
                 helpMessage: commentsInput.value,
-                checklist: checklistData,
+                checklist: JSON.stringify(checklistData),
                 createdBy: loggedInUser.id
             };
             
