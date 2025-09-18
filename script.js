@@ -14,6 +14,7 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
+
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
@@ -624,29 +625,18 @@ function setupChatBot() {
     closeBtn.addEventListener('click', () => container.classList.add('hidden'));
 }
 
-
-// ############# 這裡是本次的核心修改點 #############
-/**
- * 根據 sessionStorage 狀態設定使用者資訊和按鈕可見性
- */
 function setupUserInfo() {
     const welcomeMessageEl = document.getElementById('welcome-message');
-    const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const userDataString = sessionStorage.getItem('dashboardUser');
-
     if (userDataString) {
-        // User is logged in
         const userData = JSON.parse(userDataString);
         welcomeMessageEl.textContent = `${userData.name} 您好`;
-        welcomeMessageEl.classList.remove('hidden'); // 顯示歡迎訊息
-        logoutBtn.classList.remove('hidden');      // 顯示登出按鈕
-        loginBtn.classList.remove('hidden');     // 【修改】確保管理者登入按鈕依然顯示
+        welcomeMessageEl.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
     } else {
-        // User is not logged in
         welcomeMessageEl.classList.add('hidden');
         logoutBtn.classList.add('hidden');
-        loginBtn.classList.remove('hidden');       // 只顯示管理者登入按鈕
     }
 }
 
@@ -665,14 +655,11 @@ async function initializeDashboard() {
         if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
         const result = await response.json();
         if (result.status !== 'success' || !result.data) throw new Error(result.message || "回傳的資料格式不正確");
-
         const userData = result.data.staffData || [];
         staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit }));
-
         const itemData = result.data.activities || [];
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
         allActivities = itemData.map(item => {
             const progress = parseInt(item.progress, 10) || 0;
             const deadline = item.deadline ? new Date(item.deadline) : null;
@@ -681,23 +668,18 @@ async function initializeDashboard() {
             else if (finalStatus !== 'completed' && deadline && deadline < today) finalStatus = 'overdue';
             return { ...item, progress, status: finalStatus, lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0, helpMessage: item.helpMessage || '', checklist: Array.isArray(item.checklist) ? item.checklist : [] };
         });
-
         const urlParams = new URLSearchParams(window.location.search);
         const paramStatus = urlParams.get('status');
         if (paramStatus) currentStatusFilter = paramStatus;
-
-        // 資料載入後才渲染畫面
         renderUnitTabs();
         renderYearFilter();
         renderMonthFilter();
         renderDashboard();
-
         if (paramStatus) {
             const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
             if (btn) filterItemsByStatus(paramStatus, { target: btn });
         }
         document.getElementById('openChatBot').classList.remove('hidden');
-
     } catch (error) {
         console.error("Initialization failed:", error);
         document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
@@ -708,6 +690,12 @@ async function initializeDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    // SECURITY CHECK
+    if (!sessionStorage.getItem('dashboardUser')) {
+        window.location.href = 'index.html';
+        return;
+    }
+
     setupUserInfo();
     setupLoginModal();
     setupChangePasswordModal();
