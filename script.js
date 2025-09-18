@@ -7,6 +7,7 @@ const currentDate = new Date();
 let staffData = [];
 
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
+
 // --- State Variables ---
 let currentUnitFilter = 'all';
 let currentGroupFilter = 'all';
@@ -16,6 +17,7 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
+
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
@@ -417,9 +419,10 @@ async function getAiSuggestions(memberName = 'all') {
         analysisTarget = memberName;
         itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
     }
-    
-    const sanitizedItems = itemsToAnalyze.map(({ name, group, description, status, progress, assignees, deadline, helpMessage }) => 
+
+    const sanitizedItems = itemsToAnalyze.map(({ name, group, description, status, progress, assignees, deadline, helpMessage }) =>
         ({ name, group, description, status, progress, assignees, deadline, helpMessage }));
+
     const prompt = `你是一位專業的AI決策經理人，名叫「賈維斯」，專責協助分析「教學部」的業務狀況並提供決策建議。
 
 【分析對象】
@@ -477,6 +480,7 @@ ${analysisTarget}
         "maxOutputTokens": 8192
       }
     };
+
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -534,7 +538,7 @@ function renderAiReport(data) {
                     ${renderPoints(section.risks)}
                 </div>
             `).join('')}
-            
+
             ${holisticHtml}
 
             <div class="p-3 bg-green-50 rounded-lg border border-green-200">
@@ -564,6 +568,7 @@ function setupLoginModal() {
     const openChangePasswordModalBtn = document.getElementById('openChangePasswordModalBtn');
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
+
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -587,6 +592,7 @@ function setupLoginModal() {
     });
     closeModalBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
     loginModal.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.classList.add('hidden'); });
+
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const username = event.target.username.value;
@@ -608,17 +614,20 @@ function setupLoginModal() {
             });
 
             if (!response.ok) throw new Error(`網路回應錯誤: ${response.status} ${response.statusText}`);
-            
             const result = await response.json();
-            
+
             if (result.status === 'success') {
                 const loginData = result.data;
-                loginMessage.textContent = '登入成功！即將跳轉...';
+                // 將登入資訊存到 sessionStorage
+                sessionStorage.setItem('dashboardUser', JSON.stringify(loginData));
+
+                loginMessage.textContent = '登入成功！正在重新載入...';
                 loginMessage.className = 'text-center mb-4 font-medium text-green-500';
+
                 setTimeout(() => {
-                    // Redirect to project.html instead of the full github path for local testing flexibility
-                    window.location.href = `project.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
-                }, 1500);
+                    // 重新載入頁面，setupUserInfo 會處理後續
+                    window.location.reload();
+                }, 1000);
             } else {
                 throw new Error(result.message || '帳號或密碼錯誤。');
             }
@@ -641,16 +650,18 @@ function setupChangePasswordModal() {
     const messageDiv = document.getElementById('change-password-message');
     const submitBtn = document.getElementById('changePasswordSubmitBtn');
     const closeBtn = document.getElementById('closeChangePasswordModalBtn');
+
     closeBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
         document.getElementById('loginModal').classList.remove('hidden');
     });
+
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const employeeId = form.elements.employeeId.value;
         const oldPassword = form.elements.oldPassword.value;
         const newPassword = form.elements.newPassword.value;
-        
+
         messageDiv.textContent = '';
         submitBtn.disabled = true;
         submitBtn.querySelector('.btn-text').textContent = '處理中...';
@@ -665,9 +676,8 @@ function setupChangePasswordModal() {
             });
 
             if (!response.ok) throw new Error('網路回應錯誤');
-            
             const result = await response.json();
-            
+
             if (result.status === 'success') {
                 messageDiv.textContent = '密碼更新成功！';
                 messageDiv.className = 'text-center mb-4 font-medium text-green-500';
@@ -705,11 +715,12 @@ function populateAiMemberFilter() {
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect && staffData.length > 0) {
         filterSelect.innerHTML = '<option value="all">針對 整個團隊 分析</option>'; // 清空並加入預設選項
-        
+
         // 根據 staffData 填充下拉選單
         const membersInGroup = staffData
             .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
             .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter);
+
         membersInGroup.forEach(member => {
             const option = document.createElement('option');
             option.value = member.name;
@@ -724,6 +735,7 @@ function setupAiModal(){
         populateAiMemberFilter(); // 打開 modal 時，重新填充下拉選單
         getAiSuggestions('all');
     });
+
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect) {
         // 移除舊的監聽器避免重複綁定
@@ -761,6 +773,7 @@ function setupChatBot() {
     const closeBtn = document.getElementById('closeChatBot');
     const container = document.getElementById('chatBotContainer');
     const messagesDiv = document.getElementById('chatBotMessages');
+
     openBtn.addEventListener('click', () => {
         container.classList.remove('hidden');
         messagesDiv.innerHTML = `<div class="p-4"><i class="fas fa-spinner fa-spin text-indigo-500"></i> 正在產生報告...</div>`;
@@ -770,28 +783,28 @@ function setupChatBot() {
 }
 
 
-// --- NEW: Function to handle user info display and logout ---
+// --- NEW: Function to handle user info display and logout (MODIFIED) ---
 function setupUserInfo() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userName = urlParams.get('user');
-
     const welcomeMessageEl = document.getElementById('welcome-message');
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const userDataString = sessionStorage.getItem('dashboardUser');
 
-    if (userName) {
+    if (userDataString) {
         // User is logged in
-        welcomeMessageEl.textContent = `${decodeURIComponent(userName)} 您好`;
+        const userData = JSON.parse(userDataString);
+        welcomeMessageEl.textContent = `${userData.name} 您好`;
         welcomeMessageEl.classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
         loginBtn.classList.add('hidden');
 
         logoutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('dashboardUser');
             // Redirect to index.html (or your login page)
-            window.location.href = 'index.html'; 
+            window.location.href = 'index.html';
         });
     } else {
-        // User is not logged in (or came directly to project.html)
+        // User is not logged in
         welcomeMessageEl.classList.add('hidden');
         logoutBtn.classList.add('hidden');
         loginBtn.classList.remove('hidden');
@@ -812,14 +825,15 @@ async function initializeDashboard() {
         });
         if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
         const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
-        
+        if (result.status !== 'success' || !result.data) throw new Error(result.message || "回傳的資料格式不正確");
+
         const userData = result.data.staffData || [];
         staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit }));
-        
+
         const itemData = result.data.activities || [];
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
         allActivities = itemData.map(item => {
             const progress = parseInt(item.progress, 10) || 0;
             const deadline = item.deadline ? new Date(item.deadline) : null;
@@ -844,6 +858,7 @@ async function initializeDashboard() {
             if (btn) filterItemsByStatus(paramStatus, { target: btn });
         }
         document.getElementById('openChatBot').classList.remove('hidden');
+
     } catch (error) {
         console.error("Initialization failed:", error);
         document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
@@ -856,7 +871,7 @@ async function initializeDashboard() {
 document.addEventListener('DOMContentLoaded', async function() {
     // Setup UI elements based on login status first
     setupUserInfo();
-    
+
     // Then setup all modals and interactive elements
     setupLoginModal();
     setupChangePasswordModal();
@@ -866,7 +881,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupScrollToTop();
     setupItemListModal();
     setupChatBot();
-    
+
     // Finally, load all the data from the backend
     await initializeDashboard();
 });
