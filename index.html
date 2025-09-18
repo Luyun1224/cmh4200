@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教學部專案儀表板 - 登入</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body {
@@ -14,121 +14,190 @@
             background-size: cover;
             background-position: center;
         }
-        .backdrop-blur-md {
-            backdrop-filter: blur(10px);
+        .backdrop-blur-lg {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
     </style>
 </head>
-<body class="bg-gray-200 flex items-center justify-center min-h-screen">
+<body class="bg-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-md mx-auto p-8 bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">專案儀表板登入</h1>
-            <p class="text-gray-600 mt-2">請使用您的人事號進行登入</p>
+    <!-- Auth Container -->
+    <div class="w-full max-w-md mx-auto p-8 bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200">
+
+        <!-- Login View (Default) -->
+        <div id="loginView">
+            <h2 class="text-center text-3xl font-bold text-gray-800 mb-8">管理者登入</h2>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">人事號</label>
+                    <input type="text" id="username" name="username" required placeholder="請輸入您的人事號" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密碼</label>
+                    <input type="password" id="password" name="password" required placeholder="請輸入您的密碼" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div id="login-message" class="text-center font-medium h-5"></div>
+                <div class="flex items-center gap-4 pt-2">
+                     <button type="button" id="closeLoginBtn" class="w-full px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">關閉</button>
+                    <button type="submit" id="loginSubmitBtn" class="w-full flex justify-center items-center px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105 shadow-lg">
+                        <span class="btn-text">登入</span>
+                        <i class="fas fa-spinner fa-spin ml-2 hidden btn-spinner"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="text-center mt-6">
+                <a href="#" id="showChangePasswordViewBtn" class="text-sm text-blue-600 hover:underline">更換密碼</a>
+            </div>
         </div>
 
-        <form id="loginForm" class="space-y-6">
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700">人事號</label>
-                <div class="mt-1 relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <i class="fas fa-user text-gray-400"></i>
-                    </span>
-                    <input type="text" id="username" name="username" required
-                           class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+        <!-- Change Password View (Hidden by default) -->
+        <div id="changePasswordView" class="hidden">
+            <h2 class="text-center text-3xl font-bold text-gray-800 mb-8">更換密碼</h2>
+            <form id="changePasswordForm" class="space-y-4">
+                <div>
+                    <label for="cp-employeeId" class="block text-sm font-medium text-gray-700 mb-1">人事號</label>
+                    <input type="text" id="cp-employeeId" required placeholder="請輸入您的人事號" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
-            </div>
-
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">密碼</label>
-                <div class="mt-1 relative">
-                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <i class="fas fa-lock text-gray-400"></i>
-                    </span>
-                    <input type="password" id="password" name="password" required
-                           class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <div>
+                    <label for="cp-oldPassword" class="block text-sm font-medium text-gray-700 mb-1">舊密碼</label>
+                    <input type="password" id="cp-oldPassword" required placeholder="請輸入您的舊密碼" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
+                <div>
+                    <label for="cp-newPassword" class="block text-sm font-medium text-gray-700 mb-1">新密碼</label>
+                    <input type="password" id="cp-newPassword" required placeholder="請設定您的新密碼" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="change-password-message" class="text-center font-medium h-5"></div>
+                <div class="pt-2">
+                    <button type="submit" id="changePasswordSubmitBtn" class="w-full flex justify-center items-center px-4 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-transform hover:scale-105 shadow-lg">
+                        <span class="btn-text">確認更換</span>
+                        <i class="fas fa-spinner fa-spin ml-2 hidden btn-spinner"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="text-center mt-6">
+                <a href="#" id="showLoginViewBtn" class="text-sm text-blue-600 hover:underline">返回登入</a>
             </div>
-
-            <div id="login-message" class="text-center font-medium"></div>
-
-            <div>
-                <button type="submit" id="loginSubmitBtn"
-                        class="w-full flex justify-center items-center px-4 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform duration-150 ease-in-out hover:scale-105 shadow-lg">
-                    <span class="btn-text">安全登入</span>
-                     <i class="fas fa-spinner fa-spin ml-2 hidden btn-spinner"></i>
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
-        // 假設您的主儀表板檔案名稱是 project.html
-        const DASHBOARD_URL = 'project.html'; 
+        const DASHBOARD_URL = 'project.html';
 
-        // 檢查是否已經登入，如果是，直接跳轉
         if (sessionStorage.getItem('dashboardUser')) {
             window.location.href = DASHBOARD_URL;
         }
 
+        const loginView = document.getElementById('loginView');
+        const changePasswordView = document.getElementById('changePasswordView');
+        
+        const showChangePasswordViewBtn = document.getElementById('showChangePasswordViewBtn');
+        const showLoginViewBtn = document.getElementById('showLoginViewBtn');
+
+        showChangePasswordViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginView.classList.add('hidden');
+            changePasswordView.classList.remove('hidden');
+        });
+
+        showLoginViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            changePasswordView.classList.add('hidden');
+            loginView.classList.remove('hidden');
+        });
+        
+        // --- Login Logic (same as before) ---
         const loginForm = document.getElementById('loginForm');
         const loginMessage = document.getElementById('login-message');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-        const btnText = loginSubmitBtn.querySelector('.btn-text');
-        const btnSpinner = loginSubmitBtn.querySelector('.btn-spinner');
-
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const username = event.target.username.value;
             const password = event.target.password.value;
-
-            loginMessage.textContent = '';
-            btnText.textContent = '驗證中...';
-            btnSpinner.classList.remove('hidden');
             loginSubmitBtn.disabled = true;
-
+            loginSubmitBtn.querySelector('.btn-text').textContent = '驗證中...';
+            loginSubmitBtn.querySelector('.btn-spinner').classList.remove('hidden');
             try {
                 const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
+                    method: 'POST', mode: 'cors',
                     body: JSON.stringify({ action: 'login', username, password }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-
                 if (!response.ok) throw new Error(`網路回應錯誤: ${response.status}`);
-                
                 const result = await response.json();
-                
                 if (result.status === 'success') {
                     const userData = result.data;
-                    if (!userData.role) {
-                         throw new Error('登入成功，但無法獲取您的角色資訊，請聯繫管理員。');
-                    }
-                    
+                    if (!userData.role) throw new Error('無法獲取您的角色資訊，請聯繫管理員。');
                     sessionStorage.setItem('dashboardUser', JSON.stringify(userData));
-                    
                     loginMessage.textContent = '登入成功！即將跳轉...';
                     loginMessage.className = 'text-center font-medium text-green-600';
-                    
-                    setTimeout(() => {
-                        window.location.href = DASHBOARD_URL;
-                    }, 1000);
-
+                    setTimeout(() => { window.location.href = DASHBOARD_URL; }, 1000);
                 } else {
                     throw new Error(result.message || '帳號或密碼錯誤。');
                 }
             } catch (error) {
                 loginMessage.textContent = error.message;
                 loginMessage.className = 'text-center font-medium text-red-500';
-            } finally {
-                setTimeout(() => {
-                    btnText.textContent = '安全登入';
-                    btnSpinner.classList.add('hidden');
-                    loginSubmitBtn.disabled = false;
-                }, 1000);
+                loginSubmitBtn.disabled = false;
+                loginSubmitBtn.querySelector('.btn-text').textContent = '登入';
+                loginSubmitBtn.querySelector('.btn-spinner').classList.add('hidden');
             }
         });
+
+        // --- Change Password Logic (same as before) ---
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        const cpMessage = document.getElementById('change-password-message');
+        const cpSubmitBtn = document.getElementById('changePasswordSubmitBtn');
+        changePasswordForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const employeeId = event.target['cp-employeeId'].value;
+            const oldPassword = event.target['cp-oldPassword'].value;
+            const newPassword = event.target['cp-newPassword'].value;
+            cpSubmitBtn.disabled = true;
+            cpSubmitBtn.querySelector('.btn-text').textContent = '處理中...';
+            cpSubmitBtn.querySelector('.btn-spinner').classList.remove('hidden');
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST', mode: 'cors',
+                    body: JSON.stringify({ action: 'updatePassword', employeeId, oldPassword, newPassword }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                if (!response.ok) throw new Error('網路回應錯誤');
+                const result = await response.json();
+                if (result.status === 'success') {
+                    cpMessage.textContent = '密碼更新成功！請返回登入。';
+                    cpMessage.className = 'text-center font-medium text-green-600';
+                    changePasswordForm.reset();
+                } else {
+                    throw new Error(result.message || '更新失敗');
+                }
+            } catch (error) {
+                cpMessage.textContent = error.message;
+                cpMessage.className = 'text-center font-medium text-red-500';
+            } finally {
+                cpSubmitBtn.disabled = false;
+                cpSubmitBtn.querySelector('.btn-text').textContent = '確認更換';
+                cpSubmitBtn.querySelector('.btn-spinner').classList.add('hidden');
+            }
+        });
+        
+        // --- Close Button Logic ---
+        // '關閉' 按鈕的功能可能是返回上一頁或 просто 關閉視窗，這裡我們設定為返回上一頁
+        const closeLoginBtn = document.getElementById('closeLoginBtn');
+        if(closeLoginBtn) {
+            closeLoginBtn.addEventListener('click', () => {
+                // 如果有上一頁歷史紀錄，則返回
+                if (window.history.length > 1) {
+                    window.history.back();
+                } 
+                // 否則可以關閉視窗，但這在某些瀏覽器可能無效
+                else {
+                    window.close();
+                }
+            });
+        }
     </script>
 </body>
 </html>
+
