@@ -27,7 +27,7 @@
 
         <!-- Login View (Default) -->
         <div id="loginView">
-            <h2 class="text-center text-3xl font-bold text-gray-800 mb-8">管理者登入</h2>
+            <h2 class="text-center text-3xl font-bold text-gray-800 mb-8">教學部專案儀表板 - 登入</h2>
             <form id="loginForm" class="space-y-6">
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700 mb-1">人事號</label>
@@ -35,11 +35,16 @@
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密碼</label>
-                    <input type="password" id="password" name="password" required placeholder="請輸入您的密碼" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition">
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required placeholder="請輸入您的密碼" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition">
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 px-4 text-gray-500">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div id="login-message" class="text-center font-medium h-5"></div>
                 <div class="flex items-center gap-4 pt-2">
-                     <button type="button" id="closeLoginBtn" class="w-full px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">關閉</button>
+                     <a href="project.html" class="w-full text-center px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">關閉</a>
                     <button type="submit" id="loginSubmitBtn" class="w-full flex justify-center items-center px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105 shadow-lg">
                         <span class="btn-text">登入</span>
                         <i class="fas fa-spinner fa-spin ml-2 hidden btn-spinner"></i>
@@ -91,9 +96,10 @@
 
         const loginView = document.getElementById('loginView');
         const changePasswordView = document.getElementById('changePasswordView');
-        
         const showChangePasswordViewBtn = document.getElementById('showChangePasswordViewBtn');
         const showLoginViewBtn = document.getElementById('showLoginViewBtn');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
 
         showChangePasswordViewBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -106,8 +112,14 @@
             changePasswordView.classList.add('hidden');
             loginView.classList.remove('hidden');
         });
+
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePasswordBtn.querySelector('i').classList.toggle('fa-eye');
+            togglePasswordBtn.querySelector('i').classList.toggle('fa-eye-slash');
+        });
         
-        // --- Login Logic (same as before) ---
         const loginForm = document.getElementById('loginForm');
         const loginMessage = document.getElementById('login-message');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
@@ -145,7 +157,6 @@
             }
         });
 
-        // --- Change Password Logic (same as before) ---
         const changePasswordForm = document.getElementById('changePasswordForm');
         const cpMessage = document.getElementById('change-password-message');
         const cpSubmitBtn = document.getElementById('changePasswordSubmitBtn');
@@ -181,22 +192,6 @@
                 cpSubmitBtn.querySelector('.btn-spinner').classList.add('hidden');
             }
         });
-        
-        // --- Close Button Logic ---
-        // '關閉' 按鈕的功能可能是返回上一頁或 просто 關閉視窗，這裡我們設定為返回上一頁
-        const closeLoginBtn = document.getElementById('closeLoginBtn');
-        if(closeLoginBtn) {
-            closeLoginBtn.addEventListener('click', () => {
-                // 如果有上一頁歷史紀錄，則返回
-                if (window.history.length > 1) {
-                    window.history.back();
-                } 
-                // 否則可以關閉視窗，但這在某些瀏覽器可能無效
-                else {
-                    window.close();
-                }
-            });
-        }
     </script>
 </body>
 </html>
