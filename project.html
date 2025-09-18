@@ -139,7 +139,12 @@
                     <select id="monthFilter" onchange="filterByMonth(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"></select>
                     <button id="weeklySummaryBtn" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-calendar-week mr-2"></i>本週回顧</button>
                     <button id="aiBtn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 flex items-center shadow-lg"><i class="fas fa-brain mr-2"></i>AI 決策建議</button>
-                    <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">管理者登入</button>
+                    
+                    <div id="user-info-container" class="flex items-center gap-3">
+                        <span id="welcome-message" class="font-semibold text-gray-800 hidden"></span>
+                        <button id="logoutBtn" class="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg hidden">登出</button>
+                        <button id="loginBtn" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-transform hover:scale-105 shadow-lg">管理者登入</button>
+                    </div>
                 </div>
             </div>
         </div>
