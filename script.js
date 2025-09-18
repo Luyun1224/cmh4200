@@ -9,7 +9,7 @@ let staffData = [];
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
 
 // --- State Variables ---
-let currentUnitFilter = 'all'; 
+let currentUnitFilter = 'all';
 let currentGroupFilter = 'all';
 let currentStatusFilter = 'all';
 let currentMemberFilter = 'all';
@@ -54,7 +54,7 @@ function renderGroupTabs(membersToConsider) {
         if (indexA !== -1 && indexB !== -1) { return indexA - indexB; }
         if (indexA !== -1) { return -1; }
         if (indexB !== -1) { return 1; }
-        return a.localeCompare(b, 'zh-Hant'); 
+        return a.localeCompare(b, 'zh-Hant');
     });
     if (groups.length <= 1 && currentUnitFilter !== 'all') {
         tabsContainer.innerHTML = '';
@@ -172,8 +172,8 @@ function renderDashboard() {
 // --- Filtering Functions ---
 function filterByUnit(unit) {
     currentUnitFilter = unit;
-    currentGroupFilter = 'all'; 
-    currentMemberFilter = 'all'; 
+    currentGroupFilter = 'all';
+    currentMemberFilter = 'all';
     document.querySelectorAll('.unit-tab-btn').forEach(btn => {
         btn.classList.toggle('tab-active', btn.id === `tab-unit-${unit.replace(/\s/g, '-')}`);
         btn.classList.toggle('bg-gray-100', btn.id !== `tab-unit-${unit.replace(/\s/g, '-')}`);
@@ -429,7 +429,7 @@ async function getAiSuggestions(memberName = 'all') {
     
     try {
         const response = await fetch(SCRIPT_URL, {
-            method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text-plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: geminiPayload })
         });
         const result = await response.json();
