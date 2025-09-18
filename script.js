@@ -7,7 +7,6 @@ const currentDate = new Date();
 let staffData = [];
 
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
-
 // --- State Variables ---
 let currentUnitFilter = 'all';
 let currentGroupFilter = 'all';
@@ -17,7 +16,6 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
-
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
@@ -231,7 +229,6 @@ function showItemsInModal(filterType) {
     let modalTitle = '';
     const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
     const statusOrder = { 'active': 1, 'planning': 2, 'overdue': 3, 'completed': 4 };
-    
     switch(filterType) {
         case 'total':
             itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
@@ -289,7 +286,6 @@ function openActivityModal(resetDate = true) {
             if (isPastA !== isPastB) return isPastA ? 1 : -1;
             return dateA - dateB;
         });
-        
         let listHtml = '';
         if (sortedItems.length > 0) {
             listHtml = '<ul class="space-y-4">' + sortedItems.map(item => {
@@ -341,7 +337,6 @@ function generateCalendarHTML(year, month, activities){
     calendarHtml += `</div></div>`;
     return calendarHtml;
 };
-
 function navigateCalendar(offset){
     calendarDate.setMonth(calendarDate.getMonth() + offset);
     openActivityModal(false);
@@ -366,7 +361,6 @@ function generateWeeklySummary() {
     const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0));
     const upcomingDeadlines = projectsAndTasks.filter(item => item.deadline && new Date(item.deadline) > today && new Date(item.deadline) <= nextWeek && item.status !== 'completed');
     const helpNeeded = projectsAndTasks.filter(item => item.helpMessage && item.helpMessage.trim() !== '');
-
     const renderSummarySection = (title, icon, color, items, emptyText) => {
         let sectionHTML = `<div class="mb-4"><h3 class="text-lg font-bold ${color} flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>`;
         if (items.length > 0) {
@@ -407,9 +401,6 @@ function generateDashboardReportHTML() {
     return reportHTML;
 }
 
-// ###############################################################
-// ############# 這裡是本次的修改點 #############
-// ###############################################################
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
     const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
@@ -420,7 +411,6 @@ async function getAiSuggestions(memberName = 'all') {
         messageIndex = (messageIndex + 1) % loadingMessages.length;
         if(loadingMessageElement) loadingMessageElement.textContent = loadingMessages[messageIndex];
     }, 1500);
-
     let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type));
     let analysisTarget = "整個團隊";
     if (memberName !== 'all') {
@@ -428,10 +418,8 @@ async function getAiSuggestions(memberName = 'all') {
         itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
     }
     
-    // 為了安全與彈性，只選擇性地傳送必要欄位給 AI
     const sanitizedItems = itemsToAnalyze.map(({ name, group, description, status, progress, assignees, deadline, helpMessage }) => 
         ({ name, group, description, status, progress, assignees, deadline, helpMessage }));
-
     const prompt = `你是一位專業的AI決策經理人，名叫「賈維斯」，專責協助分析「教學部」的業務狀況並提供決策建議。
 
 【分析對象】
@@ -471,7 +459,6 @@ ${analysisTarget}
     "long_term": ["string (一年以上的制度性規劃)"]
   }
 }`;
-    
     const dataToAnalyze = JSON.stringify(sanitizedItems, null, 2);
 
     const geminiPayload = {
@@ -490,7 +477,6 @@ ${analysisTarget}
         "maxOutputTokens": 8192
       }
     };
-    
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -565,8 +551,6 @@ function renderAiReport(data) {
         </div>
     `;
 }
-// ###############################################################
-
 
 // --- Setup Functions ---
 function setupLoginModal() {
@@ -632,7 +616,8 @@ function setupLoginModal() {
                 loginMessage.textContent = '登入成功！即將跳轉...';
                 loginMessage.className = 'text-center mb-4 font-medium text-green-500';
                 setTimeout(() => {
-                    window.location.href = `https://luyun1224.github.io/cmh4200/project-admin.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
+                    // Redirect to project.html instead of the full github path for local testing flexibility
+                    window.location.href = `project.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
                 }, 1500);
             } else {
                 throw new Error(result.message || '帳號或密碼錯誤。');
@@ -716,9 +701,6 @@ function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
 }
 
-// ###############################################################
-// ############# 這裡是本次的修改點 #############
-// ###############################################################
 function populateAiMemberFilter() {
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect && staffData.length > 0) {
@@ -728,7 +710,6 @@ function populateAiMemberFilter() {
         const membersInGroup = staffData
             .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
             .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter);
-
         membersInGroup.forEach(member => {
             const option = document.createElement('option');
             option.value = member.name;
@@ -751,7 +732,6 @@ function setupAiModal(){
         newSelect.addEventListener('change', (e) => getAiSuggestions(e.target.value));
     }
 }
-// ###############################################################
 
 function setupWeeklySummaryModal(){
     setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary);
@@ -790,6 +770,34 @@ function setupChatBot() {
 }
 
 
+// --- NEW: Function to handle user info display and logout ---
+function setupUserInfo() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userName = urlParams.get('user');
+
+    const welcomeMessageEl = document.getElementById('welcome-message');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (userName) {
+        // User is logged in
+        welcomeMessageEl.textContent = `${decodeURIComponent(userName)} 您好`;
+        welcomeMessageEl.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
+
+        logoutBtn.addEventListener('click', () => {
+            // Redirect to index.html (or your login page)
+            window.location.href = 'index.html'; 
+        });
+    } else {
+        // User is not logged in (or came directly to project.html)
+        welcomeMessageEl.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+    }
+}
+
 // --- Initial Load ---
 async function initializeDashboard() {
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -805,8 +813,10 @@ async function initializeDashboard() {
         if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
+        
         const userData = result.data.staffData || [];
         staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit }));
+        
         const itemData = result.data.activities || [];
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -818,10 +828,11 @@ async function initializeDashboard() {
             else if (finalStatus !== 'completed' && deadline && deadline < today) finalStatus = 'overdue';
             return { ...item, progress, status: finalStatus, lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0, helpMessage: item.helpMessage || '', checklist: Array.isArray(item.checklist) ? item.checklist : [] };
         });
+
         const urlParams = new URLSearchParams(window.location.search);
         const paramStatus = urlParams.get('status');
         if (paramStatus) currentStatusFilter = paramStatus;
-        
+
         // 資料載入後才渲染畫面
         renderUnitTabs();
         renderYearFilter();
@@ -843,6 +854,10 @@ async function initializeDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    // Setup UI elements based on login status first
+    setupUserInfo();
+    
+    // Then setup all modals and interactive elements
     setupLoginModal();
     setupChangePasswordModal();
     setupAiModal();
@@ -851,5 +866,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupScrollToTop();
     setupItemListModal();
     setupChatBot();
+    
+    // Finally, load all the data from the backend
     await initializeDashboard();
 });
