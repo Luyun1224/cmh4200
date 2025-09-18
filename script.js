@@ -428,44 +428,52 @@ async function getAiSuggestions(memberName = 'all') {
         itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
     }
     
-    // 1. 定義您的指令 (Prompt)
-    // 為了安全與彈性，只選擇性地傳送必要欄位
-    const sanitizedItems = itemsToAnalyze.map(({ name, description, status, progress, assignees, deadline, helpMessage }) => 
-        ({ name, description, status, progress, assignees, deadline, helpMessage }));
-    
-    const prompt = `你是一位頂尖的專案管理與策略顧問，名叫「賈維斯」。你的任務是根據我提供的 JSON 格式的專案資料，為指定的分析對象「${analysisTarget}」提供一份專業、簡潔、帶有鼓勵性質，且僅包含繁體中文的週報分析。
+    // 為了安全與彈性，只選擇性地傳送必要欄位給 AI
+    const sanitizedItems = itemsToAnalyze.map(({ name, group, description, status, progress, assignees, deadline, helpMessage }) => 
+        ({ name, group, description, status, progress, assignees, deadline, helpMessage }));
 
-請嚴格遵循以下 JSON 格式輸出你的分析報告，不要有任何多餘的文字或 markdown 符號:
+    const prompt = `你是一位專業的AI決策經理人，名叫「賈維斯」，專責協助分析「教學部」的業務狀況並提供決策建議。
+
+【分析對象】
+${analysisTarget}
+
+【輸入資料】
+以下是從專案儀表板上擷取的 JSON 數據，涵蓋教學部七個部門（教學行政組、一般科、臨床技能中心、教師培育中心、實證醫學暨醫療政策中心、視聽中心、圖書館）的相關專案與任務。數據包含工作進度、狀態、負責人、挑戰與風險標註等。
+
+【任務要求】
+1. 如果分析對象是「整個團隊」，請先逐一部門分析，然後再統整。如果分析對象是個人，請直接分析個人狀況。
+2. 分析的角度需包含：業務概況摘要、延遲/落後部分、風險與瓶頸。
+3. 統整為一個「整體視角」（若是團隊分析）。
+4. 最後，請以「AI 經理人」身份，提出具體的決策建議（短期、中期、長期）。
+
+【輸出格式】
+請嚴格遵循以下 JSON 格式輸出，不要有任何多餘的文字或 markdown 符號:
 {
-  "greeting": "string",
-  "overall_status": {
-    "title": "整體狀況分析",
-    "emoji": "string (一個能代表整體狀況的表情符號)",
-    "summary": "string (一句話總結整體狀況)"
-  },
-  "key_insights": [
+  "greeting": "string (一句給 ${analysisTarget} 的溫暖問候語)",
+  "analysis_sections": [
     {
-      "title": "亮點與成就",
-      "emoji": "✨",
-      "points": ["string (條列式說明，最多3點)"]
-    },
-    {
-      "title": "潛在風險",
-      "emoji": "⚠️",
-      "points": ["string (條列式說明，最多3點)"]
+      "title": "string (例如：教學行政組 業務分析 或 ${analysisTarget} 個人狀況分析)",
+      "summary": "string (業務概況摘要)",
+      "delays": ["string (條列式說明延遲/落後部分，若無則為空陣列)"],
+      "risks": ["string (條列式說明風險與瓶頸，若無則為空陣列)"]
     }
   ],
-  "actionable_advice": {
-    "title": "賈維斯的下一步行動建議",
-    "emoji": "🚀",
-    "advice": "string (一段具體、可行的策略建議)"
+  "holistic_summary": {
+    "title": "整體教學部摘要 (若為個人分析則省略此項)",
+    "common_issues": ["string (部門間的共同問題)"],
+    "priorities": ["string (哪些部門或任務需優先關注)"],
+    "benchmarks": ["string (哪些部門或個人表現最佳)"]
+  },
+  "recommendations": {
+    "title": "賈維斯的決策建議",
+    "short_term": ["string (立即可行的改善措施)"],
+    "medium_term": ["string (需一季到半年調整的策略)"],
+    "long_term": ["string (一年以上的制度性規劃)"]
   }
 }`;
     
-    // 2. 要給 AI 分析的資料
     const dataToAnalyze = JSON.stringify(sanitizedItems, null, 2);
 
-    // 3. 組合成符合 Gemini 格式的 Payload
     const geminiPayload = {
       "contents": [
         {
@@ -478,7 +486,7 @@ async function getAiSuggestions(memberName = 'all') {
       ],
       "generationConfig": {
         "responseMimeType": "application/json",
-        "temperature": 0.5,
+        "temperature": 0.4,
         "maxOutputTokens": 8192
       }
     };
@@ -495,7 +503,6 @@ async function getAiSuggestions(memberName = 'all') {
             const reportData = JSON.parse(jsonText);
             aiContent.innerHTML = renderAiReport(reportData);
         } else {
-            // 當 AI 回應不符合預期格式時，顯示原始回應以供除錯
             const rawResponse = JSON.stringify(result, null, 2);
             throw new Error(`AI 回應格式不符。收到的原始資料：\n<pre class="whitespace-pre-wrap text-xs">${rawResponse}</pre>`);
         }
@@ -505,36 +512,60 @@ async function getAiSuggestions(memberName = 'all') {
         clearInterval(intervalId);
     }
 }
-// ###############################################################
 
 function renderAiReport(data) {
     const renderPoints = (points) => {
         if (!points || points.length === 0) {
             return '<p class="text-sm text-gray-500 pl-5">無特別事項。</p>';
         }
-        return '<ul class="space-y-2 pl-5">' + points.map(point => `<li class="text-sm text-gray-800">${point}</li>`).join('') + '</ul>';
+        return '<ul class="space-y-2 pl-5 list-disc list-inside">' + points.map(point => `<li class="text-sm text-gray-800">${point}</li>`).join('') + '</ul>';
     };
+
+    let holisticHtml = '';
+    if (data.holistic_summary && data.holistic_summary.title) {
+        holisticHtml = `
+            <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                <h3 class="font-bold text-indigo-800">📊 ${data.holistic_summary.title}</h3>
+                <div class="mt-2 space-y-2">
+                    <p class="text-sm text-indigo-700"><strong>共同議題:</strong> ${data.holistic_summary.common_issues.join(', ') || '無'}</p>
+                    <p class="text-sm text-indigo-700"><strong>優先關注:</strong> ${data.holistic_summary.priorities.join(', ') || '無'}</p>
+                    <p class="text-sm text-indigo-700"><strong>表現標竿:</strong> ${data.holistic_summary.benchmarks.join(', ') || '無'}</p>
+                </div>
+            </div>
+        `;
+    }
 
     return `
         <div class="p-2 space-y-4 text-gray-800">
             <p>${data.greeting}</p>
-            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 class="font-bold text-blue-800">${data.overall_status.emoji} ${data.overall_status.title}</h3>
-                <p class="text-sm text-blue-700 mt-1">${data.overall_status.summary}</p>
-            </div>
-            ${data.key_insights.map(insight => `
+            ${data.analysis_sections.map(section => `
                 <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <h3 class="font-bold text-gray-800">${insight.emoji} ${insight.title}</h3>
-                    ${renderPoints(insight.points)}
+                    <h3 class="font-bold text-gray-800">📝 ${section.title}</h3>
+                    <p class="text-sm text-gray-600 my-2"><strong>概況:</strong> ${section.summary}</p>
+                    <p class="text-sm text-gray-600 font-semibold"><strong>延遲項目:</strong></p>
+                    ${renderPoints(section.delays)}
+                    <p class="text-sm text-gray-600 font-semibold mt-2"><strong>潛在風險:</strong></p>
+                    ${renderPoints(section.risks)}
                 </div>
             `).join('')}
+            
+            ${holisticHtml}
+
             <div class="p-3 bg-green-50 rounded-lg border border-green-200">
-                <h3 class="font-bold text-green-800">${data.actionable_advice.emoji} ${data.actionable_advice.title}</h3>
-                <p class="text-sm text-green-700 mt-1">${data.actionable_advice.advice}</p>
+                <h3 class="font-bold text-green-800">🚀 ${data.recommendations.title}</h3>
+                <div class="mt-2 space-y-2">
+                    <p class="text-sm text-green-700"><strong>短期建議:</strong></p>
+                    ${renderPoints(data.recommendations.short_term)}
+                    <p class="text-sm text-green-700 mt-2"><strong>中期建議:</strong></p>
+                    ${renderPoints(data.recommendations.medium_term)}
+                    <p class="text-sm text-green-700 mt-2"><strong>長期建議:</strong></p>
+                    ${renderPoints(data.recommendations.long_term)}
+                </div>
             </div>
         </div>
     `;
 }
+// ###############################################################
 
 
 // --- Setup Functions ---
@@ -685,13 +716,42 @@ function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
 }
 
-function setupAiModal(){
-    setupModal('aiModal', 'aiBtn', 'closeAiModalBtn', () => getAiSuggestions('all'));
+// ###############################################################
+// ############# 這裡是本次的修改點 #############
+// ###############################################################
+function populateAiMemberFilter() {
     const filterSelect = document.getElementById('aiMemberFilter');
-    if (filterSelect) {
-        filterSelect.addEventListener('change', (e) => getAiSuggestions(e.target.value));
+    if (filterSelect && staffData.length > 0) {
+        filterSelect.innerHTML = '<option value="all">針對 整個團隊 分析</option>'; // 清空並加入預設選項
+        
+        // 根據 staffData 填充下拉選單
+        const membersInGroup = staffData
+            .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
+            .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter);
+
+        membersInGroup.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.name;
+            option.textContent = `針對 ${member.name} 分析`;
+            filterSelect.appendChild(option);
+        });
     }
 }
+
+function setupAiModal(){
+    setupModal('aiModal', 'aiBtn', 'closeAiModalBtn', () => {
+        populateAiMemberFilter(); // 打開 modal 時，重新填充下拉選單
+        getAiSuggestions('all');
+    });
+    const filterSelect = document.getElementById('aiMemberFilter');
+    if (filterSelect) {
+        // 移除舊的監聽器避免重複綁定
+        const newSelect = filterSelect.cloneNode(true);
+        filterSelect.parentNode.replaceChild(newSelect, filterSelect);
+        newSelect.addEventListener('change', (e) => getAiSuggestions(e.target.value));
+    }
+}
+// ###############################################################
 
 function setupWeeklySummaryModal(){
     setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary);
@@ -761,10 +821,13 @@ async function initializeDashboard() {
         const urlParams = new URLSearchParams(window.location.search);
         const paramStatus = urlParams.get('status');
         if (paramStatus) currentStatusFilter = paramStatus;
+        
+        // 資料載入後才渲染畫面
         renderUnitTabs();
         renderYearFilter();
         renderMonthFilter();
         renderDashboard();
+
         if (paramStatus) {
             const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
             if (btn) filterItemsByStatus(paramStatus, { target: btn });
