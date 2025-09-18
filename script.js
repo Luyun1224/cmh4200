@@ -1,213 +1,212 @@
 // script.js (FINAL & COMPLETE - All feature logic restored)
 // --- Configuration ---
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
-let allActivities = [];
-const currentDate = new Date();
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec"; [cite: 1]
+let allActivities = []; [cite: 1]
+const currentDate = new Date(); [cite: 2]
 
 let staffData = [];
 
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
-
 // --- State Variables ---
-let currentUnitFilter = 'all';
-let currentGroupFilter = 'all';
-let currentStatusFilter = 'all';
-let currentMemberFilter = 'all';
-let currentYearFilter = 'all';
+let currentUnitFilter = 'all'; [cite: 3]
+let currentGroupFilter = 'all'; [cite: 3]
+let currentStatusFilter = 'all'; [cite: 3]
+let currentMemberFilter = 'all'; [cite: 3]
+let currentYearFilter = 'all'; [cite: 4]
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
-let calendarDate = new Date();
-
+let calendarDate = new Date(); [cite: 4]
 // --- Helper Functions ---
-const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
-const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
-const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
-const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目');
+const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500'); [cite: 5]
+const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知'); [cite: 6]
+const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : ''; [cite: 7]
+const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目'); [cite: 8]
 const getTypeStyle = (type, status) => {
     switch(type) {
-        case 'project': return 'text-blue-700';
-        case 'task': return 'text-green-700';
+        case 'project': return 'text-blue-700'; [cite: 9]
+        case 'task': return 'text-green-700'; [cite: 10]
         case 'activity': return 'text-purple-700';
-        case 'meeting': return status === 'completed' ? 'text-gray-400' : 'text-indigo-700';
-        default: return 'text-gray-500';
+        case 'meeting': return status === 'completed' ? 'text-gray-400' : 'text-indigo-700'; [cite: 10]
+        default: return 'text-gray-500'; [cite: 11]
     }
 };
 
 // --- Rendering Functions ---
 function renderUnitTabs() {
     const tabsContainer = document.getElementById('unitTabs');
-    if (!staffData || staffData.length === 0) return;
+    if (!staffData || staffData.length === 0) return; [cite: 12]
     const units = ['all', ...new Set(staffData.map(s => s.unit).filter(Boolean))];
-    tabsContainer.innerHTML = units.map(unit => {
+    tabsContainer.innerHTML = units.map(unit => { [cite: 13]
         const unitName = unit === 'all' ? '全部單位' : unit;
         return `<button onclick="filterByUnit('${unit}')" id="tab-unit-${unit}" class="unit-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${unit === currentUnitFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${unitName}</button>`;
-    }).join('');
-}
+    }).join(''); [cite: 13]
+} [cite: 14]
 
 function renderGroupTabs(membersToConsider) {
     const tabsContainer = document.getElementById('groupTabs');
     let groups = [...new Set(membersToConsider.map(s => s.group).filter(Boolean))];
-    const desiredOrder = ['教學行政組', '一般科', '臨床技能中心', '教師培育中心', '實證醫學暨醫療政策中心', '視聽中心', '圖書館'];
-    groups.sort((a, b) => {
+    const desiredOrder = ['教學行政組', '一般科', '臨床技能中心', '教師培育中心', '實證醫學暨醫療政策中心', '視聽中心', '圖書館']; [cite: 15]
+    groups.sort((a, b) => { [cite: 16]
         const indexA = desiredOrder.indexOf(a);
         const indexB = desiredOrder.indexOf(b);
         if (indexA !== -1 && indexB !== -1) { return indexA - indexB; }
         if (indexA !== -1) { return -1; }
         if (indexB !== -1) { return 1; }
         return a.localeCompare(b, 'zh-Hant');
-    });
-    if (groups.length <= 1 && currentUnitFilter !== 'all') {
+    }); [cite: 16]
+    if (groups.length <= 1 && currentUnitFilter !== 'all') { [cite: 17]
         tabsContainer.innerHTML = '';
-        tabsContainer.style.padding = '0';
+        tabsContainer.style.padding = '0'; [cite: 18]
         return;
     }
     tabsContainer.style.padding = '0.75rem 0';
     let buttonsHTML = '';
-    if(groups.length > 0) {
-        buttonsHTML += `<button onclick="filterByGroup('all')" id="tab-all" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${'all' === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">全部組別</button>`;
-    }
-    buttonsHTML += groups.map(key => `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${key}</button>`).join('');
-    tabsContainer.innerHTML = buttonsHTML;
+    if(groups.length > 0) { [cite: 19]
+        buttonsHTML += `<button onclick="filterByGroup('all')" id="tab-all" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${'all' === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">全部組別</button>`; [cite: 19]
+    } [cite: 20]
+    buttonsHTML += groups.map(key => `<button onclick="filterByGroup('${key}')" id="tab-${key}" class="group-tab-btn px-4 py-2 text-sm rounded-lg font-medium transition-colors mb-2 ${key === currentGroupFilter ? 'tab-active' : 'bg-gray-100 hover:bg-gray-200'}">${key}</button>`).join(''); [cite: 20]
+    tabsContainer.innerHTML = buttonsHTML; [cite: 21]
 }
 
 function renderYearFilter() {
     const yearFilterSelect = document.getElementById('yearFilter');
-    const years = ['all', ...new Set(allActivities.map(item => item.startDate ? new Date(item.startDate).getFullYear() : null).filter(Boolean))].sort();
-    yearFilterSelect.innerHTML = years.map(year => `<option value="${year}">${year === 'all' ? '全部年份' : `${year}年`}</option>`).join('');
+    const years = ['all', ...new Set(allActivities.map(item => item.startDate ? new Date(item.startDate).getFullYear() : null).filter(Boolean))].sort(); [cite: 22]
+    yearFilterSelect.innerHTML = years.map(year => `<option value="${year}">${year === 'all' ? '全部年份' : `${year}年`}</option>`).join(''); [cite: 23]
     yearFilterSelect.value = currentYearFilter;
-}
+} [cite: 24]
 
 function renderMonthFilter() {
     const monthFilterSelect = document.getElementById('monthFilter');
     const months = ['all', 1,2,3,4,5,6,7,8,9,10,11,12];
-    monthFilterSelect.innerHTML = months.map(m => `<option value="${m}">${m === 'all' ? '全部月份' : `${m}月`}</option>`).join('');
+    monthFilterSelect.innerHTML = months.map(m => `<option value="${m}">${m === 'all' ? '全部月份' : `${m}月`}</option>`).join(''); [cite: 25]
     monthFilterSelect.value = currentMonthFilter;
-}
+} [cite: 26]
 
 function renderItems(itemsToRender) {
     const itemsList = document.getElementById('itemsList');
     let filteredItems = itemsToRender;
-    if (currentStatusFilter !== 'all') {
-        filteredItems = itemsToRender.filter(p => p.status === currentStatusFilter);
-    }
+    if (currentStatusFilter !== 'all') { [cite: 27]
+        filteredItems = itemsToRender.filter(p => p.status === currentStatusFilter); [cite: 27]
+    } [cite: 28]
     if (filteredItems.length === 0) {
         itemsList.innerHTML = `<div class="text-center text-gray-400 py-8 col-span-full"><i class="fas fa-folder-open fa-3x mb-4"></i><p class="font-semibold">沒有符合條件的項目</p><p class="text-sm mt-1">請嘗試調整篩選條件</p></div>`;
-        return;
+        return; [cite: 29]
     }
     itemsList.innerHTML = filteredItems.map(item => {
         const checklist = item.checklist || [];
         const totalSteps = checklist.length;
         const completedSteps = checklist.filter(c => c.completed).length;
         const progressChange = item.progress - (item.lastWeekProgress || 0);
-        const progressChangeHTML = progressChange > 0 ? `<span class="bg-green-100 text-green-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▲ ${progressChange}%</span>` : progressChange < 0 ? `<span class="bg-red-100 text-red-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▼ ${Math.abs(progressChange)}%</span>` : `<span class="text-gray-400 text-xs font-medium ml-2">—</span>`;
+        const progressChangeHTML = progressChange > 0 ? `<span class="bg-green-100 text-green-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▲ ${progressChange}%</span>` : progressChange < 0 ? `<span class="bg-red-100 text-red-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▼ ${Math.abs(progressChange)}%</span>` : `<span class="text-gray-400 text-xs font-medium ml-2">—</span>`; [cite: 30]
         const checklistHTML = totalSteps > 0 ? checklist.map(cp => `<li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}"><span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span><span>${cp.name}</span></li>`).join('') : '<li>無定義的檢查點</li>';
-        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}"><div class="flex-grow"><div class="flex justify-between items-start mb-3"><div class="flex-1"><h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}<p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}</div><div class="flex items-center space-x-2 ml-2"><span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div></div><div class="mt-auto border-t border-gray-100 pt-3"><div class="mb-3"><div class="flex justify-between items-center text-sm mb-1"><span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>${progressChangeHTML}</div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div><div class="relative group"><p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p><div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"><h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4><ul class="space-y-1 mt-2">${checklistHTML}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div></div><div class="flex justify-between items-center text-xs text-gray-500"><span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '無'}</span>${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}</div></div>`;
-    }).join('');
+        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}"><div class="flex-grow"><div class="flex justify-between items-start mb-3"><div class="flex-1"><h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}<p class="text-sm text-gray-600">主要負責: ${item.assignees.join(', ')}</p>${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}</div><div class="flex items-center space-x-2 ml-2"><span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div></div><div class="mt-auto border-t border-gray-100 pt-3"><div class="mb-3"><div class="flex justify-between items-center text-sm mb-1"><span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>${progressChangeHTML}</div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div><div class="relative group"><p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p><div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"><h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4><ul class="space-y-1 mt-2">${checklistHTML}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div></div><div class="flex justify-between items-center text-xs text-gray-500"><span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '無'}</span>${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}</div></div>`; [cite: 31, 32, 33, 34]
+    }).join(''); [cite: 35]
 }
 
 function renderTeamMembers(members, allItems) {
     const teamMembersDiv = document.getElementById('teamMembers');
-    if (!members || members.length === 0) {
+    if (!members || members.length === 0) { [cite: 36]
         teamMembersDiv.innerHTML = `<p class="text-center text-gray-500 py-4">此篩選條件下無成員</p>`;
-        return;
+        return; [cite: 37]
     }
     const today = new Date();
     const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
-    teamMembersDiv.innerHTML = members.map(memberInfo => {
+    teamMembersDiv.innerHTML = members.map(memberInfo => { [cite: 38]
         const name = memberInfo.name;
         const memberItems = allItems.filter(t => t.assignees.includes(name) || (t.collaborators && t.collaborators.includes(name)));
         const overdueCount = memberItems.filter(t => t.status === 'overdue').length;
         const projectCount = memberItems.filter(item => item.type === 'project').length;
         const taskCount = memberItems.filter(item => item.type === 'task').length;
         const isActive = name === currentMemberFilter;
-        const isBirthday = memberInfo.birthday === todayStr;
+        const isBirthday = memberInfo.birthday === todayStr; [cite: 39]
         const birthdayContainerClass = isBirthday ? 'birthday-container' : '';
         const birthdayHatHTML = isBirthday ? '<div class="birthday-hat"></div>' : '';
         const confettiHTML = isBirthday ? Array.from({length: 9}).map(() => `<div class="confetti"></div>`).join('') : '';
-        return `<div onclick="filterByMember('${name}')" class="group relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}"><div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-48 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30"><img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;"><p class="font-bold text-center text-gray-900 text-lg">${name}</p><a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm mt-3">檢視個人歷程</a><div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div></div>${confettiHTML}<div class="flex items-center min-w-0"><div class="relative flex-shrink-0">${birthdayHatHTML}${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}</div><div class="ml-3 min-w-0"><p class="font-medium text-gray-900 truncate">${name}</p><div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1"><span>專案: ${projectCount}</span><span>任務: ${taskCount}</span></div></div></div><div class="text-right flex-shrink-0 ml-2">${overdueCount > 0 ? `<span class="text-xs font-bold text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center">${overdueCount}</span>` : ''}</div></div>`;
+        return `<div onclick="filterByMember('${name}')" class="group relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}"><div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-48 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30"><img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;"><p class="font-bold text-center text-gray-900 text-lg">${name}</p><a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm mt-3">檢視個人歷程</a><div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div></div>${confettiHTML}<div class="flex items-center min-w-0"><div class="relative flex-shrink-0">${birthdayHatHTML}${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}</div><div class="ml-3 min-w-0"><p class="font-medium text-gray-900 truncate">${name}</p><div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1"><span>專案: ${projectCount}</span><span>任務: ${taskCount}</span></div></div></div><div class="text-right flex-shrink-0 ml-2">${overdueCount > 0 ? `<span class="text-xs font-bold text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center">${overdueCount}</span>` : ''}</div></div>`; [cite: 40, 41, 42, 43]
     }).join('');
-}
+} [cite: 44]
 
 function updateStats(itemsToCount) {
-    const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
-    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
+    const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task'); [cite: 105]
+    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting'); [cite: 45]
     document.getElementById('totalTasks').textContent = projectsAndTasks.length;
-    document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
+    document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length; [cite: 46]
     document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
-    document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
+    document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length; [cite: 47]
     document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
 }
 
 function renderDashboard() {
     let itemsForYear = allActivities;
-    if (currentYearFilter !== 'all') {
-         itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
-    }
+    if (currentYearFilter !== 'all') { [cite: 48]
+         itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter); [cite: 48]
+    } [cite: 49]
     let itemsForMonth = itemsForYear;
     if (currentMonthFilter !== 'all') {
         itemsForMonth = itemsForYear.filter(item => item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
-    }
+    } [cite: 50]
     let membersAfterUnitFilter = staffData;
     if (currentUnitFilter !== 'all') {
         membersAfterUnitFilter = staffData.filter(s => s.unit === currentUnitFilter);
-    }
+    } [cite: 51]
     renderGroupTabs(membersAfterUnitFilter);
     const membersInGroup = currentGroupFilter === 'all' ? membersAfterUnitFilter : membersAfterUnitFilter.filter(s => s.group === currentGroupFilter);
-    const finalVisibleMemberNames = membersInGroup.map(m => m.name);
+    const finalVisibleMemberNames = membersInGroup.map(m => m.name); [cite: 52]
     let itemsToConsider = itemsForMonth.filter(item => item.assignees.some(assignee => finalVisibleMemberNames.includes(assignee)) || (item.collaborators && item.collaborators.some(collaborator => finalVisibleMemberNames.includes(collaborator))));
-    if (currentSearchTerm) {
+    if (currentSearchTerm) { [cite: 53]
         const lowerCaseTerm = currentSearchTerm.toLowerCase();
-        itemsToConsider = itemsToConsider.filter(item => item.name.toLowerCase().includes(lowerCaseTerm) || (item.description && item.description.toLowerCase().includes(lowerCaseTerm)));
+        itemsToConsider = itemsToConsider.filter(item => item.name.toLowerCase().includes(lowerCaseTerm) || (item.description && item.description.toLowerCase().includes(lowerCaseTerm))); [cite: 54]
     }
     let itemsToDisplay = itemsToConsider;
-    if (currentMemberFilter !== 'all') {
-        itemsToDisplay = itemsToConsider.filter(item => item.assignees.includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
-    }
+    if (currentMemberFilter !== 'all') { [cite: 55]
+        itemsToDisplay = itemsToConsider.filter(item => item.assignees.includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter))); [cite: 55]
+    } [cite: 56]
     itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
     updateStats(itemsToConsider);
     renderTeamMembers(membersInGroup, itemsToConsider);
-    renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
+    renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task')); [cite: 57]
 }
 
 // --- Filtering Functions ---
 function filterByUnit(unit) {
     currentUnitFilter = unit;
-    currentGroupFilter = 'all';
+    currentGroupFilter = 'all'; [cite: 58]
     currentMemberFilter = 'all';
     document.querySelectorAll('.unit-tab-btn').forEach(btn => {
         btn.classList.toggle('tab-active', btn.id === `tab-unit-${unit.replace(/\s/g, '-')}`);
         btn.classList.toggle('bg-gray-100', btn.id !== `tab-unit-${unit.replace(/\s/g, '-')}`);
         btn.classList.toggle('hover:bg-gray-200', btn.id !== `tab-unit-${unit.replace(/\s/g, '-')}`);
     });
-    renderDashboard();
+    renderDashboard(); [cite: 59]
 }
 
 function filterBySearch(term) { currentSearchTerm = term; renderDashboard(); }
-function filterByYear(year) { currentYearFilter = year; renderDashboard(); }
+function filterByYear(year) { currentYearFilter = year; renderDashboard();
+} [cite: 60]
 function filterByMonth(month) { currentMonthFilter = month; renderDashboard(); }
 
 function filterByGroup(groupKey) {
     currentGroupFilter = groupKey;
     currentMemberFilter = 'all';
-    document.querySelectorAll('.group-tab-btn').forEach(btn => {
+    document.querySelectorAll('.group-tab-btn').forEach(btn => { [cite: 61]
         btn.classList.toggle('tab-active', btn.id === `tab-${groupKey}`);
-    });
+    }); [cite: 61]
     renderDashboard();
-}
+} [cite: 62]
 
 function filterByMember(memberName) {
     currentMemberFilter = (currentMemberFilter === memberName) ? 'all' : memberName;
     renderDashboard();
-}
+} [cite: 63]
 
 function filterItemsByStatus(statusFilter, event) {
     currentStatusFilter = statusFilter;
-    const colorMap = {'all': ['bg-blue-100', 'text-blue-700'], 'planning': ['bg-yellow-100', 'text-yellow-700'], 'active': ['bg-purple-100', 'text-purple-700'], 'completed': ['bg-green-100', 'text-green-700'], 'overdue': ['bg-red-100', 'text-red-700']};
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    const colorMap = {'all': ['bg-blue-100', 'text-blue-700'], 'planning': ['bg-yellow-100', 'text-yellow-700'], 'active': ['bg-purple-100', 'text-purple-700'], 'completed': ['bg-green-100', 'text-green-700'], 'overdue': ['bg-red-100', 'text-red-700']}; [cite: 64]
+    document.querySelectorAll('.filter-btn').forEach(btn => { [cite: 65]
         btn.classList.remove('active', ...Object.values(colorMap).flat());
         btn.classList.add('bg-gray-100', 'text-gray-700');
-    });
-    event.target.classList.add('active', ...colorMap[statusFilter]);
+    }); [cite: 65]
+    event.target.classList.add('active', ...colorMap[statusFilter]); [cite: 66]
     event.target.classList.remove('bg-gray-100', 'text-gray-700');
     renderDashboard();
 }
@@ -216,104 +215,102 @@ function filterItemsByStatus(statusFilter, event) {
 
 function viewMemberHistory(name, event) {
     event.stopPropagation();
-    if (name === '盧英云') {
+    if (name === '盧英云') { [cite: 67]
         window.open('https://qpig0218.github.io/Ying-Yun/', '_blank');
         return;
-    }
+    } [cite: 68]
     alert(`檢視 ${name} 的個人歷程 (功能開發中)`);
 }
 
 function showItemsInModal(filterType) {
     const modal = document.getElementById('itemListModal');
-    const titleEl = document.getElementById('itemListModalTitle');
+    const titleEl = document.getElementById('itemListModalTitle'); [cite: 69]
     const contentEl = document.getElementById('itemListModalContent');
     let itemsToShow = [];
     let modalTitle = '';
-    const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
-    const statusOrder = { 'active': 1, 'planning': 2, 'overdue': 3, 'completed': 4 };
-    
-    switch(filterType) {
+    const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task'); [cite: 70]
+    const statusOrder = { 'active': 1, 'planning': 2, 'overdue': 3, 'completed': 4 }; [cite: 71]
+    switch(filterType) { [cite: 72]
         case 'total':
             itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
-            modalTitle = '總項目列表';
+            modalTitle = '總項目列表'; [cite: 73]
             break;
         case 'active':
             itemsToShow = projectsAndTasks.filter(item => item.status === 'active');
-            modalTitle = '進行中項目列表';
+            modalTitle = '進行中項目列表'; [cite: 74]
             break;
         case 'overdue':
             itemsToShow = projectsAndTasks.filter(item => item.status === 'overdue');
-            modalTitle = '逾期項目列表';
+            modalTitle = '逾期項目列表'; [cite: 75]
             break;
         case 'completed':
             itemsToShow = allActivities.filter(item => item.status === 'completed');
-            modalTitle = '已完成項目列表';
+            modalTitle = '已完成項目列表'; [cite: 76]
             break;
     }
 
     titleEl.innerHTML = `<i class="fas fa-list-check mr-3"></i> ${modalTitle} (${itemsToShow.length})`;
-    if (itemsToShow.length === 0) {
+    if (itemsToShow.length === 0) { [cite: 77]
         contentEl.innerHTML = '<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>';
-    } else {
+    } else { [cite: 78]
         contentEl.innerHTML = itemsToShow.map(item => `
             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100">
                 <p class="font-semibold text-gray-800">${item.name}</p>
                 <p class="text-sm text-gray-600">負責人: ${item.assignees.join(', ')}</p>
                 <div class="flex justify-between items-center text-xs mt-1">
-                    <span class="font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span>
+                    <span class="font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span> [cite: 79]
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
                 </div>
             </div>
         `).join('');
-    }
+    } [cite: 80]
     modal.classList.remove('hidden');
 }
 
 function openActivityModal(resetDate = true) {
     if (resetDate) calendarDate = new Date();
-    const modal = document.getElementById('activityModal');
+    const modal = document.getElementById('activityModal'); [cite: 81]
     const content = document.getElementById('activity-content');
     const itemsForDisplay = allActivities.filter(item => item.type && (item.type.toLowerCase() === 'activity' || item.type.toLowerCase() === 'meeting'));
-    const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay);
+    const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay); [cite: 82]
 
     if (itemsForDisplay.length === 0) {
         content.innerHTML = calendarHTML + `<p class="text-center text-gray-500 mt-4">目前沒有任何活動。</p>`;
-    } else {
+    } else { [cite: 83]
         const today = new Date();
         today.setHours(0,0,0,0);
-        const sortedItems = itemsForDisplay.slice().sort((a, b) => {
+        const sortedItems = itemsForDisplay.slice().sort((a, b) => { [cite: 84]
             const dateA = new Date(a.startDate);
             const dateB = new Date(b.startDate);
             const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
             const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
-            if (isPastA !== isPastB) return isPastA ? 1 : -1;
+            if (isPastA !== isPastB) return isPastA ? 1 : -1; [cite: 85]
             return dateA - dateB;
         });
-        
-        let listHtml = '';
+        let listHtml = ''; [cite: 86]
         if (sortedItems.length > 0) {
             listHtml = '<ul class="space-y-4">' + sortedItems.map(item => {
                 const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
                 return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">
-                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
+                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg"> [cite: 87]
                         <span class="text-xl font-bold text-purple-700">${new Date(item.startDate).getDate()}</span>
                     </div>
                     <div class="flex-grow pt-1">
-                        <p class="font-semibold text-gray-800">${item.name}</p>
+                        <p class="font-semibold text-gray-800">${item.name}</p> [cite: 88]
                         <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}</p>
                         <p class="text-sm text-gray-500">負責人: ${item.assignees.join(', ')}</p>
                     </div>
                 </li>`;
-            }).join('') + '</ul>';
-        }
+            }).join('') + '</ul>'; [cite: 89]
+        } [cite: 90]
         content.innerHTML = calendarHTML + `<hr class="my-6"/>` + listHtml;
-    }
+    } [cite: 91]
     modal.classList.remove('hidden');
 }
 
 function generateCalendarHTML(year, month, activities){
     const activitiesByDay = {};
-    activities.forEach(item => {
+    activities.forEach(item => { [cite: 92]
         if (!item.startDate) return;
         const d = new Date(item.startDate);
         if (d.getFullYear() === year && d.getMonth() === month) {
@@ -322,36 +319,36 @@ function generateCalendarHTML(year, month, activities){
             activitiesByDay[day].push(item);
         }
     });
-    const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-    const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+    const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]; [cite: 93]
+    const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六']; [cite: 94]
     const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInMonth = new Date(year, month + 1, 0).getDate(); [cite: 95]
     let calendarHtml = `<div class="mb-6"><div class="flex justify-between items-center mb-4"><button onclick="navigateCalendar(-1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt;</button><h3 class="text-xl font-bold text-purple-700">${year}年 ${monthNames[month]}</h3><button onclick="navigateCalendar(1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center text-sm">`;
-    daysOfWeek.forEach(day => { calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`; });
-    for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`; }
+    daysOfWeek.forEach(day => { calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`; }); [cite: 96]
+    for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`;
+    } [cite: 97]
     for (let day = 1; day <= daysInMonth; day++) {
         const activitiesToday = activitiesByDay[day];
-        if (activitiesToday) {
+        if (activitiesToday) { [cite: 98]
             const tooltipHtml = activitiesToday.map(act => `<li class="truncate">${act.name}</li>`).join('');
-            calendarHtml += `<div class="relative group flex items-center justify-center"><div class="mx-auto flex items-center justify-center w-8 h-8 rounded-full border-2 border-purple-400 text-purple-700 font-semibold cursor-pointer">${day}</div><span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full">${activitiesToday.length}</span><div class="absolute bottom-full mb-2 w-56 p-2 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 transform -translate-x-1/2 left-1/2"><ul class="space-y-1">${tooltipHtml}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div>`;
-        } else {
-            calendarHtml += `<div class="flex items-center justify-center w-8 h-8">${day}</div>`;
+            calendarHtml += `<div class="relative group flex items-center justify-center"><div class="mx-auto flex items-center justify-center w-8 h-8 rounded-full border-2 border-purple-400 text-purple-700 font-semibold cursor-pointer">${day}</div><span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full">${activitiesToday.length}</span><div class="absolute bottom-full mb-2 w-56 p-2 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 transform -translate-x-1/2 left-1/2"><ul class="space-y-1">${tooltipHtml}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div>`; [cite: 99]
+        } else { [cite: 100]
+            calendarHtml += `<div class="flex items-center justify-center w-8 h-8">${day}</div>`; [cite: 101]
         }
     }
     calendarHtml += `</div></div>`;
     return calendarHtml;
 };
-
-function navigateCalendar(offset){
+function navigateCalendar(offset){ [cite: 102]
     calendarDate.setMonth(calendarDate.getMonth() + offset);
     openActivityModal(false);
 };
 
 function generateWeeklySummary() {
     const content = document.getElementById('weekly-summary-content');
-    content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成本週回顧...</div>`;
+    content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成本週回顧...</div>`; [cite: 103]
     const today = new Date();
-    const oneWeekAgo = new Date();
+    const oneWeekAgo = new Date(); [cite: 104]
     oneWeekAgo.setDate(today.getDate() - 7);
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
@@ -361,137 +358,215 @@ function generateWeeklySummary() {
         const completionDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate);
         return completionDate >= oneWeekAgo && completionDate <= today;
     });
-    const progressMade = projectsAndTasks.filter(item => item.status !== 'completed' && item.progress > (item.lastWeekProgress || 0));
-    const newlyAdded = projectsAndTasks.filter(item => new Date(item.startDate) >= oneWeekAgo && new Date(item.startDate) <= today);
-    const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0));
-    const upcomingDeadlines = projectsAndTasks.filter(item => item.deadline && new Date(item.deadline) > today && new Date(item.deadline) <= nextWeek && item.status !== 'completed');
-    const helpNeeded = projectsAndTasks.filter(item => item.helpMessage && item.helpMessage.trim() !== '');
-
-    const renderSummarySection = (title, icon, color, items, emptyText) => {
+    const progressMade = projectsAndTasks.filter(item => item.status !== 'completed' && item.progress > (item.lastWeekProgress || 0)); [cite: 106]
+    const newlyAdded = projectsAndTasks.filter(item => new Date(item.startDate) >= oneWeekAgo && new Date(item.startDate) <= today); [cite: 107]
+    const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0)); [cite: 108]
+    const upcomingDeadlines = projectsAndTasks.filter(item => item.deadline && new Date(item.deadline) > today && new Date(item.deadline) <= nextWeek && item.status !== 'completed'); [cite: 109]
+    const helpNeeded = projectsAndTasks.filter(item => item.helpMessage && item.helpMessage.trim() !== ''); [cite: 110]
+    const renderSummarySection = (title, icon, color, items, emptyText) => { [cite: 111]
         let sectionHTML = `<div class="mb-4"><h3 class="text-lg font-bold ${color} flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>`;
-        if (items.length > 0) {
+        if (items.length > 0) { [cite: 112]
             sectionHTML += '<ul class="space-y-2 pl-5">' + items.map(item =>
                 `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}">
                     <strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${item.assignees.join(', ')}</span>
-                    ${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}
+                    ${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''} [cite: 113]
                     ${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}
                     ${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}
                 </li>`
             ).join('') + '</ul>';
-        } else {
-            sectionHTML += `<p class="pl-5 text-sm text-gray-500">${emptyText}</p>`;
+        } else { [cite: 114]
+            sectionHTML += `<p class="pl-5 text-sm text-gray-500">${emptyText}</p>`; [cite: 115]
         }
         sectionHTML += `</div>`;
         return sectionHTML;
     };
-    let summaryHTML = renderSummarySection('本週完成項目', 'fa-check-circle', 'text-green-600', completedThisWeek, '本週沒有完成的項目。');
+    let summaryHTML = renderSummarySection('本週完成項目', 'fa-check-circle', 'text-green-600', completedThisWeek, '本週沒有完成的項目。'); [cite: 116]
     summaryHTML += renderSummarySection('本週進度更新', 'fa-rocket', 'text-blue-600', progressMade, '本週沒有項目取得進展。');
-    summaryHTML += renderSummarySection('本週新增項目', 'fa-lightbulb', 'text-purple-600', newlyAdded, '本週沒有新增項目。');
+    summaryHTML += renderSummarySection('本週新增項目', 'fa-lightbulb', 'text-purple-600', newlyAdded, '本週沒有新增項目。'); [cite: 117]
     summaryHTML += renderSummarySection('下週到期項目', 'fa-clock', 'text-yellow-600', upcomingDeadlines, '下週沒有即將到期的項目。');
-    summaryHTML += renderSummarySection('進度停滯項目', 'fa-pause-circle', 'text-orange-500', stalled, '所有項目皆有進展，太棒了！');
+    summaryHTML += renderSummarySection('進度停滯項目', 'fa-pause-circle', 'text-orange-500', stalled, '所有項目皆有進展，太棒了！'); [cite: 118]
     summaryHTML += renderSummarySection('需要協助項目', 'fa-hands-helping', 'text-red-600', helpNeeded, '沒有項目發出求救信號。');
     content.innerHTML = summaryHTML;
-}
+} [cite: 119]
 
 function generateDashboardReportHTML() {
     const today = new Date();
-    const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+    const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }); [cite: 120]
     const overdueProjects = allActivities.filter(i => i.status === 'overdue');
-    let reportHTML = `<div class="p-2 space-y-4 text-gray-800"><p>您好！這是截至 <strong>${todayString}</strong> 的重點彙報。</p>`;
+    let reportHTML = `<div class="p-2 space-y-4 text-gray-800"><p>您好！這是截至 <strong>${todayString}</strong> 的重點彙報。</p>`; [cite: 121]
     if (overdueProjects.length > 0) {
         reportHTML += `<div class="p-3 bg-red-50 rounded-lg border border-red-200"><h3 class="font-bold text-red-800">⚠️ 風險提示</h3><p class="text-sm text-red-700 mt-1">「${overdueProjects[0].name}」目前處於逾期狀態，需負責人 <strong>${overdueProjects[0].assignees.join(', ')}</strong> 重點關注。</p></div>`;
-    } else {
-        reportHTML += `<div class="p-3 bg-green-50 rounded-lg border border-green-200"><h3 class="font-bold text-green-800">✅ 目前所有項目皆在掌控中！</h3></div>`;
+    } else { [cite: 122]
+        reportHTML += `<div class="p-3 bg-green-50 rounded-lg border border-green-200"><h3 class="font-bold text-green-800">✅ 目前所有項目皆在掌控中！</h3></div>`; [cite: 123]
     }
     reportHTML += `<p class="text-xs text-gray-500 text-center pt-2">希望這份彙報對您有幫助！</p></div>`;
     return reportHTML;
-}
+} [cite: 124]
 
+// ###############################################################
+// ############# 這裡是本次的修改點 #############
+// ###############################################################
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
-    const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
+    const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."]; [cite: 125]
     let messageIndex = 0;
-    aiContent.innerHTML = `<div class="flex flex-col items-center justify-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p id="ai-loading-message" class="mt-4 text-gray-600 font-medium">${loadingMessages[0]}</p></div>`;
-    const loadingMessageElement = document.getElementById('ai-loading-message');
+    aiContent.innerHTML = `<div class="flex flex-col items-center justify-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p id="ai-loading-message" class="mt-4 text-gray-600 font-medium">${loadingMessages[0]}</p></div>`; [cite: 126]
+    const loadingMessageElement = document.getElementById('ai-loading-message'); [cite: 127]
     const intervalId = setInterval(() => {
         messageIndex = (messageIndex + 1) % loadingMessages.length;
         if(loadingMessageElement) loadingMessageElement.textContent = loadingMessages[messageIndex];
     }, 1500);
 
-    let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type));
+    let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type)); [cite: 128]
     let analysisTarget = "整個團隊";
-    if (memberName !== 'all') {
+    if (memberName !== 'all') { [cite: 129]
         analysisTarget = memberName;
-        itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
+        itemsToAnalyze = itemsToAnalyze.filter(item => item.assignees.includes(memberName) || (item.collaborators && item.collaborators.includes(memberName))); [cite: 130]
     }
-    const prompt = `你是一位頂尖的專案管理與策略顧問...`; // This prompt is very long and has been truncated for brevity
-    const geminiPayload = { /* ... full payload ... */ };
+    
+    // 1. 定義您的指令 (Prompt)
+    // 為了安全與彈性，只選擇性地傳送必要欄位
+    const sanitizedItems = itemsToAnalyze.map(({ name, description, status, progress, assignees, deadline, helpMessage }) => 
+        ({ name, description, status, progress, assignees, deadline, helpMessage }));
+    
+    const prompt = `你是一位頂尖的專案管理與策略顧問，名叫「賈維斯」。你的任務是根據我提供的 JSON 格式的專案資料，為指定的分析對象「${analysisTarget}」提供一份專業、簡潔、帶有鼓勵性質，且僅包含繁體中文的週報分析。
+
+請嚴格遵循以下 JSON 格式輸出你的分析報告，不要有任何多餘的文字或 markdown 符號:
+{
+  "greeting": "string",
+  "overall_status": {
+    "title": "整體狀況分析",
+    "emoji": "string (一個能代表整體狀況的表情符號)",
+    "summary": "string (一句話總結整體狀況)"
+  },
+  "key_insights": [
+    {
+      "title": "亮點與成就",
+      "emoji": "✨",
+      "points": ["string (條列式說明，最多3點)"]
+    },
+    {
+      "title": "潛在風險",
+      "emoji": "⚠️",
+      "points": ["string (條列式說明，最多3點)"]
+    }
+  ],
+  "actionable_advice": {
+    "title": "賈維斯的下一步行動建議",
+    "emoji": "🚀",
+    "advice": "string (一段具體、可行的策略建議)"
+  }
+}`;
+    
+    // 2. 要給 AI 分析的資料
+    const dataToAnalyze = JSON.stringify(sanitizedItems, null, 2);
+
+    // 3. 組合成符合 Gemini 格式的 Payload
+    const geminiPayload = {
+      "contents": [
+        {
+          "parts": [
+            { "text": prompt },
+            { "text": "\n\n請分析以下 JSON 資料：\n" },
+            { "text": dataToAnalyze }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "responseMimeType": "application/json",
+        "temperature": 0.5,
+        "maxOutputTokens": 8192
+      }
+    };
     
     try {
         const response = await fetch(SCRIPT_URL, {
-            method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text-plain;charset=utf-8' },
+            method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: geminiPayload })
         });
-        const result = await response.json();
-        if (result.error) throw new Error(result.error.message || '後端回傳未知錯誤');
+        const result = await response.json(); [cite: 133]
+        if (result.error) throw new Error(result.error.message || '後端回傳未知錯誤'); [cite: 134]
         if (result.candidates && result.candidates[0].content.parts[0].text) {
             const jsonText = result.candidates[0].content.parts[0].text;
-            const reportData = JSON.parse(jsonText);
+            const reportData = JSON.parse(jsonText); [cite: 135]
             aiContent.innerHTML = renderAiReport(reportData);
         } else {
-            throw new Error("AI 未能提供有效的建議。");
+            throw new Error("AI 未能提供有效的建議。"); [cite: 136]
         }
     } catch (error) {
-        aiContent.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-lg"><p class="font-bold">無法獲取 AI 建議</p><p>${error.message}</p></div>`;
+        aiContent.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-lg"><p class="font-bold">無法獲取 AI 建議</p><p>${error.message}</p></div>`; [cite: 137]
     } finally {
-        clearInterval(intervalId);
+        clearInterval(intervalId); [cite: 138]
     }
 }
+// ###############################################################
 
 function renderAiReport(data) {
-    // ... Full AI report rendering logic ...
-    return `<div>AI report placeholder</div>`; // Placeholder
+    const renderPoints = (points) => {
+        if (!points || points.length === 0) {
+            return '<p class="text-sm text-gray-500 pl-5">無特別事項。</p>';
+        }
+        return '<ul class="space-y-2 pl-5">' + points.map(point => `<li class="text-sm text-gray-800">${point}</li>`).join('') + '</ul>';
+    };
+
+    return `
+        <div class="p-2 space-y-4 text-gray-800">
+            <p>${data.greeting}</p>
+            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 class="font-bold text-blue-800">${data.overall_status.emoji} ${data.overall_status.title}</h3>
+                <p class="text-sm text-blue-700 mt-1">${data.overall_status.summary}</p>
+            </div>
+            ${data.key_insights.map(insight => `
+                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800">${insight.emoji} ${insight.title}</h3>
+                    ${renderPoints(insight.points)}
+                </div>
+            `).join('')}
+            <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                <h3 class="font-bold text-green-800">${data.actionable_advice.emoji} ${data.actionable_advice.title}</h3>
+                <p class="text-sm text-green-700 mt-1">${data.actionable_advice.advice}</p>
+            </div>
+        </div>
+    `;
 }
+
 
 // --- Setup Functions ---
 function setupLoginModal() {
     const loginBtn = document.getElementById('loginBtn');
     if (!loginBtn) return;
-    const loginModal = document.getElementById('loginModal');
+    const loginModal = document.getElementById('loginModal'); [cite: 140]
     const closeModalBtn = document.getElementById('closeModalBtn');
     const loginForm = document.getElementById('loginForm');
     const loginMessage = document.getElementById('login-message');
     const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-    const openChangePasswordModalBtn = document.getElementById('openChangePasswordModalBtn');
+    const openChangePasswordModalBtn = document.getElementById('openChangePasswordModalBtn'); [cite: 141]
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
-
-    if (togglePassword) {
+    if (togglePassword) { [cite: 142]
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
             this.querySelector('i').classList.toggle('fa-eye');
             this.querySelector('i').classList.toggle('fa-eye-slash');
         });
-    }
+    } [cite: 143]
 
     if(openChangePasswordModalBtn) {
         openChangePasswordModalBtn.addEventListener('click', () => {
             loginModal.classList.add('hidden');
             document.getElementById('changePasswordModal').classList.remove('hidden');
         });
-    }
+    } [cite: 144]
 
     loginBtn.addEventListener('click', () => {
         loginMessage.textContent = '';
         loginForm.reset();
         loginModal.classList.remove('hidden');
     });
-
-    closeModalBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
+    closeModalBtn.addEventListener('click', () => loginModal.classList.add('hidden')); [cite: 145]
     loginModal.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.classList.add('hidden'); });
-
-    loginForm.addEventListener('submit', async (event) => {
+    loginForm.addEventListener('submit', async (event) => { [cite: 146]
         event.preventDefault();
         const username = event.target.username.value;
         const password = event.target.password.value;
@@ -503,35 +578,35 @@ function setupLoginModal() {
         btnSpinner.classList.remove('hidden');
         loginSubmitBtn.disabled = true;
 
-        try {
+        try { [cite: 147]
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'cors',
                 body: JSON.stringify({ action: 'login', username, password }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            });
+            }); [cite: 148]
 
             if (!response.ok) throw new Error(`網路回應錯誤: ${response.status} ${response.statusText}`);
             
             const result = await response.json();
             
             if (result.status === 'success') {
-                const loginData = result.data;
+                const loginData = result.data; [cite: 149]
                 loginMessage.textContent = '登入成功！即將跳轉...';
                 loginMessage.className = 'text-center mb-4 font-medium text-green-500';
-                setTimeout(() => {
+                setTimeout(() => { [cite: 150]
                     window.location.href = `https://luyun1224.github.io/cmh4200/project-admin.html?user=${encodeURIComponent(loginData.name)}&id=${loginData.employeeId}`;
                 }, 1500);
-            } else {
-                throw new Error(result.message || '帳號或密碼錯誤。');
+            } else { [cite: 151]
+                throw new Error(result.message || '帳號或密碼錯誤。'); [cite: 152]
             }
         } catch (error) {
             console.error("Login Error Details:", error);
-            loginMessage.textContent = error.message;
+            loginMessage.textContent = error.message; [cite: 153]
             loginMessage.className = 'text-center mb-4 font-medium text-red-500';
         } finally {
             btnText.textContent = '登入';
-            btnSpinner.classList.add('hidden');
+            btnSpinner.classList.add('hidden'); [cite: 154]
             loginSubmitBtn.disabled = false;
         }
     });
@@ -539,18 +614,16 @@ function setupLoginModal() {
 
 function setupChangePasswordModal() {
     const modal = document.getElementById('changePasswordModal');
-    if(!modal) return;
+    if(!modal) return; [cite: 155]
     const form = document.getElementById('changePasswordForm');
     const messageDiv = document.getElementById('change-password-message');
     const submitBtn = document.getElementById('changePasswordSubmitBtn');
     const closeBtn = document.getElementById('closeChangePasswordModalBtn');
-
-    closeBtn.addEventListener('click', () => {
+    closeBtn.addEventListener('click', () => { [cite: 156]
         modal.classList.add('hidden');
         document.getElementById('loginModal').classList.remove('hidden');
     });
-
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', async (event) => { [cite: 157]
         event.preventDefault();
         const employeeId = form.elements.employeeId.value;
         const oldPassword = form.elements.oldPassword.value;
@@ -561,13 +634,13 @@ function setupChangePasswordModal() {
         submitBtn.querySelector('.btn-text').textContent = '處理中...';
         submitBtn.querySelector('.btn-spinner').classList.remove('hidden');
 
-        try {
+        try { [cite: 158]
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'cors',
                 body: JSON.stringify({ action: 'updatePassword', employeeId, oldPassword, newPassword }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            });
+            }); [cite: 159]
 
             if (!response.ok) throw new Error('網路回應錯誤');
             
@@ -575,17 +648,17 @@ function setupChangePasswordModal() {
             
             if (result.status === 'success') {
                 messageDiv.textContent = '密碼更新成功！';
-                messageDiv.className = 'text-center mb-4 font-medium text-green-500';
+                messageDiv.className = 'text-center mb-4 font-medium text-green-500'; [cite: 160]
                 form.reset();
             } else {
-                throw new Error(result.message || '更新失敗');
+                throw new Error(result.message || '更新失敗'); [cite: 161]
             }
         } catch (error) {
             messageDiv.textContent = error.message;
-            messageDiv.className = 'text-center mb-4 font-medium text-red-500';
+            messageDiv.className = 'text-center mb-4 font-medium text-red-500'; [cite: 162]
         } finally {
             submitBtn.disabled = false;
-            submitBtn.querySelector('.btn-text').textContent = '確認更換';
+            submitBtn.querySelector('.btn-text').textContent = '確認更換'; [cite: 163]
             submitBtn.querySelector('.btn-spinner').classList.add('hidden');
         }
     });
@@ -593,25 +666,25 @@ function setupChangePasswordModal() {
 
 function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
     const modal = document.getElementById(modalId);
-    if (!modal) return;
+    if (!modal) return; [cite: 164]
     const openBtn = openBtnId ? document.getElementById(openBtnId) : null;
     const closeBtn = document.getElementById(closeBtnId);
-    const open = () => {
+    const open = () => { [cite: 165]
         modal.classList.remove('hidden');
         if (openCallback) openCallback();
     };
-    const close = () => modal.classList.add('hidden');
+    const close = () => modal.classList.add('hidden'); [cite: 166]
     if (openBtn) openBtn.addEventListener('click', open);
     if(closeBtn) closeBtn.addEventListener('click', close);
-    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-}
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); }); [cite: 167]
+} [cite: 168]
 
 function setupAiModal(){
     setupModal('aiModal', 'aiBtn', 'closeAiModalBtn', () => getAiSuggestions('all'));
     const filterSelect = document.getElementById('aiMemberFilter');
-    if (filterSelect) {
+    if (filterSelect) { [cite: 169]
         filterSelect.addEventListener('change', (e) => getAiSuggestions(e.target.value));
-    }
+    } [cite: 170]
 }
 
 function setupWeeklySummaryModal(){
@@ -620,7 +693,7 @@ function setupWeeklySummaryModal(){
 
 function setupItemListModal(){
     setupModal('itemListModal', null, 'closeItemListModalBtn');
-}
+} [cite: 171]
 
 function setupActivityModal(){
     setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true));
@@ -628,33 +701,33 @@ function setupActivityModal(){
 
 function setupScrollToTop(){
     const btn = document.getElementById('scrollToTopBtn');
-    if(!btn) return;
+    if(!btn) return; [cite: 172]
     window.onscroll = () => {
         if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) btn.classList.remove('hidden');
-        else btn.classList.add('hidden');
+        else btn.classList.add('hidden'); [cite: 173]
     };
     btn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
 }
 
 function setupChatBot() {
     const openBtn = document.getElementById('openChatBot');
-    if(!openBtn) return;
+    if(!openBtn) return; [cite: 174]
     const closeBtn = document.getElementById('closeChatBot');
     const container = document.getElementById('chatBotContainer');
     const messagesDiv = document.getElementById('chatBotMessages');
-    openBtn.addEventListener('click', () => {
+    openBtn.addEventListener('click', () => { [cite: 175]
         container.classList.remove('hidden');
         messagesDiv.innerHTML = `<div class="p-4"><i class="fas fa-spinner fa-spin text-indigo-500"></i> 正在產生報告...</div>`;
         setTimeout(() => { messagesDiv.innerHTML = generateDashboardReportHTML(); }, 100);
     });
-    closeBtn.addEventListener('click', () => container.classList.add('hidden'));
+    closeBtn.addEventListener('click', () => container.classList.add('hidden')); [cite: 176]
 }
 
 
 // --- Initial Load ---
 async function initializeDashboard() {
     const loadingOverlay = document.getElementById('loadingOverlay');
-    const errorDisplay = document.getElementById('errorDisplay');
+    const errorDisplay = document.getElementById('errorDisplay'); [cite: 177]
     loadingOverlay.classList.remove('hidden');
     try {
         const response = await fetch(SCRIPT_URL, {
@@ -663,40 +736,40 @@ async function initializeDashboard() {
             body: JSON.stringify({ action: 'getDashboardData' }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
-        if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+        if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`); [cite: 178]
         const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
+        if (result.status !== 'success') throw new Error(result.message); [cite: 179]
         const userData = result.data.staffData || [];
-        staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit }));
-        const itemData = result.data.activities || [];
+        staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit })); [cite: 180]
+        const itemData = result.data.activities || []; [cite: 181]
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        allActivities = itemData.map(item => {
+        allActivities = itemData.map(item => { [cite: 182]
             const progress = parseInt(item.progress, 10) || 0;
             const deadline = item.deadline ? new Date(item.deadline) : null;
             let finalStatus = item.status || 'planning';
             if (progress >= 100) finalStatus = 'completed';
-            else if (finalStatus !== 'completed' && deadline && deadline < today) finalStatus = 'overdue';
+            else if (finalStatus !== 'completed' && deadline && deadline < today) finalStatus = 'overdue'; [cite: 183]
             return { ...item, progress, status: finalStatus, lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0, helpMessage: item.helpMessage || '', checklist: Array.isArray(item.checklist) ? item.checklist : [] };
         });
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.location.search); [cite: 184]
         const paramStatus = urlParams.get('status');
         if (paramStatus) currentStatusFilter = paramStatus;
         renderUnitTabs();
         renderYearFilter();
         renderMonthFilter();
         renderDashboard();
-        if (paramStatus) {
+        if (paramStatus) { [cite: 185]
             const btn = document.querySelector(`.filter-btn[onclick*="${paramStatus}"]`);
-            if (btn) filterItemsByStatus(paramStatus, { target: btn });
+            if (btn) filterItemsByStatus(paramStatus, { target: btn }); [cite: 186]
         }
         document.getElementById('openChatBot').classList.remove('hidden');
-    } catch (error) {
+    } catch (error) { [cite: 187]
         console.error("Initialization failed:", error);
         document.getElementById('errorMessage').textContent = `無法從伺服器獲取專案數據。請檢查您的網路連線或稍後再試。(${error.message})`;
         errorDisplay.classList.remove('hidden');
-    } finally {
-        loadingOverlay.classList.add('hidden');
+    } finally { [cite: 188]
+        loadingOverlay.classList.add('hidden'); [cite: 189]
     }
 }
 
