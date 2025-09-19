@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - All feature logic restored)
+// script.js (FINAL & COMPLETE - AI Enabled & Role Restricted)
 // --- Configuration ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -218,37 +218,16 @@ function showItemsInModal(filterType) {
     const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
     const statusOrder = { 'active': 1, 'planning': 2, 'overdue': 3, 'completed': 4 };
     switch(filterType) {
-        case 'total':
-            itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
-            modalTitle = '總項目列表';
-            break;
-        case 'active':
-            itemsToShow = projectsAndTasks.filter(item => item.status === 'active');
-            modalTitle = '進行中項目列表';
-            break;
-        case 'overdue':
-            itemsToShow = projectsAndTasks.filter(item => item.status === 'overdue');
-            modalTitle = '逾期項目列表';
-            break;
-        case 'completed':
-            itemsToShow = allActivities.filter(item => item.status === 'completed');
-            modalTitle = '已完成項目列表';
-            break;
+        case 'total': itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99)); modalTitle = '總項目列表'; break;
+        case 'active': itemsToShow = projectsAndTasks.filter(item => item.status === 'active'); modalTitle = '進行中項目列表'; break;
+        case 'overdue': itemsToShow = projectsAndTasks.filter(item => item.status === 'overdue'); modalTitle = '逾期項目列表'; break;
+        case 'completed': itemsToShow = allActivities.filter(item => item.status === 'completed'); modalTitle = '已完成項目列表'; break;
     }
     titleEl.innerHTML = `<i class="fas fa-list-check mr-3"></i> ${modalTitle} (${itemsToShow.length})`;
     if (itemsToShow.length === 0) {
         contentEl.innerHTML = '<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>';
     } else {
-        contentEl.innerHTML = itemsToShow.map(item => `
-            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100">
-                <p class="font-semibold text-gray-800">${item.name}</p>
-                <p class="text-sm text-gray-600">負責人: ${(item.assignees || []).join(', ')}</p>
-                <div class="flex justify-between items-center text-xs mt-1">
-                     <span class="font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span>
-                    <span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
-                </div>
-            </div>
-        `).join('');
+        contentEl.innerHTML = itemsToShow.map(item => `<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${item.name}</p><p class="text-sm text-gray-600">負責人: ${(item.assignees || []).join(', ')}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div>`).join('');
     }
     modal.classList.remove('hidden');
 }
@@ -264,8 +243,7 @@ function openActivityModal(resetDate = true) {
         const today = new Date();
         today.setHours(0,0,0,0);
         const sortedItems = itemsForDisplay.slice().sort((a, b) => {
-            const dateA = new Date(a.startDate);
-            const dateB = new Date(b.startDate);
+            const dateA = new Date(a.startDate); const dateB = new Date(b.startDate);
             const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
             const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
             if (isPastA !== isPastB) return isPastA ? 1 : -1;
@@ -275,16 +253,7 @@ function openActivityModal(resetDate = true) {
         if (sortedItems.length > 0) {
             listHtml = '<ul class="space-y-4">' + sortedItems.map(item => {
                 const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
-                return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}">
-                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg">
-                        <span class="text-xl font-bold text-purple-700">${new Date(item.startDate).getDate()}</span>
-                    </div>
-                    <div class="flex-grow pt-1">
-                        <p class="font-semibold text-gray-800">${item.name}</p>
-                        <p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}</p>
-                        <p class="text-sm text-gray-500">負責人: ${(item.assignees || []).join(', ')}</p>
-                    </div>
-                </li>`;
+                return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}"><div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg"><span class="text-xl font-bold text-purple-700">${new Date(item.startDate).getDate()}</span></div><div class="flex-grow pt-1"><p class="font-semibold text-gray-800">${item.name}</p><p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}</p><p class="text-sm text-gray-500">負責人: ${(item.assignees || []).join(', ')}</p></div></li>`;
             }).join('') + '</ul>';
         }
         content.innerHTML = calendarHTML + `<hr class="my-6"/>` + listHtml;
@@ -329,16 +298,10 @@ function generateWeeklySummary() {
     const content = document.getElementById('weekly-summary-content');
     content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成本週回顧...</div>`;
     const today = new Date();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(today.getDate() - 7);
-    const nextWeek = new Date();
-    nextWeek.setDate(today.getDate() + 7);
+    const oneWeekAgo = new Date(); oneWeekAgo.setDate(today.getDate() - 7);
+    const nextWeek = new Date(); nextWeek.setDate(today.getDate() + 7);
     const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
-    const completedThisWeek = projectsAndTasks.filter(item => {
-        if (item.status !== 'completed') return false;
-        const completionDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate);
-        return completionDate >= oneWeekAgo && completionDate <= today;
-    });
+    const completedThisWeek = projectsAndTasks.filter(item => { if (item.status !== 'completed') return false; const completionDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate); return completionDate >= oneWeekAgo && completionDate <= today; });
     const progressMade = projectsAndTasks.filter(item => item.status !== 'completed' && item.progress > (item.lastWeekProgress || 0));
     const newlyAdded = projectsAndTasks.filter(item => new Date(item.startDate) >= oneWeekAgo && new Date(item.startDate) <= today);
     const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0));
@@ -347,19 +310,11 @@ function generateWeeklySummary() {
     const renderSummarySection = (title, icon, color, items, emptyText) => {
         let sectionHTML = `<div class="mb-4"><h3 class="text-lg font-bold ${color} flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>`;
         if (items.length > 0) {
-            sectionHTML += '<ul class="space-y-2 pl-5">' + items.map(item =>
-                `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}">
-                    <strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${(item.assignees || []).join(', ')}</span>
-                    ${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}
-                    ${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}
-                    ${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}
-                </li>`
-            ).join('') + '</ul>';
+            sectionHTML += '<ul class="space-y-2 pl-5">' + items.map(item => `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}"><strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${(item.assignees || []).join(', ')}</span>${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}</li>`).join('') + '</ul>';
         } else {
             sectionHTML += `<p class="pl-5 text-sm text-gray-500">${emptyText}</p>`;
         }
-        sectionHTML += `</div>`;
-        return sectionHTML;
+        sectionHTML += `</div>`; return sectionHTML;
     };
     let summaryHTML = renderSummarySection('本週完成項目', 'fa-check-circle', 'text-green-600', completedThisWeek, '本週沒有完成的項目。');
     summaryHTML += renderSummarySection('本週進度更新', 'fa-rocket', 'text-blue-600', progressMade, '本週沒有項目取得進展。');
@@ -369,25 +324,53 @@ function generateWeeklySummary() {
     summaryHTML += renderSummarySection('需要協助項目', 'fa-hands-helping', 'text-red-600', helpNeeded, '沒有項目發出求救信號。');
     content.innerHTML = summaryHTML;
 }
-function generateDashboardReportHTML() {
-    const today = new Date();
-    const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
-    const overdueProjects = allActivities.filter(i => i.status === 'overdue');
-    let reportHTML = `<div class="p-2 space-y-4 text-gray-800"><p>您好！這是截至 <strong>${todayString}</strong> 的重點彙報。</p>`;
-    if (overdueProjects.length > 0) {
-        reportHTML += `<div class="p-3 bg-red-50 rounded-lg border border-red-200"><h3 class="font-bold text-red-800">⚠️ 風險提示</h3><p class="text-sm text-red-700 mt-1">「${overdueProjects[0].name}」目前處於逾期狀態，需負責人 <strong>${(overdueProjects[0].assignees || []).join(', ')}</strong> 重點關注。</p></div>`;
-    } else {
-        reportHTML += `<div class="p-3 bg-green-50 rounded-lg border border-green-200"><h3 class="font-bold text-green-800">✅ 目前所有項目皆在掌控中！</h3></div>`;
-    }
-    reportHTML += `<p class="text-xs text-gray-500 text-center pt-2">希望這份彙報對您有幫助！</p></div>`;
-    return reportHTML;
-}
+
+// --- AI & Setup Functions ---
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
-    aiContent.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-700 rounded-lg"><p class="font-bold">AI 功能展示</p><p>此處將顯示對 ${memberName} 的分析與建議。</p></div>`;
-}
+    const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
+    let messageIndex = 0;
+    aiContent.innerHTML = `<div class="flex flex-col items-center justify-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p id="ai-loading-message" class="mt-4 text-gray-600 font-medium">${loadingMessages[0]}</p></div>`;
+    const loadingMessageElement = document.getElementById('ai-loading-message');
+    const intervalId = setInterval(() => {
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+        if(loadingMessageElement) loadingMessageElement.textContent = loadingMessages[messageIndex];
+    }, 1500);
 
-// --- Setup Functions ---
+    let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type));
+    let analysisTarget = "整個團隊";
+    if (memberName !== 'all') {
+        analysisTarget = memberName;
+        itemsToAnalyze = itemsToAnalyze.filter(item => (item.assignees || []).includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
+    }
+
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST', mode: 'cors',
+            body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: { items: itemsToAnalyze, memberName: analysisTarget } }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        if (!response.ok) { const errorText = await response.text(); throw new Error(`網路回應錯誤: ${errorText}`); }
+        const result = await response.json();
+        const aiText = result.candidates[0].content.parts[0].text;
+        renderAiReport(aiText);
+    } catch (error) {
+        console.error("AI suggestion fetch failed:", error);
+        aiContent.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-lg"><p class="font-bold">唉呀！AI 引擎連線失敗</p><p>${error.message}</p></div>`;
+    } finally {
+        clearInterval(intervalId);
+    }
+}
+function renderAiReport(markdownText) {
+    const aiContent = document.getElementById('ai-suggestion-content');
+    let html = markdownText
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h3>')
+        .replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold text-gray-900 mt-4 mb-2">$1</h2>')
+        .replace(/\* (.*?)\n/g, '<li class="ml-5 list-disc">$1</li>')
+        .replace(/\n/g, '<br>');
+    aiContent.innerHTML = `<div class="prose max-w-none">${html}</div>`;
+}
 function setupUserInfo() {
     const welcomeMessageEl = document.getElementById('welcome-message');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -405,14 +388,10 @@ function setupUserInfo() {
     }
 }
 function setupModal(modalId, openBtnId, closeBtnId, openCallback) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
+    const modal = document.getElementById(modalId); if (!modal) return;
     const openBtn = openBtnId ? document.getElementById(openBtnId) : null;
     const closeBtn = document.getElementById(closeBtnId);
-    const open = () => {
-        modal.classList.remove('hidden');
-        if (openCallback) openCallback();
-    };
+    const open = () => { modal.classList.remove('hidden'); if (openCallback) openCallback(); };
     const close = () => modal.classList.add('hidden');
     if (openBtn) openBtn.addEventListener('click', open);
     if(closeBtn) closeBtn.addEventListener('click', close);
@@ -422,9 +401,7 @@ function populateAiMemberFilter() {
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect && staffData.length > 0) {
         filterSelect.innerHTML = '<option value="all">針對 整個團隊 分析</option>';
-        const membersInGroup = staffData
-            .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
-            .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter);
+        const membersInGroup = staffData.filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter).filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter);
         membersInGroup.forEach(member => {
             const option = document.createElement('option');
             option.value = member.name;
@@ -434,10 +411,29 @@ function populateAiMemberFilter() {
     }
 }
 function setupAiModal(){
-    setupModal('aiModal', 'aiBtn', 'closeAiModalBtn', () => {
-        populateAiMemberFilter();
-        getAiSuggestions('all');
+    const aiModal = document.getElementById('aiModal');
+    const aiBtn = document.getElementById('aiBtn');
+    const closeAiModalBtn = document.getElementById('closeAiModalBtn');
+    const permissionDeniedModal = document.getElementById('permissionDeniedModal');
+    const closePermissionDeniedModalBtn = document.getElementById('closePermissionDeniedModalBtn');
+    
+    if (!aiBtn) return;
+    aiBtn.addEventListener('click', () => {
+        const userDataString = sessionStorage.getItem('dashboardUser');
+        const userData = JSON.parse(userDataString);
+        if (userData && userData.role === '主管') {
+            aiModal.classList.remove('hidden');
+            populateAiMemberFilter();
+            getAiSuggestions('all');
+        } else {
+            permissionDeniedModal.classList.remove('hidden');
+        }
     });
+    closeAiModalBtn.addEventListener('click', () => aiModal.classList.add('hidden'));
+    aiModal.addEventListener('click', (e) => { if (e.target === aiModal) aiModal.classList.add('hidden'); });
+    closePermissionDeniedModalBtn.addEventListener('click', () => permissionDeniedModal.classList.add('hidden'));
+    permissionDeniedModal.addEventListener('click', (e) => { if (e.target === permissionDeniedModal) permissionDeniedModal.classList.add('hidden'); });
+    
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect) {
         const newSelect = filterSelect.cloneNode(true);
@@ -445,30 +441,18 @@ function setupAiModal(){
         newSelect.addEventListener('change', (e) => getAiSuggestions(e.target.value));
     }
 }
-function setupWeeklySummaryModal(){
-    setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary);
-}
-function setupItemListModal(){
-    setupModal('itemListModal', null, 'closeItemListModalBtn');
-}
-function setupActivityModal(){
-    setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true));
-}
+function setupWeeklySummaryModal(){ setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary); }
+function setupItemListModal(){ setupModal('itemListModal', null, 'closeItemListModalBtn'); }
+function setupActivityModal(){ setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true)); }
 function setupScrollToTop(){
-    const btn = document.getElementById('scrollToTopBtn');
-    if(!btn) return;
+    const btn = document.getElementById('scrollToTopBtn'); if(!btn) return;
     window.onscroll = () => {
-        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-            btn.classList.remove('hidden');
-        } else {
-            btn.classList.add('hidden');
-        }
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) { btn.classList.remove('hidden'); } else { btn.classList.add('hidden'); }
     };
     btn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
 }
 function setupChatBot() {
-    const openBtn = document.getElementById('openChatBot');
-    if(!openBtn) return;
+    const openBtn = document.getElementById('openChatBot'); if(!openBtn) return;
     const closeBtn = document.getElementById('closeChatBot');
     const container = document.getElementById('chatBotContainer');
     const messagesDiv = document.getElementById('chatBotMessages');
@@ -484,14 +468,9 @@ function setupChatBot() {
 async function initializeDashboard() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const errorDisplay = document.getElementById('errorDisplay');
-    // Keep loading overlay visible while we fetch data
     loadingOverlay.classList.remove('hidden');
     try {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST', mode: 'cors',
-            body: JSON.stringify({ action: 'getDashboardData' }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        });
+        const response = await fetch(SCRIPT_URL, { method: 'POST', mode: 'cors', body: JSON.stringify({ action: 'getDashboardData' }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
         if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
         const result = await response.json();
         if (result.status !== 'success' || !result.data) throw new Error(result.message || "回傳的資料格式不正確");
@@ -527,30 +506,16 @@ async function initializeDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // =======================================================
-    // NEW & CRITICAL: SECURITY CHECK
-    // This protects the page and ensures the correct workflow.
-    // =======================================================
     if (!sessionStorage.getItem('dashboardUser')) {
-        // If user data is NOT in sessionStorage, they are not logged in.
-        // Redirect them to the login page.
         window.location.href = 'index.html';
-        return; // Stop any further script execution on this page.
+        return;
     }
-
-    // --- The following code will ONLY run if the user is logged in ---
-    
-    // 1. Setup user info (Welcome message, Admin link, Logout button)
     setupUserInfo();
-
-    // 2. Setup all modals and other interactive features
     setupAiModal();
     setupActivityModal();
     setupWeeklySummaryModal();
     setupScrollToTop();
     setupItemListModal();
     setupChatBot();
-    
-    // 3. Load all the dashboard data from the backend
     await initializeDashboard();
 });
