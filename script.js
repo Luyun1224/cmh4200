@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - AI Enabled & Role Restricted)
+// script.js (FINAL & COMPLETE - Differentiated Reports)
 // --- Configuration ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -31,7 +31,7 @@ const getTypeStyle = (type, status) => {
     }
 };
 
-// --- Rendering Functions ---
+// --- Rendering Functions (No changes in this section) ---
 function renderUnitTabs() {
     const tabsContainer = document.getElementById('unitTabs');
     if (!staffData || staffData.length === 0) return;
@@ -161,7 +161,7 @@ function renderDashboard() {
     renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
 }
 
-// --- Filtering Functions ---
+// --- Filtering Functions (No changes in this section) ---
 function filterByUnit(unit) {
     currentUnitFilter = unit;
     currentGroupFilter = 'all';
@@ -294,29 +294,83 @@ function navigateCalendar(offset){
     calendarDate.setMonth(calendarDate.getMonth() + offset);
     openActivityModal(false);
 };
+
+// =======================================================
+// ***** 修改處 1：活化「本週回顧」 *****
+// =======================================================
 function generateWeeklySummary() {
     const content = document.getElementById('weekly-summary-content');
-    content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成本週回顧...</div>`;
+    content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成週報...</div>`;
+
     const today = new Date();
     const oneWeekAgo = new Date(); oneWeekAgo.setDate(today.getDate() - 7);
     const nextWeek = new Date(); nextWeek.setDate(today.getDate() + 7);
+
     const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
     const completedThisWeek = projectsAndTasks.filter(item => { if (item.status !== 'completed') return false; const completionDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate); return completionDate >= oneWeekAgo && completionDate <= today; });
     const progressMade = projectsAndTasks.filter(item => item.status !== 'completed' && item.progress > (item.lastWeekProgress || 0));
     const newlyAdded = projectsAndTasks.filter(item => new Date(item.startDate) >= oneWeekAgo && new Date(item.startDate) <= today);
-    const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0));
+    const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0) && item.progress < 100);
     const upcomingDeadlines = projectsAndTasks.filter(item => item.deadline && new Date(item.deadline) > today && new Date(item.deadline) <= nextWeek && item.status !== 'completed');
     const helpNeeded = projectsAndTasks.filter(item => item.helpMessage && item.helpMessage.trim() !== '');
+
+    // 計算統計數據
+    const totalProgressGained = progressMade.reduce((sum, item) => sum + (item.progress - (item.lastWeekProgress || 0)), 0);
+    
+    // 計算 MVP
+    const memberContributions = {};
+    progressMade.forEach(item => {
+        const progress = item.progress - (item.lastWeekProgress || 0);
+        item.assignees.forEach(name => {
+            if (!memberContributions[name]) memberContributions[name] = 0;
+            memberContributions[name] += progress;
+        });
+    });
+    let mvp = { name: '無', score: 0 };
+    for (const name in memberContributions) {
+        if (memberContributions[name] > mvp.score) {
+            mvp = { name: name, score: memberContributions[name] };
+        }
+    }
+
     const renderSummarySection = (title, icon, color, items, emptyText) => {
-        let sectionHTML = `<div class="mb-4"><h3 class="text-lg font-bold ${color} flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>`;
+        let sectionHTML = `<div class="mb-4"><h3 class="text-base font-bold ${color} flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>`;
         if (items.length > 0) {
-            sectionHTML += '<ul class="space-y-2 pl-5">' + items.map(item => `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}"><strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${(item.assignees || []).join(', ')}</span>${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}</li>`).join('') + '</ul>';
+            sectionHTML += '<ul class="space-y-2 pl-5">' + items.map(item =>
+                `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}">
+                    <strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${(item.assignees || []).join(', ')}</span>
+                    ${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}
+                    ${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}
+                    ${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}
+                </li>`
+            ).join('') + '</ul>';
         } else {
             sectionHTML += `<p class="pl-5 text-sm text-gray-500">${emptyText}</p>`;
         }
         sectionHTML += `</div>`; return sectionHTML;
     };
-    let summaryHTML = renderSummarySection('本週完成項目', 'fa-check-circle', 'text-green-600', completedThisWeek, '本週沒有完成的項目。');
+    
+    let summaryHTML = `
+        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+            <h3 class="text-lg font-bold text-blue-800 mb-2">本週團隊數據總覽</h3>
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <p class="text-2xl font-bold text-blue-700">${completedThisWeek.length}</p>
+                    <p class="text-sm text-gray-600">完成項目數</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-green-700">+${totalProgressGained}%</p>
+                    <p class="text-sm text-gray-600">總進度推進</p>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-6">
+             <h3 class="text-lg font-bold text-amber-800 mb-2 flex items-center"><i class="fas fa-star mr-2 text-yellow-500"></i>本週之星</h3>
+             ${mvp.name !== '無' ? `<p class="text-center"><span class="font-bold text-xl text-amber-900">${mvp.name}</span> <br> <span class="text-sm text-gray-600">以 <strong class="text-amber-700">${mvp.score}%</strong> 的總進度貢獻拔得頭籌！</span></p>` : `<p class="text-center text-gray-500">本週尚無明顯的進度貢獻者，下週加油！</p>`}
+        </div>
+    `;
+
+    summaryHTML += renderSummarySection('本週完成項目', 'fa-check-circle', 'text-green-600', completedThisWeek, '本週沒有完成的項目。');
     summaryHTML += renderSummarySection('本週進度更新', 'fa-rocket', 'text-blue-600', progressMade, '本週沒有項目取得進展。');
     summaryHTML += renderSummarySection('本週新增項目', 'fa-lightbulb', 'text-purple-600', newlyAdded, '本週沒有新增項目。');
     summaryHTML += renderSummarySection('下週到期項目', 'fa-clock', 'text-yellow-600', upcomingDeadlines, '下週沒有即將到期的項目。');
@@ -327,11 +381,12 @@ function generateWeeklySummary() {
 
 
 // =======================================================
-// ***** 修改處：活化每日彙報機器人 *****
+// ***** 修改處 2：活化「每日彙報機器人」 *****
 // =======================================================
 function generateDashboardReportHTML() {
     const today = new Date();
-    const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+    const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+    const todayString = today.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' });
     
     // 數據分析
     const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
@@ -339,10 +394,11 @@ function generateDashboardReportHTML() {
     const stalledProjects = projectsAndTasks.filter(i => i.status === 'active' && i.progress === (i.lastWeekProgress || 0) && i.progress < 100);
     const helpNeededProjects = projectsAndTasks.filter(i => i.helpMessage && i.helpMessage.trim() !== '');
     const nearingCompletion = projectsAndTasks.filter(i => i.progress >= 80 && i.status !== 'completed');
+    const birthdayMembers = staffData.filter(s => s.birthday === todayStr);
 
     // 建立訊息區塊的輔助函數
-    const createSection = (title, icon, colorClass, items) => {
-        if (items.length === 0) return '';
+    const createSection = (title, icon, colorClass, items, emptyText) => {
+        if (items.length === 0) return emptyText ? `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
         let itemsHtml = items.map(item => 
             `<li class="text-sm text-gray-800">
                 <span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})
@@ -355,7 +411,6 @@ function generateDashboardReportHTML() {
             </div>`;
     };
 
-    // 組合戰報
     let reportHTML = `
         <div class="space-y-4 text-gray-800">
             <div>
@@ -363,25 +418,45 @@ function generateDashboardReportHTML() {
                 <p class="text-sm text-gray-500">報告時間：${todayString}</p>
             </div>
             <p>教學部戰隊的各位夥伴，早安！領航員回報，本日戰線情報分析如下：</p>
-            
-            ${createSection('紅色警戒區', 'fa-radiation-alt', 'border-red-500', overdueProjects)}
-            ${createSection('前線膠著區', 'fa-traffic-jam', 'border-yellow-500', stalledProjects)}
-            ${createSection('緊急呼救', 'fa-first-aid', 'border-amber-500', helpNeededProjects)}
-            ${createSection('即將攻頂', 'fa-flag-checkered', 'border-green-500', nearingCompletion)}
     `;
 
+    // 生日祝福
+    if (birthdayMembers.length > 0) {
+        reportHTML += `
+            <div class="p-3 bg-rose-50 rounded-lg border-l-4 border-rose-400 shadow-sm animate-pulse">
+                <h3 class="font-bold text-rose-800 flex items-center mb-1"><i class="fas fa-birthday-cake fa-fw mr-2"></i>特別情報！</h3>
+                <p class="text-sm text-rose-700">領航員偵測到一股強大的快樂能量... 原來是 <strong class="font-bold">${birthdayMembers.map(m=>m.name).join('、')}</strong> 的生日！艦橋全體人員在此獻上最誠摯的祝福！</p>
+            </div>
+        `;
+    }
+    
+    // 首要目標
+    const topTarget = overdueProjects.find(p => p.priority === 'high') || overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
+    if (topTarget) {
+         reportHTML += `
+            <div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm">
+                <h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3>
+                <p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${topTarget.assignees.join(', ')} 集中火力，優先處理！</p>
+            </div>
+        `;
+    }
+
+    reportHTML += createSection('前線膠著區', 'fa-traffic-jam', 'border-yellow-500', stalledProjects);
+    reportHTML += createSection('緊急呼救', 'fa-first-aid', 'border-amber-500', helpNeededProjects, '✔️ 各單位回報狀況良好，無人請求支援。');
+    reportHTML += createSection('即將攻頂', 'fa-flag-checkered', 'border-green-500', nearingCompletion);
+
     // 總結
-    if (overdueProjects.length > 0 || stalledProjects.length > 0) {
-        reportHTML += `<p class="pt-2">⚠️ 總結：戰場上出現了需要優先處理的目標，請各單位根據情報採取行動，確保戰役順利進行。領航員將持續監控戰場！</p>`;
+    if (overdueProjects.length > 0 || stalledProjects.length > 0 || helpNeededProjects.length > 0) {
+        reportHTML += `<p class="pt-2 text-sm">⚠️ <strong>戰報總結</strong>：戰場上出現了需要優先處理的目標，請各單位根據情報採取行動，確保戰役順利進行。領航員將持續監控戰場！</p>`;
     } else {
-        reportHTML += `<p class="pt-2">✅ 總結：本日戰況一切良好！所有戰線均在掌控之中，請各位夥伴繼續保持！領航員為你們感到驕傲！</p>`;
+        reportHTML += `<p class="pt-2 text-sm">✅ <strong>戰報總結</strong>：本日戰況一切良好！所有戰線均在掌控之中，請各位夥伴繼續保持！領航員為你們感到驕傲！</p>`;
     }
     
     reportHTML += `</div>`;
     return reportHTML;
 }
 
-
+// --- AI & Setup Functions (No changes in this section) ---
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
     const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
@@ -514,6 +589,7 @@ function setupChatBot() {
     const messagesDiv = document.getElementById('chatBotMessages');
     openBtn.addEventListener('click', () => {
         container.classList.remove('hidden');
+        // The generate function now returns the full HTML, which we place inside a styled container
         messagesDiv.innerHTML = `<div class="p-4 bg-gray-100 rounded-lg">${generateDashboardReportHTML()}</div>`;
     });
     closeBtn.addEventListener('click', () => container.classList.add('hidden'));
