@@ -325,7 +325,63 @@ function generateWeeklySummary() {
     content.innerHTML = summaryHTML;
 }
 
-// --- AI & Setup Functions ---
+
+// =======================================================
+// ***** 修改處：活化每日彙報機器人 *****
+// =======================================================
+function generateDashboardReportHTML() {
+    const today = new Date();
+    const todayString = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+    
+    // 數據分析
+    const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
+    const overdueProjects = projectsAndTasks.filter(i => i.status === 'overdue');
+    const stalledProjects = projectsAndTasks.filter(i => i.status === 'active' && i.progress === (i.lastWeekProgress || 0) && i.progress < 100);
+    const helpNeededProjects = projectsAndTasks.filter(i => i.helpMessage && i.helpMessage.trim() !== '');
+    const nearingCompletion = projectsAndTasks.filter(i => i.progress >= 80 && i.status !== 'completed');
+
+    // 建立訊息區塊的輔助函數
+    const createSection = (title, icon, colorClass, items) => {
+        if (items.length === 0) return '';
+        let itemsHtml = items.map(item => 
+            `<li class="text-sm text-gray-800">
+                <span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})
+            </li>`
+        ).join('');
+        return `
+            <div class="p-3 bg-white rounded-lg border-l-4 ${colorClass} shadow-sm">
+                <h3 class="font-bold text-gray-800 flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>
+                <ul class="space-y-1 pl-5 list-disc">${itemsHtml}</ul>
+            </div>`;
+    };
+
+    // 組合戰報
+    let reportHTML = `
+        <div class="space-y-4 text-gray-800">
+            <div>
+                <h2 class="text-lg font-bold text-gray-900">膠部領航員 日常戰報</h2>
+                <p class="text-sm text-gray-500">報告時間：${todayString}</p>
+            </div>
+            <p>教學部戰隊的各位夥伴，早安！領航員回報，本日戰線情報分析如下：</p>
+            
+            ${createSection('紅色警戒區', 'fa-radiation-alt', 'border-red-500', overdueProjects)}
+            ${createSection('前線膠著區', 'fa-traffic-jam', 'border-yellow-500', stalledProjects)}
+            ${createSection('緊急呼救', 'fa-first-aid', 'border-amber-500', helpNeededProjects)}
+            ${createSection('即將攻頂', 'fa-flag-checkered', 'border-green-500', nearingCompletion)}
+    `;
+
+    // 總結
+    if (overdueProjects.length > 0 || stalledProjects.length > 0) {
+        reportHTML += `<p class="pt-2">⚠️ 總結：戰場上出現了需要優先處理的目標，請各單位根據情報採取行動，確保戰役順利進行。領航員將持續監控戰場！</p>`;
+    } else {
+        reportHTML += `<p class="pt-2">✅ 總結：本日戰況一切良好！所有戰線均在掌控之中，請各位夥伴繼續保持！領航員為你們感到驕傲！</p>`;
+    }
+    
+    reportHTML += `</div>`;
+    return reportHTML;
+}
+
+
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
     const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
@@ -458,8 +514,7 @@ function setupChatBot() {
     const messagesDiv = document.getElementById('chatBotMessages');
     openBtn.addEventListener('click', () => {
         container.classList.remove('hidden');
-        messagesDiv.innerHTML = `<div class="p-4"><i class="fas fa-spinner fa-spin text-indigo-500"></i> 正在產生報告...</div>`;
-        setTimeout(() => { messagesDiv.innerHTML = generateDashboardReportHTML(); }, 100);
+        messagesDiv.innerHTML = `<div class="p-4 bg-gray-100 rounded-lg">${generateDashboardReportHTML()}</div>`;
     });
     closeBtn.addEventListener('click', () => container.classList.add('hidden'));
 }
