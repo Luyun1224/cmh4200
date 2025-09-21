@@ -10,9 +10,26 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop');
+            background-image: url('all.png');
             background-size: cover;
-            background-position: center;
+            background-position: center calc(50% - 12vh);
+            background-repeat: no-repeat;
+            align-items: flex-start;
+            padding: clamp(1.5rem, 6vh, 3rem) 1.5rem clamp(2rem, 8vh, 3.5rem);
+        }
+        @media (max-width: 640px) {
+            body {
+                padding: 2.5rem 1.25rem;
+                background-position: center;
+            }
+        }
+        .auth-wrapper {
+            margin-top: clamp(4rem, 16vh, 12rem);
+        }
+        @media (max-width: 640px) {
+            .auth-wrapper {
+                margin-top: 1.5rem;
+            }
         }
         .backdrop-blur-lg {
             backdrop-filter: blur(16px);
@@ -20,10 +37,10 @@
         }
     </style>
 </head>
-<body class="bg-gray-200 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-200 flex justify-center min-h-screen">
 
     <!-- Auth Container -->
-    <div class="w-full max-w-md mx-auto p-8 bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200">
+    <div class="auth-wrapper w-full max-w-md mx-auto p-8 bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200">
 
         <!-- Login View (Default) -->
         <div id="loginView">
