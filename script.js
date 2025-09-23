@@ -1,8 +1,8 @@
-// script.js (FINAL & COMPLETE - v14.0 with Honor Roll)
+// script.js (FINAL & COMPLETE - v14.1 with Image Fix)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
-let allHonors = []; // 新增：儲存榮譽榜資料
+let allHonors = [];
 let staffData = [];
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
 let currentUnitFilter = 'all';
@@ -18,7 +18,6 @@ let allDutiesData = {};
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
-// 更新：使用更完整的日期格式
 const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目');
 const getTypeStyle = (type, status) => {
@@ -31,7 +30,7 @@ const getTypeStyle = (type, status) => {
     }
 };
 
-// --- Rendering Functions ---
+// --- Rendering Functions (openHonorRollModal 已修改) ---
 function renderUnitTabs() {
     const tabsContainer = document.getElementById('unitTabs');
     if (!staffData || staffData.length === 0) return;
@@ -144,7 +143,6 @@ function updateStats(itemsToCount) {
     document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
     document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
-    // 更新：現在是計算榮譽總數
     document.getElementById('honorCount').textContent = allHonors.length;
 }
 function renderDashboard() {
@@ -249,12 +247,11 @@ function showItemsInModal(filterType) {
     modal.classList.remove('hidden');
 }
 
-// === 全新！榮譽榜 Modal 相關函式 ===
+// === 榮譽榜 Modal 相關函式 (已修改) ===
 function openHonorRollModal() {
     const modal = document.getElementById('honorRollModal');
     const contentEl = document.getElementById('honor-roll-content');
     
-    // 依日期排序，最新的在前面
     const sortedHonors = [...allHonors].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (sortedHonors.length === 0) {
@@ -262,13 +259,15 @@ function openHonorRollModal() {
     } else {
         contentEl.innerHTML = sortedHonors.map(honor => {
             const isPdf = honor.fileName && honor.fileName.toLowerCase().endsWith('.pdf');
-            const fileLink = honor.fileUrl ? honor.fileUrl.replace('uc?id=', 'file/d/') : '#';
+            // === 修改處：優先使用 fileId 產生最可靠的連結 ===
+            const imgSrc = honor.fileId ? `https://drive.google.com/uc?export=view&id=${honor.fileId}` : honor.fileUrl;
+            const fileLink = honor.fileId ? `https://drive.google.com/file/d/${honor.fileId}/view` : '#';
 
             return `
             <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-200 mb-6 transition-all hover:shadow-2xl hover:border-yellow-400">
                 <div class="grid md:grid-cols-3 gap-6 items-center">
                     <div class="md:col-span-1">
-                        ${honor.fileUrl ? (
+                        ${honor.fileId ? ( // 檢查是否有 fileId
                             isPdf ? `
                             <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-48 bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
                                 <i class="fas fa-file-pdf text-red-500 text-6xl"></i>
@@ -276,7 +275,7 @@ function openHonorRollModal() {
                             </a>
                             ` : `
                             <a href="${fileLink}" target="_blank">
-                                <img src="${honor.fileUrl}" alt="${honor.title}" class="w-full h-48 object-contain rounded-lg bg-gray-50 p-2">
+                                <img src="${imgSrc}" alt="${honor.title}" class="w-full h-48 object-contain rounded-lg bg-gray-50 p-2">
                             </a>
                             `
                         ) : `
@@ -288,7 +287,7 @@ function openHonorRollModal() {
                     <div class="md:col-span-2">
                         <span class="text-sm font-semibold text-yellow-600">${formatDate(honor.date)}</span>
                         <h3 class="text-2xl font-bold text-gray-900 mt-1">${honor.title}</h3>
-                        <p class="text-base text-gray-600 mt-2 mb-4">${honor.description || ''}</p>
+                        <p class="text-base text-gray-600 mt-2 mb-4 whitespace-pre-wrap">${honor.description || ''}</p>
                         <div class="border-t pt-3">
                             <p class="text-sm font-semibold text-gray-800">🏆 獲獎人員:</p>
                             <p class="text-gray-700">${(honor.recipients || []).join(', ')}</p>
@@ -306,7 +305,6 @@ function openHonorRollModal() {
 function generateWeeklySummary() {
     const content = document.getElementById('weekly-summary-content');
     content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成週報...</div>`;
-
     const today = new Date();
     const oneWeekAgo = new Date(); oneWeekAgo.setDate(today.getDate() - 7);
     const nextWeek = new Date(); nextWeek.setDate(today.getDate() + 7);
@@ -332,7 +330,6 @@ function generateWeeklySummary() {
             mvp = { name: name, score: memberContributions[name] };
         }
     }
-
     const renderSummarySection = (title, icon, color, items, emptyText) => {
         let sectionHTML = `<div class="mb-4"><h3 class="text-base font-bold ${color} flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>`;
         if (items.length > 0) {
@@ -381,20 +378,14 @@ function generateDashboardReportHTML() {
     const helpNeededProjects = projectsAndTasks.filter(i => i.helpMessage && i.helpMessage.trim() !== '');
     const nearingCompletion = projectsAndTasks.filter(i => i.progress >= 80 && i.status !== 'completed');
     const birthdayMembers = staffData.filter(s => s.birthday === todayStr);
-
-    // === 新增：篩選近期榮譽 ===
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const recentHonors = allHonors.filter(h => new Date(h.date) >= oneMonthAgo);
-
     const createSection = (title, icon, colorClass, items, emptyText) => {
         if (items.length === 0) return emptyText ? `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
-        let itemsHtml = items.map(item => 
-            `<li class="text-sm text-gray-800"><span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})</li>`
-        ).join('');
+        let itemsHtml = items.map(item => `<li class="text-sm text-gray-800"><span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})</li>`).join('');
         return `<div class="p-3 bg-white rounded-lg border-l-4 ${colorClass} shadow-sm"><h3 class="font-bold text-gray-800 flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3><ul class="space-y-1 pl-5 list-disc">${itemsHtml}</ul></div>`;
     };
-
     let reportHTML = `
         <div class="space-y-4 text-gray-800">
             <div><h2 class="text-lg font-bold text-gray-900">膠部領航員 日常戰報</h2><p class="text-sm text-gray-500">報告時間：${todayString}</p></div>
@@ -403,8 +394,6 @@ function generateDashboardReportHTML() {
     if (birthdayMembers.length > 0) {
         reportHTML += `<div class="p-3 bg-rose-50 rounded-lg border-l-4 border-rose-400 shadow-sm animate-pulse"><h3 class="font-bold text-rose-800 flex items-center mb-1"><i class="fas fa-birthday-cake fa-fw mr-2"></i>特別情報！</h3><p class="text-sm text-rose-700">領航員偵測到一股強大的快樂能量... 原來是 <strong class="font-bold">${birthdayMembers.map(m=>m.name).join('、')}</strong> 的生日！艦橋全體人員在此獻上最誠摯的祝福！</p></div>`;
     }
-
-    // === 新增：在戰報中顯示近期榮譽 ===
     if (recentHonors.length > 0) {
         reportHTML += `
         <div class="p-3 bg-green-50 rounded-lg border-l-4 border-green-500 shadow-sm">
@@ -412,22 +401,18 @@ function generateDashboardReportHTML() {
             <p class="text-sm text-green-700">恭喜團隊成員在近期締造佳績：<strong class="font-bold">"${recentHonors.map(h => h.title).join('、')}"</strong>！讓我們為獲獎的英雄們喝采！</p>
         </div>`;
     }
-    
     const topTarget = overdueProjects.find(p => p.priority === 'high') || overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
     if (topTarget) {
          reportHTML += `<div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm"><h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3><p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${topTarget.assignees.join(', ')} 集中火力，優先處理！</p></div>`;
     }
-
     reportHTML += createSection('前線膠著區', 'fa-traffic-jam', 'border-yellow-500', stalledProjects);
     reportHTML += createSection('緊急呼救', 'fa-first-aid', 'border-amber-500', helpNeededProjects, '✔️ 各單位回報狀況良好，無人請求支援。');
     reportHTML += createSection('即將攻頂', 'fa-flag-checkered', 'border-green-500', nearingCompletion);
-    
     if (overdueProjects.length > 0 || stalledProjects.length > 0 || helpNeededProjects.length > 0) {
         reportHTML += `<p class="pt-2 text-sm">⚠️ <strong>戰報總結</strong>：戰場上出現了需要優先處理的目標，請各單位根據情報採取行動，確保戰役順利進行。領航員將持續監控戰場！</p>`;
     } else {
         reportHTML += `<p class="pt-2 text-sm">✅ <strong>戰報總結</strong>：本日戰況一切良好！所有戰線均在掌控之中，請各位夥伴繼續保持！領航員為你們感到驕傲！</p>`;
     }
-    
     reportHTML += `</div>`;
     return reportHTML;
 }
@@ -449,7 +434,6 @@ async function getAiSuggestions(memberName = 'all') {
         analysisTarget = memberName;
         itemsToAnalyze = itemsToAnalyze.filter(item => (item.assignees || []).includes(memberName) || (item.collaborators && item.collaborators.includes(memberName)));
     }
-
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST', mode: 'cors',
@@ -469,12 +453,7 @@ async function getAiSuggestions(memberName = 'all') {
 }
 function renderAiReport(markdownText) {
     const aiContent = document.getElementById('ai-suggestion-content');
-    let html = markdownText
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h3>')
-        .replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold text-gray-900 mt-4 mb-2">$1</h2>')
-        .replace(/\* (.*?)\n/g, '<li class="ml-5 list-disc">$1</li>')
-        .replace(/\n/g, '<br>');
+    let html = markdownText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h3>').replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold text-gray-900 mt-4 mb-2">$1</h2>').replace(/\* (.*?)\n/g, '<li class="ml-5 list-disc">$1</li>').replace(/\n/g, '<br>');
     aiContent.innerHTML = `<div class="prose max-w-none">${html}</div>`;
 }
 function setupUserInfo() {
@@ -482,7 +461,6 @@ function setupUserInfo() {
     const logoutBtn = document.getElementById('logoutBtn');
     const adminLink = document.getElementById('admin-link');
     const userDataString = sessionStorage.getItem('dashboardUser');
-    
     if (userDataString) {
         const userData = JSON.parse(userDataString);
         welcomeMessageEl.textContent = `${userData.name} 您好`;
@@ -522,7 +500,6 @@ function setupAiModal(){
     const closeAiModalBtn = document.getElementById('closeAiModalBtn');
     const permissionDeniedModal = document.getElementById('permissionDeniedModal');
     const closePermissionDeniedModalBtn = document.getElementById('closePermissionDeniedModalBtn');
-    
     if (!aiBtn) return;
     aiBtn.addEventListener('click', () => {
         const userDataString = sessionStorage.getItem('dashboardUser');
@@ -539,7 +516,6 @@ function setupAiModal(){
     aiModal.addEventListener('click', (e) => { if (e.target === aiModal) aiModal.classList.add('hidden'); });
     closePermissionDeniedModalBtn.addEventListener('click', () => permissionDeniedModal.classList.add('hidden'));
     permissionDeniedModal.addEventListener('click', (e) => { if (e.target === permissionDeniedModal) permissionDeniedModal.classList.add('hidden'); });
-    
     const filterSelect = document.getElementById('aiMemberFilter');
     if (filterSelect) {
         const newSelect = filterSelect.cloneNode(true);
@@ -549,9 +525,7 @@ function setupAiModal(){
 }
 function setupWeeklySummaryModal(){ setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary); }
 function setupItemListModal(){ setupModal('itemListModal', null, 'closeItemListModalBtn'); }
-// 移除舊的 openActivityModal 相關 setup
-// function setupActivityModal(){ setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true)); }
-function setupHonorRollModal() { setupModal('honorRollModal', null, 'closeHonorRollModalBtn'); } // 新增
+function setupHonorRollModal() { setupModal('honorRollModal', null, 'closeHonorRollModalBtn'); }
 function setupScrollToTop(){
     const btn = document.getElementById('scrollToTopBtn'); if(!btn) return;
     window.onscroll = () => {
@@ -571,71 +545,47 @@ function setupChatBot() {
     });
     closeBtn.addEventListener('click', () => container.classList.add('hidden'));
 }
-
 function setupDutySearchModal() {
     const modal = document.getElementById('dutySearchModal');
     const openBtn = document.getElementById('openDutySearchBtn');
     const closeBtn = document.getElementById('closeDutySearchModalBtn');
     const searchInput = document.getElementById('dutySearchInput');
     const resultsContainer = document.getElementById('dutySearchResults');
-    
     const renderAllDuties = (data, searchTerm = '') => {
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
         let html = '';
         const personOrder = Object.keys(data).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
         let foundResults = false;
-        
         for (const person of personOrder) {
             const duties = data[person];
             const nameMatches = person.toLowerCase().includes(lowerCaseSearchTerm);
-            
-            const dutiesThatMatch = duties.filter(duty => 
-                duty.name.toLowerCase().includes(lowerCaseSearchTerm) || 
-                duty.description.toLowerCase().includes(lowerCaseSearchTerm)
-            );
+            const dutiesThatMatch = duties.filter(duty => duty.name.toLowerCase().includes(lowerCaseSearchTerm) || duty.description.toLowerCase().includes(lowerCaseSearchTerm));
             let dutiesToShow = [];
-            if (nameMatches) {
-                dutiesToShow = duties;
-            } else if (dutiesThatMatch.length > 0) {
-                dutiesToShow = dutiesThatMatch;
-            }
-
+            if (nameMatches) { dutiesToShow = duties; } 
+            else if (dutiesThatMatch.length > 0) { dutiesToShow = dutiesThatMatch; }
             if (dutiesToShow.length > 0) {
                 foundResults = true;
-                html += `<div class="mb-4">
-                            <h3 class="text-lg font-bold text-gray-800 sticky top-0 bg-white py-2 border-b-2 border-blue-600 z-10">${person}</h3>
-                            <div class="space-y-2 mt-2">`;
+                html += `<div class="mb-4"><h3 class="text-lg font-bold text-gray-800 sticky top-0 bg-white py-2 border-b-2 border-blue-600 z-10">${person}</h3><div class="space-y-2 mt-2">`;
                 dutiesToShow.forEach(duty => {
-                    html += `<div class="p-3 bg-gray-50 rounded-lg border">
-                                <p class="font-semibold text-gray-900">${duty.name}</p>
-                                <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">${duty.description}</p>
-                            </div>`;
+                    html += `<div class="p-3 bg-gray-50 rounded-lg border"><p class="font-semibold text-gray-900">${duty.name}</p><p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">${duty.description}</p></div>`;
                 });
                 html += `</div></div>`;
             }
         }
-        
         if (!foundResults) {
             resultsContainer.innerHTML = '<p class="text-center text-gray-500 pt-8">找不到符合條件的業務或同仁</p>';
         } else {
             resultsContainer.innerHTML = html;
         }
     };
-
     const open = async () => {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         searchInput.focus();
-        
         if (Object.keys(allDutiesData).length === 0) {
             resultsContainer.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="mt-2">正在載入業務總覽...</p></div>`;
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    body: JSON.stringify({ action: 'getAllDuties' }),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                });
+                const response = await fetch(SCRIPT_URL, { method: 'POST', mode: 'cors', body: JSON.stringify({ action: 'getAllDuties' }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
                 const result = await response.json();
                 if (result.status === 'success') {
                     allDutiesData = result.data;
@@ -650,18 +600,12 @@ function setupDutySearchModal() {
             renderAllDuties(allDutiesData, searchInput.value);
         }
     };
-    
-    const close = () => {
-        modal.classList.add('hidden');
-    };
+    const close = () => { modal.classList.add('hidden'); };
     openBtn.addEventListener('click', open);
     closeBtn.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-    searchInput.addEventListener('input', (e) => {
-        renderAllDuties(allDutiesData, e.target.value);
-    });
+    searchInput.addEventListener('input', (e) => { renderAllDuties(allDutiesData, e.target.value); });
 }
-
 
 // --- Initial Load ---
 async function initializeDashboard() {
@@ -712,7 +656,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     setupUserInfo();
     setupAiModal();
-    // 移除舊的 setupActivityModal()
+    // 移除舊的，因為它現在合併在項目概覽裡
+    // setupActivityModal(); 
     setupWeeklySummaryModal();
     setupScrollToTop();
     setupItemListModal();
