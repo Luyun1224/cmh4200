@@ -566,68 +566,96 @@ function setupChatBot() {
     closeBtn.addEventListener('click', () => container.classList.add('hidden'));
 }
 
-function setupDutyListModal() {
-    setupModal('dutyListModal', null, 'closeDutyListModalBtn');
-}
-
 function setupDutySearchModal() {
     const modal = document.getElementById('dutySearchModal');
     const openBtn = document.getElementById('openDutySearchBtn');
     const closeBtn = document.getElementById('closeDutySearchModalBtn');
     const searchInput = document.getElementById('dutySearchInput');
     const resultsContainer = document.getElementById('dutySearchResults');
-    let searchTimeout;
-    const open = () => {
+    
+    const renderAllDuties = (data, searchTerm = '') => {
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+        let html = '';
+        const personOrder = Object.keys(data).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+        let foundResults = false;
+
+        for (const person of personOrder) {
+            const duties = data[person];
+            const nameMatches = person.toLowerCase().includes(lowerCaseSearchTerm);
+            
+            const dutiesThatMatch = duties.filter(duty => 
+                duty.name.toLowerCase().includes(lowerCaseSearchTerm) || 
+                duty.description.toLowerCase().includes(lowerCaseSearchTerm)
+            );
+
+            let dutiesToShow = [];
+            if (nameMatches) {
+                dutiesToShow = duties;
+            } else if (dutiesThatMatch.length > 0) {
+                dutiesToShow = dutiesThatMatch;
+            }
+
+            if (dutiesToShow.length > 0) {
+                foundResults = true;
+                html += `<div class="mb-4">
+                            <h3 class="text-lg font-bold text-gray-800 sticky top-0 bg-white py-2 border-b-2 border-blue-600 z-10">${person}</h3>
+                            <div class="space-y-2 mt-2">`;
+                dutiesToShow.forEach(duty => {
+                    html += `<div class="p-3 bg-gray-50 rounded-lg border">
+                                <p class="font-semibold text-gray-900">${duty.name}</p>
+                                <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">${duty.description}</p>
+                             </div>`;
+                });
+                html += `</div></div>`;
+            }
+        }
+        
+        if (!foundResults) {
+            resultsContainer.innerHTML = '<p class="text-center text-gray-500 pt-8">找不到符合條件的業務或同仁</p>';
+        } else {
+            resultsContainer.innerHTML = html;
+        }
+    };
+
+    const open = async () => {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         searchInput.focus();
-    };
-    const close = () => modal.classList.add('hidden');
-
-    openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const searchTerm = e.target.value.trim();
-
-        if (searchTerm.length < 1) {
-            resultsContainer.innerHTML = '<p class="text-center text-gray-400 pt-8">請在上方輸入框查詢您想找的業務</p>';
-            return;
-        }
-
-        resultsContainer.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="mt-2">正在查詢中...</p></div>`;
-
-        searchTimeout = setTimeout(async () => {
+        
+        if (Object.keys(allDutiesData).length === 0) {
+            resultsContainer.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="mt-2">正在載入業務總覽...</p></div>`;
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'cors',
-                    body: JSON.stringify({ action: 'searchDuties', searchTerm }),
+                    body: JSON.stringify({ action: 'getAllDuties' }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
                 const result = await response.json();
-                if (result.status === 'success' && result.data) {
-                    if (result.data.length > 0) {
-                        resultsContainer.innerHTML = result.data.map(item => `
-                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="flex justify-between items-start">
-                                    <p class="font-semibold text-gray-900">${item.name}</p>
-                                    <span class="flex-shrink-0 ml-4 text-sm font-bold text-white bg-blue-600 rounded-full px-3 py-1">${item.assignee}</span>
-                                </div>
-                                <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">${item.description}</p>
-                            </div>
-                        `).join('');
-                    } else {
-                        resultsContainer.innerHTML = '<p class="text-center text-gray-500 pt-8">找不到符合條件的業務</p>';
-                    }
+                if (result.status === 'success') {
+                    allDutiesData = result.data;
+                    renderAllDuties(allDutiesData);
                 } else {
-                    throw new Error(result.message || '查詢失敗');
+                    throw new Error(result.message);
                 }
             } catch (error) {
-                resultsContainer.innerHTML = `<p class="text-center text-red-500 pt-8">查詢發生錯誤: ${error.message}</p>`;
+                resultsContainer.innerHTML = `<p class="text-center text-red-500 pt-8">載入業務總覽失敗: ${error.message}</p>`;
             }
-        }, 300); 
+        } else {
+            renderAllDuties(allDutiesData, searchInput.value);
+        }
+    };
+    
+    const close = () => {
+        modal.classList.add('hidden');
+    };
+
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+    searchInput.addEventListener('input', (e) => {
+        renderAllDuties(allDutiesData, e.target.value);
     });
 }
 
@@ -682,8 +710,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupWeeklySummaryModal();
     setupScrollToTop();
     setupItemListModal();
-    setupDutyListModal(); // 初始化職掌 Modal
-    setupDutySearchModal(); // 初始化查詢 Modal
+    // setupDutyListModal(); // 此函式已移除
+    setupDutySearchModal(); // 初始化升級版的查詢 Modal
     setupChatBot();
     await initializeDashboard();
 });
