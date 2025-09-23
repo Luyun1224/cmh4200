@@ -1,8 +1,7 @@
-// script.js (FINAL & COMPLETE - v13.3 with Duty Lookup)
+// script.js (FINAL & COMPLETE - v13.5 with Enhanced Search)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
-const currentDate = new Date();
 let staffData = [];
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
 let currentUnitFilter = 'all';
@@ -13,6 +12,8 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
+let allDutiesData = {}; // 全域變數，用來快取所有業務職掌資料
+
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
@@ -120,9 +121,6 @@ function renderTeamMembers(members, allItems) {
                 <img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;">
                 <p class="font-bold text-center text-gray-900 text-lg">${name}</p>
                 <div class="space-y-2 mt-3">
-                    <button onclick="showMemberDuties('${name}', event)" class="block w-full text-center bg-indigo-600 text-white font-semibold py-1.5 rounded-lg hover:bg-indigo-700 transition-colors duration-200 text-sm">
-                        <i class="fas fa-briefcase fa-fw mr-1"></i> 業務職掌
-                    </button>
                     <a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm">
                         <i class="fas fa-history fa-fw mr-1"></i> 個人歷程
                     </a>
@@ -191,8 +189,7 @@ function filterByUnit(unit) {
     renderDashboard();
 }
 function filterBySearch(term) { currentSearchTerm = term; renderDashboard(); }
-function filterByYear(year) { currentYearFilter = year; renderDashboard();
-}
+function filterByYear(year) { currentYearFilter = year; renderDashboard(); }
 function filterByMonth(month) { currentMonthFilter = month; renderDashboard(); }
 function filterByGroup(groupKey) {
     currentGroupFilter = groupKey;
@@ -266,7 +263,6 @@ function openActivityModal(resetDate = true) {
             const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
             const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
             if (isPastA !== isPastB) return isPastA ? 1 : -1;
-        
             return dateA - dateB;
         });
         let listHtml = '';
@@ -297,8 +293,7 @@ function generateCalendarHTML(year, month, activities){
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     let calendarHtml = `<div class="mb-6"><div class="flex justify-between items-center mb-4"><button onclick="navigateCalendar(-1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt;</button><h3 class="text-xl font-bold text-purple-700">${year}年 ${monthNames[month]}</h3><button onclick="navigateCalendar(1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center text-sm">`;
     daysOfWeek.forEach(day => { calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`; });
-    for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`;
-    }
+    for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`; }
     for (let day = 1; day <= daysInMonth; day++) {
         const activitiesToday = activitiesByDay[day];
         if (activitiesToday) {
