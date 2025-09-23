@@ -16,6 +16,15 @@
         input[type=range]:hover { opacity: 1; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #2563eb; cursor: pointer; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.2); }
         input[type=range]::-moz-range-thumb { width: 20px; height: 20px; background: #2563eb; cursor: pointer; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+        /* 新增：檔案上傳預覽 */
+        .file-preview {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 0.5rem;
+            border: 2px dashed #cbd5e1;
+            padding: 0.5rem;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -24,26 +33,22 @@
              <a href="project.html" class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all text-sm font-medium shadow-md border border-slate-200">
                   <i class="fas fa-arrow-left mr-2"></i>返回儀表板
              </a>
-  
-           <div class="text-center absolute left-1/2 -translate-x-1/2">
+             <div class="text-center absolute left-1/2 -translate-x-1/2">
                  <h1 class="text-3xl font-black text-gray-800 flex items-center justify-center gap-3"><i class="fas fa-gamepad text-blue-600"></i>儀表板項目指揮中心</h1>
-                 <p class="text-gray-600 mt-2">在這裡配置您的任務與挑戰！</p>
+                 <p class="text-gray-600 mt-2">在這裡配置您的任務、挑戰與榮譽！</p>
              </div>
              <div id="user-greeting" class="text-right text-gray-700 font-medium"></div>
         </div>
 
- 
-       <div class="bg-white rounded-xl shadow-2xl p-6 mb-8 border border-slate-200">
+        <div class="bg-white rounded-xl shadow-2xl p-6 mb-8 border border-slate-200">
             <h2 id="form-title" class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">新增項目</h2>
             <form id="item-form" class="space-y-6">
                 <input type="hidden" id="item-id">
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-               
                  <div>
                         <label for="item-name" class="block text-sm font-medium text-gray-700 mb-2">項目名稱 (必填)</label>
                         <input type="text" id="item-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
-         
                    <div>
                         <label for="item-group" class="block text-sm font-medium text-gray-700 mb-2">所屬小組 (必填)</label>
                         <select id="item-group" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
@@ -51,99 +56,79 @@
                         <div id="other-group-wrapper" class="mt-2 hidden">
                              <input type="text" id="other-group-name" placeholder="請輸入新的小組名稱" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
-         
                    </div>
                     <div>
                         <label for="item-type" class="block text-sm font-medium text-gray-700 mb-2">類型 (必填)</label>
                         <select id="item-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-    
                              <option value="task">任務</option>
                             <option value="project">專案</option>
                             <option value="activity">活動</option>
-                 
                            <option value="meeting">會議</option>
                         </select>
                     </div>
                 </div>
                 <div>
-            
                  <label for="item-description" class="block text-sm font-medium text-gray-700 mb-2">項目備註說明</label>
                     <textarea id="item-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="請輸入此項目的詳細說明或備註..."></textarea>
                 </div>
-
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-sm font-medium text-gray-700">檢查點 (Checklist)</label>
                         <div class="flex items-center gap-2">
                             <select id="load-checklist-template" class="text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 p-1">
-       
                                  <option value="">載入範本...</option>
-                                </select>
+                            </select>
                             <button type="button" id="save-checklist-template-btn" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-        
                                  <i class="fas fa-save mr-1"></i> 存為範本
                             </button>
                             <button type="button" id="delete-checklist-template-btn" class="text-sm text-red-600 hover:text-red-800 font-medium">
-          
                                 <i class="fas fa-trash-alt mr-1"></i> 刪除範本
                             </button>
                         </div>
                     </div>
- 
                    <div id="checklist-container" class="space-y-2 border p-4 rounded-lg bg-gray-50">
                         </div>
                     <button type="button" id="add-checklist-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
-                        
-                         <i class="fas fa-plus-circle mr-1"></i> 新增檢查點
+                          <i class="fas fa-plus-circle mr-1"></i> 新增檢查點
                     </button>
                 </div>
-
                 <div class="grid md:grid-cols-2 gap-6">
                       <div>
-                   
                          <label for="item-assignees" class="block text-sm font-medium text-gray-700 mb-2">主要負責人 (可複選)</label>
                         <select id="item-assignees" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5" required>
-                            </select>
+                        </select>
                     </div>
-    
                      <div>
                         <label for="item-collaborators" class="block text-sm font-medium text-gray-700 mb-2">協同人員 (可複選)</label>
                         <select id="item-collaborators" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5">
-                  
-                       </select>
+                        </select>
                     </div>
                 </div>
-                <div class="grid md:grid-cols-3 gap-6">
+                 <div class="grid md:grid-cols-3 gap-6">
                     <div>
-                   
                          <div class="flex items-center justify-between mb-2">
                             <label for="item-status" class="block text-sm font-medium text-gray-700">狀態 (必填)</label>
                         </div>
                          <select id="item-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                            <option value="planning">規劃中</option>
+                             <option value="planning">規劃中</option>
                             <option value="active">進行中</option>
                             <option value="completed">已完成</option>
-           
-                                 <option value="overdue">逾期</option>
+                            <option value="overdue">逾期</option>
                         </select>
                     </div>
                     <div>
-                 
-                       <label for="item-priority" class="block text-sm font-medium text-gray-700 mb-2">優先級 (必填)</label>
+                        <label for="item-priority" class="block text-sm font-medium text-gray-700 mb-2">優先級 (必填)</label>
                         <select id="item-priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                             <option value="low">低</option>
-                       
                              <option value="medium">中</option>
                             <option value="high">高</option>
                         </select>
                     </div>
                     <div>
- 
                         <label for="item-start-date" class="block text-sm font-medium text-gray-700 mb-2">開始日期 (必填)</label>
                         <input type="date" id="item-start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
-               
-                 </div>
+                </div>
                 <div class="grid md:grid-cols-3 gap-6">
                     <div>
                         <label for="item-deadline" class="block text-sm font-medium text-gray-700 mb-2">截止日期 (非必填)</label>
@@ -152,22 +137,18 @@
                 </div>
                 <div class="pt-2">
                     <label for="item-progress" class="block text-sm font-medium text-gray-700 mb-2">進度 (%)</label>
-               
                      <div class="flex items-center space-x-4">
                         <input type="range" id="item-progress" min="0" max="100" step="10" value="0" class="flex-grow">
                         <span id="progress-value" class="font-semibold text-gray-700 w-12 text-center">0%</span>
                         <div class="flex space-x-2">
-      
                                <button type="button" id="decrease-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">-10</button>
-                            <button type="button" id="increase-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">+10</button>
+                               <button type="button" id="increase-progress" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">+10</button>
                         </div>
-          
                    </div>
                 </div>
                 <div class="pt-2">
                     <label for="item-comments" class="block text-sm font-medium text-gray-700">留言板 (求救訊息)</label>
                     <textarea id="item-comments" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="專案進度說明(停滯原因...等)"></textarea>
-  
                </div>
                 <div class="flex justify-end space-x-4 pt-4">
                     <button type="button" id="cancel-edit-btn" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors hidden">取消編輯</button>
@@ -178,10 +159,9 @@
             </form>
         </div>
 
-        <div class="bg-white rounded-xl shadow-2xl p-6 border border-slate-200">
-   
+        <div class="bg-white rounded-xl shadow-2xl p-6 mb-8 border border-slate-200">
           <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-4">我的項目列表</h2>
-             <div class="flex flex-col md:flex-row gap-4 mb-4">
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
                  <div>
                     <label for="filter-group" class="block text-sm font-medium text-gray-700 mb-1">所屬小組</label>
                     <select id="filter-group" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
@@ -189,19 +169,16 @@
                     </select>
                 </div>
                  <div>
-                  
                    <label for="filter-assignee" class="block text-sm font-medium text-gray-700 mb-1">負責人</label>
                     <select id="filter-assignee" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
                     </select>
                  </div>
-   
                  <div>
                     <label for="filter-status" class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
                     <select id="filter-status" class="w-40 px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="all">全部</option>
-        
-                     </select>
+                    </select>
                 </div>
              </div>
              <div class="overflow-x-auto">
@@ -210,31 +187,90 @@
                          <tr>
                              <th scope="col" class="px-6 py-3">項目名稱</th>
                              <th scope="col" class="px-6 py-3">所屬小組</th>
-          
-                           <th scope="col" class="px-6 py-3">主要負責人</th>
+                             <th scope="col" class="px-6 py-3">主要負責人</th>
                              <th scope="col" class="px-6 py-3">協同人員</th>
                              <th scope="col" class="px-6 py-3">狀態</th>
-              
-                               <th scope="col" class="px-6 py-3 text-right">操作</th>
+                             <th scope="col" class="px-6 py-3 text-right">操作</th>
                          </tr>
                      </thead>
                      <tbody id="items-table-body">
-             
                      </tbody>
                  </table>
              </div>
         </div>
+
+        <div class="bg-white rounded-xl shadow-2xl p-6 mb-8 border border-slate-200">
+            <h2 id="honor-form-title" class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center"><i class="fas fa-trophy text-yellow-500 mr-3"></i>新增榮譽事項</h2>
+            <form id="honor-form" class="space-y-6">
+                <input type="hidden" id="honor-id">
+                <input type="hidden" id="honor-file-id">
+                <input type="hidden" id="honor-file-url">
+                <input type="hidden" id="honor-file-name">
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="honor-title" class="block text-sm font-medium text-gray-700 mb-2">榮譽標題 (必填)</label>
+                        <input type="text" id="honor-title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="honor-date" class="block text-sm font-medium text-gray-700 mb-2">獲獎日期 (必填)</label>
+                        <input type="date" id="honor-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="honor-description" class="block text-sm font-medium text-gray-700 mb-2">事蹟說明</label>
+                    <textarea id="honor-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="請輸入此榮譽的詳細說明..."></textarea>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="honor-recipients" class="block text-sm font-medium text-gray-700 mb-2">獲獎人員 (可複選)</label>
+                        <select id="honor-recipients" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" multiple size="5" required>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="honor-file" class="block text-sm font-medium text-gray-700 mb-2">相關證明 (圖片或PDF)</label>
+                        <input type="file" id="honor-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*,.pdf">
+                        <div id="file-preview-container" class="mt-4"></div>
+                        <p class="text-xs text-gray-500 mt-1">若要修改，請上傳新檔案覆蓋。若不選擇檔案，則會保留原檔案。</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" id="cancel-honor-edit-btn" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors hidden">取消編輯</button>
+                    <button type="submit" id="save-honor-btn" class="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-8 py-2 rounded-lg font-medium transition-all shadow-md hover:shadow-lg hover:scale-105">
+                        <i class="fas fa-plus mr-2"></i>新增榮譽
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-2xl p-6 border border-slate-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-4 flex items-center"><i class="fas fa-award text-yellow-500 mr-3"></i>榮譽榜列表</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">榮譽標題</th>
+                            <th scope="col" class="px-6 py-3">獲獎日期</th>
+                            <th scope="col" class="px-6 py-3">獲獎人員</th>
+                            <th scope="col" class="px-6 py-3">證明文件</th>
+                            <th scope="col" class="px-6 py-3 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="honors-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     
     <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
-    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4"><div class="bg-white rounded-xl p-6 w-full max-w-sm mx-auto"><h3 class="text-lg font-semibold mb-4">確認刪除</h3><p class="text-gray-600 mb-6">您確定要刪除這個項目嗎？此操作無法復原。</p><div class="flex justify-end space-x-3"><button id="confirm-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button><button id="confirm-modal-ok" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">確認刪除</button></div></div></div>
-    
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4"><div class="bg-white rounded-xl p-6 w-full max-w-sm mx-auto"><h3 id="confirm-modal-title" class="text-lg font-semibold mb-4">確認刪除</h3><p id="confirm-modal-message" class="text-gray-600 mb-6">您確定要刪除這個項目嗎？此操作無法復原。</p><div class="flex justify-end space-x-3"><button id="confirm-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button><button id="confirm-modal-ok" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">確認刪除</button></div></div></div>
     <div id="template-name-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-auto">
             <h3 class="text-lg font-semibold mb-4">儲存檢查點範本</h3>
             <p class="text-gray-600 mb-4">請為這個常用的檢查點清單命名：</p>
             <input type="text" id="template-name-input" placeholder="例如：新人訓練任務" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-         
              <div class="flex justify-end space-x-3 mt-6">
                  <button id="template-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border">取消</button>
                  <button id="template-modal-ok" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">確認儲存</button>
@@ -242,15 +278,13 @@
         </div>
     </div>
 
-
     <script>
         // --- Configuration ---
-  
-       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let activities = [];
+        let honors = []; // 新增：儲存榮譽榜資料
         let staffData = [];
         let loggedInUser = { name: '', id: '' };
-        
         const statusData = { 'planning': '規劃中', 'active': '進行中', 'completed': '已完成', 'overdue': '逾期' };
         let currentGroupFilter = 'all';
         let currentAssigneeFilter = 'all';
@@ -280,7 +314,7 @@
         const loadChecklistTemplateSelect = document.getElementById('load-checklist-template');
         const saveChecklistTemplateBtn = document.getElementById('save-checklist-template-btn');
         const deleteChecklistTemplateBtn = document.getElementById('delete-checklist-template-btn');
-
+        
         // --- API Communication ---
         async function handleApiRequest(action, payload, buttonElement) {
             if (buttonElement) {
@@ -291,8 +325,7 @@
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'cors',
-                 
-                   body: JSON.stringify({ action, ...payload }),
+                    body: JSON.stringify({ action, ...payload }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
                 const result = await response.json();
@@ -307,16 +340,19 @@
             }
         }
         
-        async function fetchStaffData() {
+        async function fetchInitialData() {
             const users = await handleApiRequest('getAllUsers');
             if (users) {
                 staffData = users;
             }
+            const honorData = await handleApiRequest('getHonors');
+            if(honorData) {
+                honors = honorData;
+            }
         }
-
+        
         async function loadItems() {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在載入您的專屬資料...</td></tr>`;
-            // IMPORTANT: Get items for the logged-in user
             const items = await handleApiRequest('getAllItems', { userId: loggedInUser.id });
             if (items) {
                 activities = items;
@@ -326,7 +362,22 @@
             }
         }
 
-        // --- Functions ---
+        // --- Helper Functions ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
+        }
+
+        function getSelectedOptions(selectElement) {
+            return Array.from(selectElement.options).filter(option => option.selected).map(option => option.value);
+        }
+
         function formatDateForInput(dateString) {
             if (!dateString) return '';
             try {
@@ -334,20 +385,24 @@
                 if (isNaN(date.getTime())) return '';
                 return date.toISOString().split('T')[0];
             } catch (e) {
-                console.error("Could not format date:", dateString, e);
                 return '';
             }
         }
-
-        function formatDate(dateString) { return dateString ? new Date(dateString).toLocaleDateString('zh-TW') : ''; }
+        
         function formatDateRange(start, end) {
-            const s = formatDate(start);
-            const e = formatDate(end);
+            const s = formatDateForInput(start) ? new Date(start).toLocaleDateString('zh-TW') : '';
+            const e = formatDateForInput(end) ? new Date(end).toLocaleDateString('zh-TW') : '';
             if (!s && !e) return '';
             return e ? `${s} - ${e}` : s;
         }
         
-        function populateDropdowns() {
+        function getTypeDisplay(type) {
+            const types = { project: '<span class="text-xs font-normal text-blue-500">(專案)</span>', task: '<span class="text-xs font-normal text-green-500">(任務)</span>', activity: '<span class="text-xs font-normal text-purple-500">(活動)</span>', meeting: '<span class="text-xs font-normal text-indigo-500">(會議)</span>' };
+            return types[type] || '';
+        }
+
+        // --- Item Management Functions ---
+        function populateItemDropdowns() {
             const fixedGroupOrder = [ '教學行政組', '一般科', '臨床技能中心', '教師培育中心', '實證醫學暨醫療政策中心', '視聽中心', '圖書館' ];
             const allGroups = staffData.map(staff => staff.group).filter(Boolean);
             const uniqueGroupsFromData = [...new Set(allGroups)];
@@ -366,6 +421,7 @@
             filterAssigneeSelect.innerHTML = '<option value="all">全部</option>';
             filterStatusSelect.innerHTML = '<option value="all">全部</option>';
             Object.entries(statusData).forEach(([key, value]) => filterStatusSelect.add(new Option(value, key)));
+
             const allStaffOption1 = new Option('全體同仁', '全體同仁');
             const allStaffOption2 = new Option('全體同仁', '全體同仁');
             assigneesSelect.add(allStaffOption1);
@@ -376,47 +432,35 @@
                 filterAssigneeSelect.add(new Option(staff.name, staff.name));
             });
         }
-        
-        function getTypeDisplay(type) {
-            const types = { project: '<span class="text-xs font-normal text-blue-500">(專案)</span>', task: '<span class="text-xs font-normal text-green-500">(任務)</span>', activity: '<span class="text-xs font-normal text-purple-500">(活動)</span>', meeting: '<span class="text-xs font-normal text-indigo-500">(會議)</span>' };
-            return types[type] || '';
-        }
 
        function renderTable() {
             let filtered = activities;
             if (currentGroupFilter !== 'all') filtered = filtered.filter(i => i.group === currentGroupFilter);
             if (currentAssigneeFilter !== 'all') filtered = filtered.filter(i => (i.assignees || []).includes(currentAssigneeFilter));
             if (currentStatusFilter !== 'all') filtered = filtered.filter(i => i.status === currentStatusFilter);
-            
+
             tableBody.innerHTML = filtered.map(item => {
-                const groupName = item.group;
                 const assigneesText = (item.assignees || []).join(', ') || 'N/A';
                 const collaboratorsText = (item.collaborators || []).join(', ') || '無';
-                const typeDisplay = getTypeDisplay(item.type);
-          
-                const dateRange = formatDateRange(item.startDate, item.deadline);
-                const dateRangeHtml = dateRange ? `<div class="text-xs text-gray-500 mt-1">${dateRange}</div>` : '';
+                const dateRangeHtml = formatDateRange(item.startDate, item.deadline) ? `<div class="text-xs text-gray-500 mt-1">${formatDateRange(item.startDate, item.deadline)}</div>` : '';
 
                 return `
                 <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${typeDisplay}${dateRangeHtml}</td>
-  
-                   <td class="px-6 py-4">${groupName}</td>
+                   <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.name} ${getTypeDisplay(item.type)}${dateRangeHtml}</td>
+                   <td class="px-6 py-4">${item.group}</td>
                     <td class="px-6 py-4">${assigneesText}</td>
                     <td class="px-6 py-4">${collaboratorsText}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-800' : item.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${statusData[item.status] || item.status}</span></td>
                     <td class="px-6 py-4 text-right">
                         <button onclick="editItem('${item.id}')" class="font-medium text-blue-600 hover:underline mr-4"><i class="fas fa-edit"></i> 編輯</button>
                         <button onclick="deleteItem('${item.id}')" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
- 
-                   </td>
+                    </td>
                 </tr>
             `}).join('');
             if (filtered.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">沒有符合條件的項目</td></tr>`;
             }
-   
-         }
+       }
         
         function resetForm() {
             form.reset();
@@ -424,8 +468,7 @@
             commentsInput.value = '';
             document.getElementById('item-id').value = '';
             formTitle.textContent = '新增項目';
-           
-             saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
+            saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
             cancelBtn.classList.add('hidden');
             otherGroupWrapper.classList.add('hidden');
             otherGroupNameInput.value = '';
@@ -441,8 +484,8 @@
             document.getElementById('item-id').value = item.id;
             document.getElementById('item-name').value = item.name;
             document.getElementById('item-description').value = item.description || '';
+            
             const groupExistsInDropdown = [...groupSelect.options].some(opt => opt.value === item.group);
-
             if (groupExistsInDropdown) {
                 groupSelect.value = item.group;
                 otherGroupWrapper.classList.add('hidden');
@@ -476,48 +519,34 @@
 
         function deleteItem(id) {
             const confirmModal = document.getElementById('confirm-modal');
-            const confirmOkBtn = document.getElementById('confirm-modal-ok');
-            const confirmCancelBtn = document.getElementById('confirm-modal-cancel');
-            const originalBtnText = '確認刪除';
-
+            document.getElementById('confirm-modal-title').textContent = '確認刪除項目';
+            document.getElementById('confirm-modal-message').textContent = '您確定要刪除這個項目嗎？此操作無法復原。';
             confirmModal.classList.remove('hidden');
             confirmModal.classList.add('flex');
-            confirmOkBtn.onclick = async () => {
-                confirmOkBtn.disabled = true;
-                confirmOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
+
+            const confirmOkBtn = document.getElementById('confirm-modal-ok');
+            const newOkBtn = confirmOkBtn.cloneNode(true);
+            confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
+            
+            newOkBtn.onclick = async () => {
+                newOkBtn.disabled = true;
+                newOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
                 const result = await handleApiRequest('deleteItem', { id, userId: loggedInUser.id });
                 if (result) {
                     showToast('項目已刪除', 'success');
                     await loadItems();
                 }
                 confirmModal.classList.add('hidden');
-                confirmOkBtn.disabled = false;
-                confirmOkBtn.innerHTML = originalBtnText;
+                newOkBtn.disabled = false;
+                newOkBtn.innerHTML = `確認刪除`;
             };
             
-            confirmCancelBtn.onclick = () => {
+            document.getElementById('confirm-modal-cancel').onclick = () => {
                 confirmModal.classList.add('hidden');
-                confirmOkBtn.disabled = false;
-                confirmOkBtn.innerHTML = originalBtnText;
             };
         }
 
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-            toast.className = `toast text-white px-6 py-3 rounded-lg shadow-lg ${bgColor}`;
-            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => container.removeChild(toast), 500); }, 3000);
-        }
-
-        function getSelectedOptions(selectElement) {
-            return Array.from(selectElement.options).filter(option => option.selected).map(option => option.value);
-        }
-
-        // --- Interactive Checklist & Template Functions ---
+        // --- Checklist & Template Functions ---
         function addChecklistItem(name = '', completed = false) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'flex items-center space-x-3 checklist-item';
@@ -616,19 +645,18 @@
                 return;
             }
             const confirmModal = document.getElementById('confirm-modal');
-            const confirmOkBtn = document.getElementById('confirm-modal-ok');
-            const confirmCancelBtn = document.getElementById('confirm-modal-cancel');
-            const modalTitle = confirmModal.querySelector('h3');
-            const modalMessage = confirmModal.querySelector('p');
-            const originalOkText = '確認刪除';
+            const modalTitle = document.getElementById('confirm-modal-title');
+            const modalMessage = document.getElementById('confirm-modal-message');
+
             modalTitle.textContent = '確認刪除範本';
             modalMessage.textContent = `您確定要刪除範本 "${templateName}" 嗎？此操作無法復原。`;
             confirmModal.classList.remove('hidden');
             confirmModal.classList.add('flex');
-
+            
+            const confirmOkBtn = document.getElementById('confirm-modal-ok');
             const newOkBtn = confirmOkBtn.cloneNode(true);
-            newOkBtn.textContent = originalOkText;
             confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
+
             newOkBtn.onclick = () => {
                 const templates = getTemplates();
                 delete templates[templateName];
@@ -636,16 +664,126 @@
                 populateTemplateDropdown();
                 showToast(`範本 "${templateName}" 已刪除！`, 'success');
                 confirmModal.classList.add('hidden');
-                confirmModal.classList.remove('flex');
-                modalTitle.textContent = '確認刪除';
-                modalMessage.textContent = '您確定要刪除這個項目嗎？此操作無法復原。';
             };
-            confirmCancelBtn.onclick = () => {
+        }
+
+        // ===============================================================
+        // === 全新！榮譽榜相關函式 ===
+        // ===============================================================
+        const honorForm = document.getElementById('honor-form');
+        const honorRecipientsSelect = document.getElementById('honor-recipients');
+        const honorTableBody = document.getElementById('honors-table-body');
+        const honorFileInput = document.getElementById('honor-file');
+        const filePreviewContainer = document.getElementById('file-preview-container');
+
+        function populateHonorDropdowns() {
+            honorRecipientsSelect.innerHTML = '';
+            const allStaffOption = new Option('全體同仁', '全體同仁');
+            honorRecipientsSelect.add(allStaffOption);
+            staffData.forEach(staff => {
+                honorRecipientsSelect.add(new Option(staff.name, staff.name));
+            });
+        }
+
+        function renderHonorsTable() {
+            honors.sort((a, b) => new Date(b.date) - new Date(a.date));
+            honorTableBody.innerHTML = honors.map(honor => `
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium text-gray-900">${honor.title}</td>
+                    <td class="px-6 py-4">${formatDateForInput(honor.date)}</td>
+                    <td class="px-6 py-4">${(honor.recipients || []).join(', ')}</td>
+                    <td class="px-6 py-4">
+                        ${honor.fileUrl ? `<a href="${honor.fileUrl.replace('uc?id=', 'file/d/')}" target="_blank" class="text-blue-600 hover:underline">${honor.fileName || '查看檔案'} <i class="fas fa-external-link-alt fa-xs"></i></a>` : '無'}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="editHonor('${honor.id}')" class="font-medium text-blue-600 hover:underline mr-4"><i class="fas fa-edit"></i> 編輯</button>
+                        <button onclick="deleteHonor('${honor.id}')" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i> 刪除</button>
+                    </td>
+                </tr>
+            `).join('');
+            if (honors.length === 0) {
+                 honorTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">尚未有任何榮譽事項</td></tr>`;
+            }
+        }
+
+        function resetHonorForm() {
+            honorForm.reset();
+            document.getElementById('honor-id').value = '';
+            document.getElementById('honor-file-id').value = '';
+            document.getElementById('honor-file-url').value = '';
+            document.getElementById('honor-file-name').value = '';
+            filePreviewContainer.innerHTML = '';
+            [...honorRecipientsSelect.options].forEach(opt => opt.selected = false);
+            
+            document.getElementById('honor-form-title').innerHTML = `<i class="fas fa-trophy text-yellow-500 mr-3"></i>新增榮譽事項`;
+            const saveBtn = document.getElementById('save-honor-btn');
+            saveBtn.innerHTML = `<i class="fas fa-plus mr-2"></i>新增榮譽`;
+            document.getElementById('cancel-honor-edit-btn').classList.add('hidden');
+        }
+
+        function editHonor(id) {
+            const honor = honors.find(h => String(h.id) === String(id));
+            if (!honor) return;
+            
+            resetHonorForm();
+            document.getElementById('honor-id').value = honor.id;
+            document.getElementById('honor-title').value = honor.title;
+            document.getElementById('honor-date').value = formatDateForInput(honor.date);
+            document.getElementById('honor-description').value = honor.description || '';
+            
+            document.getElementById('honor-file-id').value = honor.fileId || '';
+            document.getElementById('honor-file-url').value = honor.fileUrl || '';
+            document.getElementById('honor-file-name').value = honor.fileName || '';
+
+            [...honorRecipientsSelect.options].forEach(opt => {
+                opt.selected = (honor.recipients || []).includes(opt.value);
+            });
+            
+            if (honor.fileUrl) {
+                if (honor.fileName && honor.fileName.toLowerCase().endsWith('.pdf')) {
+                    filePreviewContainer.innerHTML = `<a href="${honor.fileUrl.replace('uc?id=', 'file/d/')}" target="_blank" class="flex items-center text-blue-600"><i class="fas fa-file-pdf fa-2x mr-2"></i> ${honor.fileName}</a>`;
+                } else {
+                    filePreviewContainer.innerHTML = `<img src="${honor.fileUrl}" class="file-preview" alt="檔案預覽">`;
+                }
+            }
+
+            document.getElementById('honor-form-title').innerHTML = `<i class="fas fa-trophy text-yellow-500 mr-3"></i>編輯榮譽事項`;
+            document.getElementById('save-honor-btn').innerHTML = `<i class="fas fa-save mr-2"></i>儲存變更`;
+            document.getElementById('cancel-honor-edit-btn').classList.remove('hidden');
+            window.scrollTo(0, honorForm.offsetTop - 20);
+        }
+
+        function deleteHonor(id) {
+            const confirmModal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-modal-title').textContent = '確認刪除榮譽事項';
+            document.getElementById('confirm-modal-message').textContent = '您確定要刪除這個榮譽事項嗎？相關檔案也會一併從雲端硬碟中刪除。此操作無法復原。';
+            confirmModal.classList.remove('hidden');
+            confirmModal.classList.add('flex');
+
+            const confirmOkBtn = document.getElementById('confirm-modal-ok');
+            const newOkBtn = confirmOkBtn.cloneNode(true);
+            confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
+            
+            newOkBtn.onclick = async () => {
+                newOkBtn.disabled = true;
+                newOkBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>刪除中...`;
+                const result = await handleApiRequest('deleteHonor', { id: id, userId: loggedInUser.id });
+                if (result) {
+                    showToast('榮譽事項已刪除', 'success');
+                    const honorData = await handleApiRequest('getHonors');
+                    if(honorData) {
+                        honors = honorData;
+                        renderHonorsTable();
+                    }
+                }
                 confirmModal.classList.add('hidden');
-                confirmModal.classList.remove('flex');
-                modalTitle.textContent = '確認刪除';
-                modalMessage.textContent = '您確定要刪除這個項目嗎？此操作無法復原。';
+                newOkBtn.disabled = false;
+                newOkBtn.innerHTML = `確認刪除`;
             };
+
+            document.getElementById('confirm-modal-cancel').onclick = () => {
+                confirmModal.classList.add('hidden');
+            }
         }
 
         // --- Event Listeners ---
@@ -660,7 +798,80 @@
             const percent = progressInput.value;
             progressInput.style.background = `linear-gradient(to right, #60a5fa ${percent}%, #e5e7eb ${percent}%)`;
         }
+        
+        honorForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const saveBtn = document.getElementById('save-honor-btn');
+            const originalButtonHTML = document.getElementById('honor-id').value ? `<i class="fas fa-save mr-2"></i>儲存變更` : `<i class="fas fa-plus mr-2"></i>新增榮譽`;
 
+            const selectedRecipients = getSelectedOptions(honorRecipientsSelect);
+            if (selectedRecipients.length === 0) {
+                showToast('「獲獎人員」為必填欄位！', 'error');
+                return;
+            }
+
+            const honorData = {
+                id: document.getElementById('honor-id').value,
+                title: document.getElementById('honor-title').value,
+                date: document.getElementById('honor-date').value,
+                description: document.getElementById('honor-description').value,
+                recipients: selectedRecipients,
+                fileId: document.getElementById('honor-file-id').value,
+                fileUrl: document.getElementById('honor-file-url').value,
+                fileName: document.getElementById('honor-file-name').value,
+                createdBy: loggedInUser.id
+            };
+            
+            const file = honorFileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    honorData.fileData = reader.result;
+                    honorData.fileName = file.name;
+                    await submitHonorData(honorData, saveBtn, originalButtonHTML);
+                };
+                reader.onerror = () => showToast('讀取檔案失敗', 'error');
+            } else {
+                await submitHonorData(honorData, saveBtn, originalButtonHTML);
+            }
+        });
+        
+        async function submitHonorData(data, button, originalHTML) {
+             const result = await handleApiRequest('saveHonor', { honorData: data }, button);
+             button.innerHTML = originalHTML;
+
+             if (result) {
+                showToast(result.message, 'success');
+                resetHonorForm();
+                const honorData = await handleApiRequest('getHonors');
+                if(honorData) {
+                    honors = honorData;
+                    renderHonorsTable();
+                }
+             }
+        }
+
+        honorFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                filePreviewContainer.innerHTML = '';
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        filePreviewContainer.innerHTML = `<img src="${event.target.result}" class="file-preview" alt="圖片預覽">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'application/pdf') {
+                    filePreviewContainer.innerHTML = `<div class="flex items-center text-gray-700"><i class="fas fa-file-pdf fa-3x mr-3 text-red-500"></i><span class="font-medium">${file.name}</span></div>`;
+                } else {
+                    filePreviewContainer.innerHTML = `<div class="flex items-center text-gray-700"><i class="fas fa-file fa-3x mr-3 text-gray-400"></i><span class="font-medium">${file.name}</span></div>`;
+                }
+            }
+        });
+        
+        document.getElementById('cancel-honor-edit-btn').addEventListener('click', resetHonorForm);
+        
         progressInput.addEventListener('input', (e) => {
             progressValue.textContent = `${e.target.value}%`;
             updateProgressBarStyle();
@@ -683,14 +894,14 @@
             if (selectedAssignees.length === 0) {
                 showToast('「主要負責人」為必填欄位！', 'error');
                 return;
-             }
+            }
 
             let groupValue = groupSelect.value;
             if (groupValue === 'other') {
                 groupValue = otherGroupNameInput.value.trim();
                 if (!groupValue) {
                     showToast('請輸入新的小組名稱！', 'error');
-                     return;
+                    return;
                 }
             }
 
@@ -705,7 +916,7 @@
                    });
                 }
             });
-            
+
             const itemData = {
                 id: id ? id : String(Date.now()),
                 name: document.getElementById('item-name').value,
@@ -720,15 +931,13 @@
                 deadline: document.getElementById('item-deadline').value,
                 progress: parseInt(progressInput.value),
                 helpMessage: commentsInput.value,
-                checklist: checklistData, // Keep it as an array
+                checklist: checklistData,
                 createdBy: loggedInUser.id
             };
-            // Note: The backend will stringify the checklist.
             
             const originalButtonHTML = id ? '<i class="fas fa-save mr-2"></i>儲存變更' : '<i class="fas fa-plus mr-2"></i>新增項目';
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
-            
-            saveBtn.innerHTML = originalButtonHTML; // Restore button text immediately
+            saveBtn.innerHTML = originalButtonHTML;
 
             if (result) {
                 showToast(result.message, 'success');
@@ -765,18 +974,25 @@
             if (!userName || !userId) {
                 alert("無效的存取，將返回儀表板。");
                 window.location.href = 'project.html'; 
-                return; // Stop further execution
+                return;
             }
 
             loggedInUser = { name: userName, id: userId };
             document.getElementById('user-greeting').textContent = `${userName}, 您好！`;
-
-            await fetchStaffData();
-            populateDropdowns();
+            
+            // 載入所有需要的初始資料
+            await fetchInitialData();
+            
+            // 初始化「項目管理」功能
+            populateItemDropdowns();
             populateTemplateDropdown();
             setupTemplateNameModal();
             await loadItems();
             updateProgressBarStyle();
+            
+            // 初始化「榮譽榜管理」功能
+            populateHonorDropdowns();
+            renderHonorsTable();
         });
     </script>
 </body>
