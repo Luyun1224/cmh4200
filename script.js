@@ -1,12 +1,10 @@
-// script.js (FINAL & COMPLETE - Differentiated Reports)
-// --- Configuration ---
+// script.js (FINAL & COMPLETE - v13.3 with Duty Lookup)
+// --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
 const currentDate = new Date();
 let staffData = [];
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
-
-// --- State Variables ---
 let currentUnitFilter = 'all';
 let currentGroupFilter = 'all';
 let currentStatusFilter = 'all';
@@ -31,7 +29,7 @@ const getTypeStyle = (type, status) => {
     }
 };
 
-// --- Rendering Functions (No changes in this section) ---
+// --- Rendering Functions ---
 function renderUnitTabs() {
     const tabsContainer = document.getElementById('unitTabs');
     if (!staffData || staffData.length === 0) return;
@@ -118,7 +116,27 @@ function renderTeamMembers(members, allItems) {
         const birthdayContainerClass = isBirthday ? 'birthday-container' : '';
         const birthdayHatHTML = isBirthday ? '<div class="birthday-hat"></div>' : '';
         const confettiHTML = isBirthday ? Array.from({length: 9}).map(() => `<div class="confetti"></div>`).join('') : '';
-        return `<div onclick="filterByMember('${name}')" class="group relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}"><div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-48 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30"><img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;"><p class="font-bold text-center text-gray-900 text-lg">${name}</p><a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm mt-3">檢視個人歷程</a><div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div></div>${confettiHTML}<div class="flex items-center min-w-0"><div class="relative flex-shrink-0">${birthdayHatHTML}${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}</div><div class="ml-3 min-w-0"><p class="font-medium text-gray-900 truncate">${name}</p><div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1"><span>專案: ${projectCount}</span><span>任務: ${taskCount}</span></div></div></div><div class="text-right flex-shrink-0 ml-2">${overdueCount > 0 ? `<span class="text-xs font-bold text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center">${overdueCount}</span>` : ''}</div></div>`;
+        return `<div onclick="filterByMember('${name}')" class="group relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}">
+            <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-52 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30">
+                <img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;">
+                <p class="font-bold text-center text-gray-900 text-lg">${name}</p>
+                <div class="space-y-2 mt-3">
+                    <button onclick="showMemberDuties('${name}', event)" class="block w-full text-center bg-indigo-600 text-white font-semibold py-1.5 rounded-lg hover:bg-indigo-700 transition-colors duration-200 text-sm">
+                        <i class="fas fa-briefcase fa-fw mr-1"></i> 業務職掌
+                    </button>
+                    <a href="#" onclick="viewMemberHistory('${name}', event)" class="block w-full text-center bg-blue-600 text-white font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm">
+                        <i class="fas fa-history fa-fw mr-1"></i> 個人歷程
+                    </a>
+                </div>
+                <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div>
+            </div>
+            ${confettiHTML}
+            <div class="flex items-center min-w-0">
+                <div class="relative flex-shrink-0">${birthdayHatHTML}${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}</div>
+                <div class="ml-3 min-w-0"><p class="font-medium text-gray-900 truncate">${name}</p><div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1"><span>專案: ${projectCount}</span><span>任務: ${taskCount}</span></div></div>
+            </div>
+            <div class="text-right flex-shrink-0 ml-2">${overdueCount > 0 ? `<span class="text-xs font-bold text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center">${overdueCount}</span>` : ''}</div>
+        </div>`;
     }).join('');
 }
 function updateStats(itemsToCount) {
@@ -161,7 +179,7 @@ function renderDashboard() {
     renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
 }
 
-// --- Filtering Functions (No changes in this section) ---
+// --- Filtering Functions ---
 function filterByUnit(unit) {
     currentUnitFilter = unit;
     currentGroupFilter = 'all';
@@ -294,10 +312,6 @@ function navigateCalendar(offset){
     calendarDate.setMonth(calendarDate.getMonth() + offset);
     openActivityModal(false);
 };
-
-// =======================================================
-// ***** 修改處 1：活化「本週回顧」 *****
-// =======================================================
 function generateWeeklySummary() {
     const content = document.getElementById('weekly-summary-content');
     content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成週報...</div>`;
@@ -305,7 +319,6 @@ function generateWeeklySummary() {
     const today = new Date();
     const oneWeekAgo = new Date(); oneWeekAgo.setDate(today.getDate() - 7);
     const nextWeek = new Date(); nextWeek.setDate(today.getDate() + 7);
-
     const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
     const completedThisWeek = projectsAndTasks.filter(item => { if (item.status !== 'completed') return false; const completionDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate); return completionDate >= oneWeekAgo && completionDate <= today; });
     const progressMade = projectsAndTasks.filter(item => item.status !== 'completed' && item.progress > (item.lastWeekProgress || 0));
@@ -313,11 +326,7 @@ function generateWeeklySummary() {
     const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0) && item.progress < 100);
     const upcomingDeadlines = projectsAndTasks.filter(item => item.deadline && new Date(item.deadline) > today && new Date(item.deadline) <= nextWeek && item.status !== 'completed');
     const helpNeeded = projectsAndTasks.filter(item => item.helpMessage && item.helpMessage.trim() !== '');
-
-    // 計算統計數據
     const totalProgressGained = progressMade.reduce((sum, item) => sum + (item.progress - (item.lastWeekProgress || 0)), 0);
-    
-    // 計算 MVP
     const memberContributions = {};
     progressMade.forEach(item => {
         const progress = item.progress - (item.lastWeekProgress || 0);
@@ -349,19 +358,12 @@ function generateWeeklySummary() {
         }
         sectionHTML += `</div>`; return sectionHTML;
     };
-    
     let summaryHTML = `
         <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
             <h3 class="text-lg font-bold text-blue-800 mb-2">本週團隊數據總覽</h3>
             <div class="grid grid-cols-2 gap-4 text-center">
-                <div>
-                    <p class="text-2xl font-bold text-blue-700">${completedThisWeek.length}</p>
-                    <p class="text-sm text-gray-600">完成項目數</p>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-green-700">+${totalProgressGained}%</p>
-                    <p class="text-sm text-gray-600">總進度推進</p>
-                </div>
+                <div><p class="text-2xl font-bold text-blue-700">${completedThisWeek.length}</p><p class="text-sm text-gray-600">完成項目數</p></div>
+                <div><p class="text-2xl font-bold text-green-700">+${totalProgressGained}%</p><p class="text-sm text-gray-600">總進度推進</p></div>
             </div>
         </div>
         <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-6">
@@ -369,7 +371,6 @@ function generateWeeklySummary() {
              ${mvp.name !== '無' ? `<p class="text-center"><span class="font-bold text-xl text-amber-900">${mvp.name}</span> <br> <span class="text-sm text-gray-600">以 <strong class="text-amber-700">${mvp.score}%</strong> 的總進度貢獻拔得頭籌！</span></p>` : `<p class="text-center text-gray-500">本週尚無明顯的進度貢獻者，下週加油！</p>`}
         </div>
     `;
-
     summaryHTML += renderSummarySection('本週完成項目', 'fa-check-circle', 'text-green-600', completedThisWeek, '本週沒有完成的項目。');
     summaryHTML += renderSummarySection('本週進度更新', 'fa-rocket', 'text-blue-600', progressMade, '本週沒有項目取得進展。');
     summaryHTML += renderSummarySection('本週新增項目', 'fa-lightbulb', 'text-purple-600', newlyAdded, '本週沒有新增項目。');
@@ -378,74 +379,42 @@ function generateWeeklySummary() {
     summaryHTML += renderSummarySection('需要協助項目', 'fa-hands-helping', 'text-red-600', helpNeeded, '沒有項目發出求救信號。');
     content.innerHTML = summaryHTML;
 }
-
-
-// =======================================================
-// ***** 修改處 2：活化「每日彙報機器人」 *****
-// =======================================================
 function generateDashboardReportHTML() {
     const today = new Date();
     const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
     const todayString = today.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' });
-    
-    // 數據分析
     const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
     const overdueProjects = projectsAndTasks.filter(i => i.status === 'overdue');
     const stalledProjects = projectsAndTasks.filter(i => i.status === 'active' && i.progress === (i.lastWeekProgress || 0) && i.progress < 100);
     const helpNeededProjects = projectsAndTasks.filter(i => i.helpMessage && i.helpMessage.trim() !== '');
     const nearingCompletion = projectsAndTasks.filter(i => i.progress >= 80 && i.status !== 'completed');
     const birthdayMembers = staffData.filter(s => s.birthday === todayStr);
-
-    // 建立訊息區塊的輔助函數
     const createSection = (title, icon, colorClass, items, emptyText) => {
         if (items.length === 0) return emptyText ? `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
         let itemsHtml = items.map(item => 
-            `<li class="text-sm text-gray-800">
-                <span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})
-            </li>`
+            `<li class="text-sm text-gray-800"><span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})</li>`
         ).join('');
-        return `
-            <div class="p-3 bg-white rounded-lg border-l-4 ${colorClass} shadow-sm">
-                <h3 class="font-bold text-gray-800 flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3>
-                <ul class="space-y-1 pl-5 list-disc">${itemsHtml}</ul>
-            </div>`;
+        return `<div class="p-3 bg-white rounded-lg border-l-4 ${colorClass} shadow-sm"><h3 class="font-bold text-gray-800 flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3><ul class="space-y-1 pl-5 list-disc">${itemsHtml}</ul></div>`;
     };
 
     let reportHTML = `
         <div class="space-y-4 text-gray-800">
-            <div>
-                <h2 class="text-lg font-bold text-gray-900">膠部領航員 日常戰報</h2>
-                <p class="text-sm text-gray-500">報告時間：${todayString}</p>
-            </div>
+            <div><h2 class="text-lg font-bold text-gray-900">膠部領航員 日常戰報</h2><p class="text-sm text-gray-500">報告時間：${todayString}</p></div>
             <p>教學部戰隊的各位夥伴，早安！領航員回報，本日戰線情報分析如下：</p>
     `;
-
-    // 生日祝福
     if (birthdayMembers.length > 0) {
-        reportHTML += `
-            <div class="p-3 bg-rose-50 rounded-lg border-l-4 border-rose-400 shadow-sm animate-pulse">
-                <h3 class="font-bold text-rose-800 flex items-center mb-1"><i class="fas fa-birthday-cake fa-fw mr-2"></i>特別情報！</h3>
-                <p class="text-sm text-rose-700">領航員偵測到一股強大的快樂能量... 原來是 <strong class="font-bold">${birthdayMembers.map(m=>m.name).join('、')}</strong> 的生日！艦橋全體人員在此獻上最誠摯的祝福！</p>
-            </div>
-        `;
+        reportHTML += `<div class="p-3 bg-rose-50 rounded-lg border-l-4 border-rose-400 shadow-sm animate-pulse"><h3 class="font-bold text-rose-800 flex items-center mb-1"><i class="fas fa-birthday-cake fa-fw mr-2"></i>特別情報！</h3><p class="text-sm text-rose-700">領航員偵測到一股強大的快樂能量... 原來是 <strong class="font-bold">${birthdayMembers.map(m=>m.name).join('、')}</strong> 的生日！艦橋全體人員在此獻上最誠摯的祝福！</p></div>`;
     }
     
-    // 首要目標
     const topTarget = overdueProjects.find(p => p.priority === 'high') || overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
     if (topTarget) {
-         reportHTML += `
-            <div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm">
-                <h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3>
-                <p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${topTarget.assignees.join(', ')} 集中火力，優先處理！</p>
-            </div>
-        `;
+         reportHTML += `<div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm"><h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3><p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${topTarget.assignees.join(', ')} 集中火力，優先處理！</p></div>`;
     }
 
     reportHTML += createSection('前線膠著區', 'fa-traffic-jam', 'border-yellow-500', stalledProjects);
     reportHTML += createSection('緊急呼救', 'fa-first-aid', 'border-amber-500', helpNeededProjects, '✔️ 各單位回報狀況良好，無人請求支援。');
     reportHTML += createSection('即將攻頂', 'fa-flag-checkered', 'border-green-500', nearingCompletion);
-
-    // 總結
+    
     if (overdueProjects.length > 0 || stalledProjects.length > 0 || helpNeededProjects.length > 0) {
         reportHTML += `<p class="pt-2 text-sm">⚠️ <strong>戰報總結</strong>：戰場上出現了需要優先處理的目標，請各單位根據情報採取行動，確保戰役順利進行。領航員將持續監控戰場！</p>`;
     } else {
@@ -456,7 +425,7 @@ function generateDashboardReportHTML() {
     return reportHTML;
 }
 
-// --- AI & Setup Functions (No changes in this section) ---
+// --- AI & Setup Functions ---
 async function getAiSuggestions(memberName = 'all') {
     const aiContent = document.getElementById('ai-suggestion-content');
     const loadingMessages = ["正在準備您的專案數據...", "已連線至 AI 引擎...", "AI 正在分析風險與機會...", "生成個人化決策建議中...", "幾乎完成了..."];
@@ -467,7 +436,6 @@ async function getAiSuggestions(memberName = 'all') {
         messageIndex = (messageIndex + 1) % loadingMessages.length;
         if(loadingMessageElement) loadingMessageElement.textContent = loadingMessages[messageIndex];
     }, 1500);
-
     let itemsToAnalyze = allActivities.filter(item => ['project', 'task'].includes(item.type));
     let analysisTarget = "整個團隊";
     if (memberName !== 'all') {
@@ -493,14 +461,13 @@ async function getAiSuggestions(memberName = 'all') {
     }
 }
 function renderAiReport(markdownText) {
-    const aiContent = document.getElementById('ai-suggestion-content');
     let html = markdownText
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h3>')
         .replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold text-gray-900 mt-4 mb-2">$1</h2>')
         .replace(/\* (.*?)\n/g, '<li class="ml-5 list-disc">$1</li>')
         .replace(/\n/g, '<br>');
-    aiContent.innerHTML = `<div class="prose max-w-none">${html}</div>`;
+    document.getElementById('ai-suggestion-content').innerHTML = `<div class="prose max-w-none">${html}</div>`;
 }
 function setupUserInfo() {
     const welcomeMessageEl = document.getElementById('welcome-message');
@@ -589,11 +556,78 @@ function setupChatBot() {
     const messagesDiv = document.getElementById('chatBotMessages');
     openBtn.addEventListener('click', () => {
         container.classList.remove('hidden');
-        // The generate function now returns the full HTML, which we place inside a styled container
         messagesDiv.innerHTML = `<div class="p-4 bg-gray-100 rounded-lg">${generateDashboardReportHTML()}</div>`;
     });
     closeBtn.addEventListener('click', () => container.classList.add('hidden'));
 }
+
+function setupDutyListModal() {
+    setupModal('dutyListModal', null, 'closeDutyListModalBtn');
+}
+
+function setupDutySearchModal() {
+    const modal = document.getElementById('dutySearchModal');
+    const openBtn = document.getElementById('openDutySearchBtn');
+    const closeBtn = document.getElementById('closeDutySearchModalBtn');
+    const searchInput = document.getElementById('dutySearchInput');
+    const resultsContainer = document.getElementById('dutySearchResults');
+    let searchTimeout;
+
+    const open = () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        searchInput.focus();
+    };
+    const close = () => modal.classList.add('hidden');
+
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+
+        if (searchTerm.length < 1) {
+            resultsContainer.innerHTML = '<p class="text-center text-gray-400 pt-8">請在上方輸入框查詢您想找的業務</p>';
+            return;
+        }
+
+        resultsContainer.innerHTML = `<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="mt-2">正在查詢中...</p></div>`;
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify({ action: 'searchDuties', searchTerm }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    if (result.data.length > 0) {
+                        resultsContainer.innerHTML = result.data.map(item => `
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex justify-between items-start">
+                                    <p class="font-semibold text-gray-900">${item.name}</p>
+                                    <span class="flex-shrink-0 ml-4 text-sm font-bold text-white bg-blue-600 rounded-full px-3 py-1">${item.assignee}</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">${item.description}</p>
+                            </div>
+                        `).join('');
+                    } else {
+                        resultsContainer.innerHTML = '<p class="text-center text-gray-500 pt-8">找不到符合條件的業務</p>';
+                    }
+                } else {
+                    throw new Error(result.message || '查詢失敗');
+                }
+            } catch (error) {
+                resultsContainer.innerHTML = `<p class="text-center text-red-500 pt-8">查詢發生錯誤: ${error.message}</p>`;
+            }
+        }, 300); 
+    });
+}
+
 
 // --- Initial Load ---
 async function initializeDashboard() {
@@ -608,7 +642,6 @@ async function initializeDashboard() {
         
         const userData = result.data.staffData || [];
         staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit }));
-        
         const itemData = result.data.activities || [];
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -620,7 +653,6 @@ async function initializeDashboard() {
             else if (finalStatus !== 'completed' && deadline && deadline < today) finalStatus = 'overdue';
             return { ...item, progress, status: finalStatus, lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0, helpMessage: item.helpMessage || '', checklist: Array.isArray(item.checklist) ? item.checklist : [] };
         });
-        
         renderUnitTabs();
         renderYearFilter();
         renderMonthFilter();
@@ -647,6 +679,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupWeeklySummaryModal();
     setupScrollToTop();
     setupItemListModal();
+    setupDutyListModal(); // 初始化職掌 Modal
+    setupDutySearchModal(); // 初始化查詢 Modal
     setupChatBot();
     await initializeDashboard();
 });
