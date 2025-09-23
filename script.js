@@ -13,7 +13,6 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
-
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
@@ -192,7 +191,8 @@ function filterByUnit(unit) {
     renderDashboard();
 }
 function filterBySearch(term) { currentSearchTerm = term; renderDashboard(); }
-function filterByYear(year) { currentYearFilter = year; renderDashboard(); }
+function filterByYear(year) { currentYearFilter = year; renderDashboard();
+}
 function filterByMonth(month) { currentMonthFilter = month; renderDashboard(); }
 function filterByGroup(groupKey) {
     currentGroupFilter = groupKey;
@@ -236,7 +236,8 @@ function showItemsInModal(filterType) {
     const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
     const statusOrder = { 'active': 1, 'planning': 2, 'overdue': 3, 'completed': 4 };
     switch(filterType) {
-        case 'total': itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99)); modalTitle = '總項目列表'; break;
+        case 'total': itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
+        modalTitle = '總項目列表'; break;
         case 'active': itemsToShow = projectsAndTasks.filter(item => item.status === 'active'); modalTitle = '進行中項目列表'; break;
         case 'overdue': itemsToShow = projectsAndTasks.filter(item => item.status === 'overdue'); modalTitle = '逾期項目列表'; break;
         case 'completed': itemsToShow = allActivities.filter(item => item.status === 'completed'); modalTitle = '已完成項目列表'; break;
@@ -265,6 +266,7 @@ function openActivityModal(resetDate = true) {
             const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
             const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
             if (isPastA !== isPastB) return isPastA ? 1 : -1;
+        
             return dateA - dateB;
         });
         let listHtml = '';
@@ -295,7 +297,8 @@ function generateCalendarHTML(year, month, activities){
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     let calendarHtml = `<div class="mb-6"><div class="flex justify-between items-center mb-4"><button onclick="navigateCalendar(-1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt;</button><h3 class="text-xl font-bold text-purple-700">${year}年 ${monthNames[month]}</h3><button onclick="navigateCalendar(1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center text-sm">`;
     daysOfWeek.forEach(day => { calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`; });
-    for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`; }
+    for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`;
+    }
     for (let day = 1; day <= daysInMonth; day++) {
         const activitiesToday = activitiesByDay[day];
         if (activitiesToday) {
@@ -390,7 +393,8 @@ function generateDashboardReportHTML() {
     const nearingCompletion = projectsAndTasks.filter(i => i.progress >= 80 && i.status !== 'completed');
     const birthdayMembers = staffData.filter(s => s.birthday === todayStr);
     const createSection = (title, icon, colorClass, items, emptyText) => {
-        if (items.length === 0) return emptyText ? `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
+        if (items.length === 0) return emptyText ?
+        `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
         let itemsHtml = items.map(item => 
             `<li class="text-sm text-gray-800"><span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})</li>`
         ).join('');
@@ -406,7 +410,8 @@ function generateDashboardReportHTML() {
         reportHTML += `<div class="p-3 bg-rose-50 rounded-lg border-l-4 border-rose-400 shadow-sm animate-pulse"><h3 class="font-bold text-rose-800 flex items-center mb-1"><i class="fas fa-birthday-cake fa-fw mr-2"></i>特別情報！</h3><p class="text-sm text-rose-700">領航員偵測到一股強大的快樂能量... 原來是 <strong class="font-bold">${birthdayMembers.map(m=>m.name).join('、')}</strong> 的生日！艦橋全體人員在此獻上最誠摯的祝福！</p></div>`;
     }
     
-    const topTarget = overdueProjects.find(p => p.priority === 'high') || overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
+    const topTarget = overdueProjects.find(p => p.priority === 'high') ||
+    overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
     if (topTarget) {
          reportHTML += `<div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm"><h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3><p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${topTarget.assignees.join(', ')} 集中火力，優先處理！</p></div>`;
     }
@@ -449,7 +454,8 @@ async function getAiSuggestions(memberName = 'all') {
             body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: { items: itemsToAnalyze, memberName: analysisTarget } }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
-        if (!response.ok) { const errorText = await response.text(); throw new Error(`網路回應錯誤: ${errorText}`); }
+        if (!response.ok) { const errorText = await response.text(); throw new Error(`網路回應錯誤: ${errorText}`);
+        }
         const result = await response.json();
         const aiText = result.candidates[0].content.parts[0].text;
         renderAiReport(aiText);
@@ -461,13 +467,14 @@ async function getAiSuggestions(memberName = 'all') {
     }
 }
 function renderAiReport(markdownText) {
+    const aiContent = document.getElementById('ai-suggestion-content');
     let html = markdownText
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h3>')
         .replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold text-gray-900 mt-4 mb-2">$1</h2>')
         .replace(/\* (.*?)\n/g, '<li class="ml-5 list-disc">$1</li>')
         .replace(/\n/g, '<br>');
-    document.getElementById('ai-suggestion-content').innerHTML = `<div class="prose max-w-none">${html}</div>`;
+    aiContent.innerHTML = `<div class="prose max-w-none">${html}</div>`;
 }
 function setupUserInfo() {
     const welcomeMessageEl = document.getElementById('welcome-message');
@@ -525,6 +532,7 @@ function setupAiModal(){
             getAiSuggestions('all');
         } else {
             permissionDeniedModal.classList.remove('hidden');
+   
         }
     });
     closeAiModalBtn.addEventListener('click', () => aiModal.classList.add('hidden'));
@@ -541,11 +549,13 @@ function setupAiModal(){
 }
 function setupWeeklySummaryModal(){ setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary); }
 function setupItemListModal(){ setupModal('itemListModal', null, 'closeItemListModalBtn'); }
-function setupActivityModal(){ setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true)); }
+function setupActivityModal(){ setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true));
+}
 function setupScrollToTop(){
     const btn = document.getElementById('scrollToTopBtn'); if(!btn) return;
     window.onscroll = () => {
-        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) { btn.classList.remove('hidden'); } else { btn.classList.add('hidden'); }
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) { btn.classList.remove('hidden');
+        } else { btn.classList.add('hidden'); }
     };
     btn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
 }
@@ -572,7 +582,6 @@ function setupDutySearchModal() {
     const searchInput = document.getElementById('dutySearchInput');
     const resultsContainer = document.getElementById('dutySearchResults');
     let searchTimeout;
-
     const open = () => {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -583,7 +592,6 @@ function setupDutySearchModal() {
     openBtn.addEventListener('click', open);
     closeBtn.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
         const searchTerm = e.target.value.trim();
