@@ -1,7 +1,8 @@
-// script.js (FINAL & COMPLETE - v13.5 with Enhanced Search)
+// script.js (FINAL & COMPLETE - v14.0 with Honor Roll)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
+let allHonors = []; // 新增：儲存榮譽榜資料
 let staffData = [];
 const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
 let currentUnitFilter = 'all';
@@ -12,12 +13,13 @@ let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
 let calendarDate = new Date();
-let allDutiesData = {}; // 全域變數，用來快取所有業務職掌資料
+let allDutiesData = {};
 
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
-const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW') : '';
+// 更新：使用更完整的日期格式
+const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目');
 const getTypeStyle = (type, status) => {
     switch(type) {
@@ -138,12 +140,12 @@ function renderTeamMembers(members, allItems) {
 }
 function updateStats(itemsToCount) {
     const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
-    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
     document.getElementById('totalTasks').textContent = projectsAndTasks.length;
     document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
     document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
-    document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
+    // 更新：現在是計算榮譽總數
+    document.getElementById('honorCount').textContent = allHonors.length;
 }
 function renderDashboard() {
     let itemsForYear = allActivities;
@@ -233,8 +235,7 @@ function showItemsInModal(filterType) {
     const projectsAndTasks = allActivities.filter(item => item.type === 'project' || item.type === 'task');
     const statusOrder = { 'active': 1, 'planning': 2, 'overdue': 3, 'completed': 4 };
     switch(filterType) {
-        case 'total': itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
-        modalTitle = '總項目列表'; break;
+        case 'total': itemsToShow = projectsAndTasks.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99)); modalTitle = '總項目列表'; break;
         case 'active': itemsToShow = projectsAndTasks.filter(item => item.status === 'active'); modalTitle = '進行中項目列表'; break;
         case 'overdue': itemsToShow = projectsAndTasks.filter(item => item.status === 'overdue'); modalTitle = '逾期項目列表'; break;
         case 'completed': itemsToShow = allActivities.filter(item => item.status === 'completed'); modalTitle = '已完成項目列表'; break;
@@ -247,69 +248,61 @@ function showItemsInModal(filterType) {
     }
     modal.classList.remove('hidden');
 }
-function openActivityModal(resetDate = true) {
-    if (resetDate) calendarDate = new Date();
-    const modal = document.getElementById('activityModal');
-    const content = document.getElementById('activity-content');
-    const itemsForDisplay = allActivities.filter(item => item.type && (item.type.toLowerCase() === 'activity' || item.type.toLowerCase() === 'meeting'));
-    const calendarHTML = generateCalendarHTML(calendarDate.getFullYear(), calendarDate.getMonth(), itemsForDisplay);
-    if (itemsForDisplay.length === 0) {
-        content.innerHTML = calendarHTML + `<p class="text-center text-gray-500 mt-4">目前沒有任何活動。</p>`;
+
+// === 全新！榮譽榜 Modal 相關函式 ===
+function openHonorRollModal() {
+    const modal = document.getElementById('honorRollModal');
+    const contentEl = document.getElementById('honor-roll-content');
+    
+    // 依日期排序，最新的在前面
+    const sortedHonors = [...allHonors].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (sortedHonors.length === 0) {
+        contentEl.innerHTML = '<p class="text-center text-gray-500 py-8">目前尚無榮譽事項記錄。</p>';
     } else {
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const sortedItems = itemsForDisplay.slice().sort((a, b) => {
-            const dateA = new Date(a.startDate); const dateB = new Date(b.startDate);
-            const isPastA = (a.deadline ? new Date(a.deadline) : dateA) < today;
-            const isPastB = (b.deadline ? new Date(b.deadline) : dateB) < today;
-            if (isPastA !== isPastB) return isPastA ? 1 : -1;
-            return dateA - dateB;
-        });
-        let listHtml = '';
-        if (sortedItems.length > 0) {
-            listHtml = '<ul class="space-y-4">' + sortedItems.map(item => {
-                const isExpired = (item.deadline ? new Date(item.deadline) : new Date(item.startDate)) < today;
-                return `<li class="relative flex items-start space-x-4 p-2 rounded-lg ${isExpired ? 'bg-gray-100' : 'hover:bg-gray-50'}"><div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg"><span class="text-xl font-bold text-purple-700">${new Date(item.startDate).getDate()}</span></div><div class="flex-grow pt-1"><p class="font-semibold text-gray-800">${item.name}</p><p class="text-sm text-gray-600">日期: ${formatDate(item.startDate)}</p><p class="text-sm text-gray-500">負責人: ${(item.assignees || []).join(', ')}</p></div></li>`;
-            }).join('') + '</ul>';
-        }
-        content.innerHTML = calendarHTML + `<hr class="my-6"/>` + listHtml;
+        contentEl.innerHTML = sortedHonors.map(honor => {
+            const isPdf = honor.fileName && honor.fileName.toLowerCase().endsWith('.pdf');
+            const fileLink = honor.fileUrl ? honor.fileUrl.replace('uc?id=', 'file/d/') : '#';
+
+            return `
+            <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-200 mb-6 transition-all hover:shadow-2xl hover:border-yellow-400">
+                <div class="grid md:grid-cols-3 gap-6 items-center">
+                    <div class="md:col-span-1">
+                        ${honor.fileUrl ? (
+                            isPdf ? `
+                            <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-48 bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
+                                <i class="fas fa-file-pdf text-red-500 text-6xl"></i>
+                                <span class="mt-2 font-semibold text-sm text-gray-700 truncate w-full">${honor.fileName}</span>
+                            </a>
+                            ` : `
+                            <a href="${fileLink}" target="_blank">
+                                <img src="${honor.fileUrl}" alt="${honor.title}" class="w-full h-48 object-contain rounded-lg bg-gray-50 p-2">
+                            </a>
+                            `
+                        ) : `
+                        <div class="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                            <i class="fas fa-award text-gray-300 text-6xl"></i>
+                        </div>
+                        `}
+                    </div>
+                    <div class="md:col-span-2">
+                        <span class="text-sm font-semibold text-yellow-600">${formatDate(honor.date)}</span>
+                        <h3 class="text-2xl font-bold text-gray-900 mt-1">${honor.title}</h3>
+                        <p class="text-base text-gray-600 mt-2 mb-4">${honor.description || ''}</p>
+                        <div class="border-t pt-3">
+                            <p class="text-sm font-semibold text-gray-800">🏆 獲獎人員:</p>
+                            <p class="text-gray-700">${(honor.recipients || []).join(', ')}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
     }
     modal.classList.remove('hidden');
 }
-function generateCalendarHTML(year, month, activities){
-    const activitiesByDay = {};
-    activities.forEach(item => {
-        if (!item.startDate) return;
-        const d = new Date(item.startDate);
-        if (d.getFullYear() === year && d.getMonth() === month) {
-            const day = d.getDate();
-            if (!activitiesByDay[day]) activitiesByDay[day] = [];
-            activitiesByDay[day].push(item);
-        }
-    });
-    const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-    const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let calendarHtml = `<div class="mb-6"><div class="flex justify-between items-center mb-4"><button onclick="navigateCalendar(-1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt;</button><h3 class="text-xl font-bold text-purple-700">${year}年 ${monthNames[month]}</h3><button onclick="navigateCalendar(1)" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center text-sm">`;
-    daysOfWeek.forEach(day => { calendarHtml += `<div class="font-semibold text-gray-600">${day}</div>`; });
-    for (let i = 0; i < firstDay; i++) { calendarHtml += `<div></div>`; }
-    for (let day = 1; day <= daysInMonth; day++) {
-        const activitiesToday = activitiesByDay[day];
-        if (activitiesToday) {
-            const tooltipHtml = activitiesToday.map(act => `<li class="truncate">${act.name}</li>`).join('');
-            calendarHtml += `<div class="relative group flex items-center justify-center"><div class="mx-auto flex items-center justify-center w-8 h-8 rounded-full border-2 border-purple-400 text-purple-700 font-semibold cursor-pointer">${day}</div><span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs bg-red-500 text-white rounded-full">${activitiesToday.length}</span><div class="absolute bottom-full mb-2 w-56 p-2 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 transform -translate-x-1/2 left-1/2"><ul class="space-y-1">${tooltipHtml}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div>`;
-        } else {
-            calendarHtml += `<div class="flex items-center justify-center w-8 h-8">${day}</div>`;
-        }
-    }
-    calendarHtml += `</div></div>`;
-    return calendarHtml;
-};
-function navigateCalendar(offset){
-    calendarDate.setMonth(calendarDate.getMonth() + offset);
-    openActivityModal(false);
-};
+
+
 function generateWeeklySummary() {
     const content = document.getElementById('weekly-summary-content');
     content.innerHTML = `<div class="p-8 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl text-green-500 mr-3"></i> 正在生成週報...</div>`;
@@ -377,6 +370,7 @@ function generateWeeklySummary() {
     summaryHTML += renderSummarySection('需要協助項目', 'fa-hands-helping', 'text-red-600', helpNeeded, '沒有項目發出求救信號。');
     content.innerHTML = summaryHTML;
 }
+
 function generateDashboardReportHTML() {
     const today = new Date();
     const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
@@ -387,9 +381,14 @@ function generateDashboardReportHTML() {
     const helpNeededProjects = projectsAndTasks.filter(i => i.helpMessage && i.helpMessage.trim() !== '');
     const nearingCompletion = projectsAndTasks.filter(i => i.progress >= 80 && i.status !== 'completed');
     const birthdayMembers = staffData.filter(s => s.birthday === todayStr);
+
+    // === 新增：篩選近期榮譽 ===
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const recentHonors = allHonors.filter(h => new Date(h.date) >= oneMonthAgo);
+
     const createSection = (title, icon, colorClass, items, emptyText) => {
-        if (items.length === 0) return emptyText ?
-        `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
+        if (items.length === 0) return emptyText ? `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
         let itemsHtml = items.map(item => 
             `<li class="text-sm text-gray-800"><span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})</li>`
         ).join('');
@@ -404,9 +403,17 @@ function generateDashboardReportHTML() {
     if (birthdayMembers.length > 0) {
         reportHTML += `<div class="p-3 bg-rose-50 rounded-lg border-l-4 border-rose-400 shadow-sm animate-pulse"><h3 class="font-bold text-rose-800 flex items-center mb-1"><i class="fas fa-birthday-cake fa-fw mr-2"></i>特別情報！</h3><p class="text-sm text-rose-700">領航員偵測到一股強大的快樂能量... 原來是 <strong class="font-bold">${birthdayMembers.map(m=>m.name).join('、')}</strong> 的生日！艦橋全體人員在此獻上最誠摯的祝福！</p></div>`;
     }
+
+    // === 新增：在戰報中顯示近期榮譽 ===
+    if (recentHonors.length > 0) {
+        reportHTML += `
+        <div class="p-3 bg-green-50 rounded-lg border-l-4 border-green-500 shadow-sm">
+            <h3 class="font-bold text-green-800 flex items-center mb-1"><i class="fas fa-medal fa-fw mr-2"></i>近期戰功速報！</h3>
+            <p class="text-sm text-green-700">恭喜團隊成員在近期締造佳績：<strong class="font-bold">"${recentHonors.map(h => h.title).join('、')}"</strong>！讓我們為獲獎的英雄們喝采！</p>
+        </div>`;
+    }
     
-    const topTarget = overdueProjects.find(p => p.priority === 'high') ||
-    overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
+    const topTarget = overdueProjects.find(p => p.priority === 'high') || overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
     if (topTarget) {
          reportHTML += `<div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm"><h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3><p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${topTarget.assignees.join(', ')} 集中火力，優先處理！</p></div>`;
     }
@@ -449,8 +456,7 @@ async function getAiSuggestions(memberName = 'all') {
             body: JSON.stringify({ action: 'getAiSuggestionProxy', payload: { items: itemsToAnalyze, memberName: analysisTarget } }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
-        if (!response.ok) { const errorText = await response.text(); throw new Error(`網路回應錯誤: ${errorText}`);
-        }
+        if (!response.ok) { const errorText = await response.text(); throw new Error(`網路回應錯誤: ${errorText}`); }
         const result = await response.json();
         const aiText = result.candidates[0].content.parts[0].text;
         renderAiReport(aiText);
@@ -527,7 +533,6 @@ function setupAiModal(){
             getAiSuggestions('all');
         } else {
             permissionDeniedModal.classList.remove('hidden');
-   
         }
     });
     closeAiModalBtn.addEventListener('click', () => aiModal.classList.add('hidden'));
@@ -544,8 +549,9 @@ function setupAiModal(){
 }
 function setupWeeklySummaryModal(){ setupModal('weeklySummaryModal', 'weeklySummaryBtn', 'closeWeeklySummaryBtn', generateWeeklySummary); }
 function setupItemListModal(){ setupModal('itemListModal', null, 'closeItemListModalBtn'); }
-function setupActivityModal(){ setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true));
-}
+// 移除舊的 openActivityModal 相關 setup
+// function setupActivityModal(){ setupModal('activityModal', null, 'closeActivityModalBtn', () => openActivityModal(true)); }
+function setupHonorRollModal() { setupModal('honorRollModal', null, 'closeHonorRollModalBtn'); } // 新增
 function setupScrollToTop(){
     const btn = document.getElementById('scrollToTopBtn'); if(!btn) return;
     window.onscroll = () => {
@@ -578,7 +584,7 @@ function setupDutySearchModal() {
         let html = '';
         const personOrder = Object.keys(data).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
         let foundResults = false;
-
+        
         for (const person of personOrder) {
             const duties = data[person];
             const nameMatches = person.toLowerCase().includes(lowerCaseSearchTerm);
@@ -587,7 +593,6 @@ function setupDutySearchModal() {
                 duty.name.toLowerCase().includes(lowerCaseSearchTerm) || 
                 duty.description.toLowerCase().includes(lowerCaseSearchTerm)
             );
-
             let dutiesToShow = [];
             if (nameMatches) {
                 dutiesToShow = duties;
@@ -604,7 +609,7 @@ function setupDutySearchModal() {
                     html += `<div class="p-3 bg-gray-50 rounded-lg border">
                                 <p class="font-semibold text-gray-900">${duty.name}</p>
                                 <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">${duty.description}</p>
-                             </div>`;
+                            </div>`;
                 });
                 html += `</div></div>`;
             }
@@ -649,11 +654,9 @@ function setupDutySearchModal() {
     const close = () => {
         modal.classList.add('hidden');
     };
-
     openBtn.addEventListener('click', open);
     closeBtn.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-
     searchInput.addEventListener('input', (e) => {
         renderAllDuties(allDutiesData, e.target.value);
     });
@@ -673,6 +676,9 @@ async function initializeDashboard() {
         
         const userData = result.data.staffData || [];
         staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit }));
+        
+        allHonors = result.data.honors || []; // 新增：取得榮譽榜資料
+
         const itemData = result.data.activities || [];
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -706,12 +712,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     setupUserInfo();
     setupAiModal();
-    setupActivityModal();
+    // 移除舊的 setupActivityModal()
     setupWeeklySummaryModal();
     setupScrollToTop();
     setupItemListModal();
-    // setupDutyListModal(); // 此函式已移除
-    setupDutySearchModal(); // 初始化升級版的查詢 Modal
+    setupDutySearchModal();
+    setupHonorRollModal(); // 新增：初始化榮譽榜 Modal
     setupChatBot();
     await initializeDashboard();
 });
