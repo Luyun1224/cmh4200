@@ -138,8 +138,11 @@ function renderTeamMembers(members, allItems) {
     }).join('');
 }
 function updateStats(itemsToCount) {
+    // === 修正：讓「總項目數」計算所有類型的項目 ===
     const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
-    document.getElementById('totalTasks').textContent = projectsAndTasks.length;
+    document.getElementById('totalTasks').textContent = itemsToCount.length; // 原本是 projectsAndTasks.length
+    
+    // (其他卡片維持只計算 project/task)
     document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
     document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
@@ -193,7 +196,15 @@ function filterItemsByStatus(e,t){currentStatusFilter=e;const o={all:["bg-blue-1
 
 // --- Feature Functions (Modals, etc.) ---
 function viewMemberHistory(e,t){t.stopPropagation(),"盧英云"===e?window.open("https://qpig0218.github.io/Ying-Yun/","_blank"):alert(`檢視 ${e} 的個人歷程 (功能開發中)`)}
-function showItemsInModal(e){const t=document.getElementById("itemListModal"),o=document.getElementById("itemListModalTitle"),s=document.getElementById("itemListModalContent");let n=[],a="";const r=allActivities.filter(e=>"project"===e.type||"task"===e.type),i={active:1,planning:2,overdue:3,completed:4};switch(e){case"total":n=r.sort((e,t)=>(i[e.status]||99)-(i[t.status]||99)),a="總項目列表";break;case"active":n=r.filter(e=>"active"===e.status),a="進行中項目列表";break;case"overdue":n=r.filter(e=>"overdue"===e.status),a="逾期項目列表";break;case"completed":n=allActivities.filter(e=>"completed"===e.status),a="已完成項目列表"}o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")}
+function showItemsInModal(e){const t=document.getElementById("itemListModal"),o=document.getElementById("itemListModalTitle"),s=document.getElementById("itemListModalContent");let n=[],a="";const r=allActivities.filter(e=>"project"===e.type||"task"===e.type),i={active:1,planning:2,overdue:3,completed:4};switch(e){case"total":
+    // === 修正：點擊「總項目」卡片時，顯示所有項目 ===
+    n = allActivities
+        .filter(item => currentUnitFilter === 'all' || staffData.find(s => s.name === (item.assignees && item.assignees[0]) && s.unit === currentUnitFilter)) // 簡易的 unit 過濾
+        .filter(item => currentGroupFilter === 'all' || item.group === currentGroupFilter) // 簡易的 group 過濾
+        .sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
+    a="總項目列表";
+    break;
+case"active":n=r.filter(e=>"active"===e.status),a="進行中項目列表";break;case"overdue":n=r.filter(e=>"overdue"===e.status),a="逾期項目列表";break;case"completed":n=allActivities.filter(e=>"completed"===e.status),a="已完成項目列表"}o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")}
 
 function openHonorRollModal() {
     const modal = document.getElementById('honorRollModal');
