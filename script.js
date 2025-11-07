@@ -222,19 +222,32 @@ function showItemsInModal(e){
     
     const i={active:1,planning:2,overdue:3,completed:4};
 
-    // === 新增：統一的過濾邏輯 ===
-    // 1. 找出當前畫面上所有可見的成員
+    // === 修正：統一的過濾邏輯 ===
+    
+    // 1. 依據 年/月 篩選 (這是之前遺漏的步驟)
+    let itemsForYear = allActivities;
+    if (currentYearFilter !== 'all') {
+         itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
+    }
+    let itemsForMonth = itemsForYear;
+    if (currentMonthFilter !== 'all') {
+        itemsForMonth = itemsForYear.filter(item => item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
+    }
+    // itemsForMonth 是我們的主要基礎列表
+
+    // 2. 找出當前畫面上所有可見的成員
     const visibleStaffNames = staffData
         .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter)
         .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
         .map(s => s.name);
 
-    // 2. 根據可見成員，篩選出所有相關的活動
-    const visibleActivities = allActivities.filter(item => {
+    // 3. 根據可見成員，篩選出所有相關的活動
+    //    (基礎列表從 allActivities 改為 itemsForMonth)
+    const visibleActivities = itemsForMonth.filter(item => {
         return (item.assignees || []).some(assignee => visibleStaffNames.includes(assignee)) ||
                (item.collaborators || []).some(collaborator => visibleStaffNames.includes(collaborator));
     });
-    // === 結束新邏輯 ===
+    // === 結束修正 ===
 
     switch(e){
         case"total":
