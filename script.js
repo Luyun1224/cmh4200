@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.3 with Final Image Fix)
+// script.js (FINAL & COMPLETE - v14.4 - Re-added Activity Calendar)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -12,7 +12,7 @@ let currentMemberFilter = 'all';
 let currentYearFilter = 'all';
 let currentMonthFilter = 'all';
 let currentSearchTerm = '';
-let calendarDate = new Date();
+let calendarDate = new Date(); // 用於活動日曆
 let allDutiesData = {};
 
 // --- Helper Functions ---
@@ -146,6 +146,11 @@ function updateStats(itemsToCount) {
     document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
     document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
+    
+    // === 新增：計算活動/會議總數 ===
+    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
+    document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
+
     document.getElementById('honorCount').textContent = allHonors.length;
 }
 function renderDashboard() {
@@ -199,12 +204,125 @@ function viewMemberHistory(e,t){t.stopPropagation(),"盧英云"===e?window.open(
 function showItemsInModal(e){const t=document.getElementById("itemListModal"),o=document.getElementById("itemListModalTitle"),s=document.getElementById("itemListModalContent");let n=[],a="";const r=allActivities.filter(e=>"project"===e.type||"task"===e.type),i={active:1,planning:2,overdue:3,completed:4};switch(e){case"total":
     // === 修正：點擊「總項目」卡片時，顯示所有項目 ===
     n = allActivities
-        .filter(item => currentUnitFilter === 'all' || staffData.find(s => s.name === (item.assignees && item.assignees[0]) && s.unit === currentUnitFilter)) // 簡易的 unit 過濾
-        .filter(item => currentGroupFilter === 'all' || item.group === currentGroupFilter) // 簡易的 group 過濾
+        .filter(item => {
+             // 過濾邏輯：確保項目至少有一個負責人是在當前篩選的 staffData 範圍內
+             const visibleStaffNames = staffData
+                .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter)
+                .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
+                .map(s => s.name);
+            
+             return (item.assignees || []).some(assignee => visibleStaffNames.includes(assignee)) ||
+                    (item.collaborators || []).some(collaborator => visibleStaffNames.includes(collaborator));
+        })
         .sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
     a="總項目列表";
     break;
 case"active":n=r.filter(e=>"active"===e.status),a="進行中項目列表";break;case"overdue":n=r.filter(e=>"overdue"===e.status),a="逾期項目列表";break;case"completed":n=allActivities.filter(e=>"completed"===e.status),a="已完成項目列表"}o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")}
+
+// === 新增：日曆相關功能 ===
+function renderCalendarView() {
+    const contentEl = document.getElementById('activity-content');
+    const month = calendarDate.getMonth();
+    const year = calendarDate.getFullYear();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const firstDayIndex = firstDay.getDay(); // 0 = Sunday, 1 = Monday...
+    const lastDate = lastDay.getDate();
+
+    const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+    const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
+
+    // 篩選出當前的活動
+    const eventsThisMonth = allActivities.filter(item => {
+        const itemDate = new Date(item.startDate);
+        return (item.type === 'activity' || item.type === 'meeting') &&
+               itemDate.getFullYear() === year &&
+               itemDate.getMonth() === month;
+    });
+
+    let calendarHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <button onclick="prevMonth()" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt; 上個月</button>
+            <h3 class="text-lg font-bold">${year}年 ${monthNames[month]}</h3>
+            <button onclick="nextMonth()" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">下個月 &gt;</button>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-600">
+            ${dayNames.map(day => `<div class="p-2 bg-gray-100 rounded-t-lg">${day}</div>`).join('')}
+        </div>
+        <div class="grid grid-cols-7 gap-1 border border-t-0 border-gray-200 rounded-b-lg p-1">
+    `;
+
+    // 補齊開頭的空白
+    for (let i = 0; i < firstDayIndex; i++) {
+        calendarHTML += `<div class="h-20"></div>`;
+    }
+
+    // 填入日期
+    for (let day = 1; day <= lastDate; day++) {
+        const today = new Date();
+        const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        const eventsOnThisDay = eventsThisMonth.filter(e => e.startDate && e.startDate.startsWith(dateStr));
+        
+        let dayClass = 'h-20 p-1.5 border border-gray-100 rounded-md transition-colors hover:bg-gray-50';
+        if (isToday) dayClass += ' bg-blue-50 border-blue-300';
+        if (eventsOnThisDay.length > 0) dayClass += ' bg-orange-50 cursor-pointer';
+
+        calendarHTML += `
+            <div class="${dayClass}" onclick="showEventsForDay('${dateStr}')">
+                <div class="font-semibold ${isToday ? 'text-blue-600' : 'text-gray-800'}">${day}</div>
+                ${eventsOnThisDay.length > 0 ? `
+                    <div class="mt-1 text-xs text-orange-700 bg-orange-200 rounded-full px-1.5 py-0.5 font-medium">
+                        ${eventsOnThisDay.length} 個活動
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    calendarHTML += `</div><div id="event-list-for-day" class="mt-4"></div>`;
+    contentEl.innerHTML = calendarHTML;
+}
+
+function prevMonth() {
+    calendarDate.setMonth(calendarDate.getMonth() - 1);
+    renderCalendarView();
+}
+
+function nextMonth() {
+    calendarDate.setMonth(calendarDate.getMonth() + 1);
+    renderCalendarView();
+}
+
+function showEventsForDay(dateStr) {
+    const eventsOnThisDay = allActivities.filter(e => 
+        (e.type === 'activity' || e.type === 'meeting') && 
+        e.startDate && e.startDate.startsWith(dateStr)
+    );
+    
+    const eventListEl = document.getElementById('event-list-for-day');
+    if (eventsOnThisDay.length === 0) {
+        eventListEl.innerHTML = `<p class="text-center text-gray-500"> ${new Date(dateStr + 'T00:00:00').toLocaleDateString('zh-TW', {month: 'long', day: 'numeric'})} 沒有活動。</p>`;
+        return;
+    }
+
+    eventListEl.innerHTML = `
+        <h4 class="text-md font-bold text-gray-800 mb-2">${new Date(dateStr + 'T00:00:00').toLocaleDateString('zh-TW', {month: 'long', day: 'numeric'})} 的活動/會議</h4>
+        <div class="space-y-2">
+            ${eventsOnThisDay.map(item => `
+                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p class="font-semibold ${getTypeStyle(item.type, item.status)}">${item.name} <span class="text-sm font-medium">(${getTypeText(item.type)})</span></p>
+                    <p class="text-sm text-gray-600">負責人: ${(item.assignees || []).join(', ')}</p>
+                    ${item.description ? `<p class="text-xs text-gray-500 mt-1">${item.description}</p>` : ''}
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+// === 結束：日曆相關功能 ===
+
 
 function openHonorRollModal() {
     const modal = document.getElementById('honorRollModal');
@@ -384,6 +502,16 @@ function populateAiMemberFilter(){const e=document.getElementById("aiMemberFilte
 function setupAiModal(){const e=document.getElementById("aiModal"),t=document.getElementById("aiBtn"),o=document.getElementById("closeAiModalBtn"),s=document.getElementById("permissionDeniedModal"),n=document.getElementById("closePermissionDeniedModalBtn");if(t){t.addEventListener("click",()=>{const t=sessionStorage.getItem("dashboardUser"),o=JSON.parse(t);o&&"主管"===o.role?(e.classList.remove("hidden"),populateAiMemberFilter(),getAiSuggestions("all")):s.classList.remove("hidden")}),o.addEventListener("click",()=>e.classList.add("hidden")),e.addEventListener("click",t=>{t.target===e&&e.classList.add("hidden")}),n.addEventListener("click",()=>s.classList.add("hidden")),s.addEventListener("click",e=>{e.target===s&&s.classList.add("hidden")});const a=document.getElementById("aiMemberFilter");if(a){const e=a.cloneNode(!0);a.parentNode.replaceChild(e,a),e.addEventListener("change",e=>getAiSuggestions(e.target.value))}}}
 function setupWeeklySummaryModal(){setupModal("weeklySummaryModal","weeklySummaryBtn","closeWeeklySummaryBtn",generateWeeklySummary)}
 function setupItemListModal(){setupModal("itemListModal",null,"closeItemListModalBtn")}
+
+// === 新增：設定活動日曆 Modal ===
+function setupActivityModal() {
+    setupModal("activityModal", "activityBtn", "closeActivityModalBtn", () => {
+        calendarDate = new Date(); // 每次打開時都重設為當前月份
+        renderCalendarView();
+    });
+}
+// ==================================
+
 function setupHonorRollModal(){setupModal("honorRollModal",null,"closeHonorRollModalBtn")}
 function setupScrollToTop(){const e=document.getElementById("scrollToTopBtn");e&&(window.onscroll=()=>{document.body.scrollTop>20||document.documentElement.scrollTop>20?e.classList.remove("hidden"):e.classList.add("hidden")},e.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"})))}
 function setupChatBot(){const e=document.getElementById("openChatBot");if(!e)return;const t=document.getElementById("closeChatBot"),o=document.getElementById("chatBotContainer"),s=document.getElementById("chatBotMessages");e.addEventListener("click",()=>{o.classList.remove("hidden"),s.innerHTML=`<div class="p-4 bg-gray-100 rounded-lg">${generateDashboardReportHTML()}</div>`}),t.addEventListener("click",()=>o.classList.add("hidden"))}
@@ -442,6 +570,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupScrollToTop();
     setupItemListModal();
     setupDutySearchModal();
+    setupActivityModal(); // === 新增：啟用活動日曆 Modal ===
     setupHonorRollModal(); 
     setupChatBot();
     await initializeDashboard();
