@@ -4,7 +4,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyG
 let allActivities = [];
 let allHonors = [];
 let staffData = [];
-const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.jpg','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
+const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
 let currentUnitFilter = 'all';
 let currentGroupFilter = 'all';
 let currentStatusFilter = 'all';
@@ -138,19 +138,29 @@ function renderTeamMembers(members, allItems) {
     }).join('');
 }
 function updateStats(itemsToCount) {
-    // === 修正：讓「總項目數」計算所有類型的項目 ===
-    const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
-    document.getElementById('totalTasks').textContent = itemsToCount.length; // 原本是 projectsAndTasks.length
+    // === 修正：讓所有卡片都計算所有類型的項目 ===
     
-    // (其他卡片維持只計算 project/task)
-    document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
-    document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
+    // 移除'projectsAndTasks'篩選，直接使用'itemsToCount'
+    // const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
+    
+    // 總項目數
+    document.getElementById('totalTasks').textContent = itemsToCount.length;
+    
+    // 進行中 (計算所有 'active' 項目)
+    document.getElementById('activeTasks').textContent = itemsToCount.filter(t => t.status === 'active').length;
+    
+    // 逾期項目 (計算所有 'overdue' 項目)
+    document.getElementById('overdueTasks').textContent = itemsToCount.filter(t => t.status === 'overdue').length;
+    
+    // 已完成 (計算所有 'completed' 項目)
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
     
-    // === 新增：計算活動/會議總數 ===
-    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
-    document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
+    // === 移除錯誤的 'activityCount' ===
+    // (下面這行會導致錯誤，因為 project.html 中沒有 'activityCount' 元素)
+    // const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
+    // document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
 
+    // 榮譽榜
     document.getElementById('honorCount').textContent = allHonors.length;
 }
 function renderDashboard() {
