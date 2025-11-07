@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.5 - Calendar & All Fixes)
+// script.js (FINAL & COMPLETE - v14.4 - Re-added Activity Calendar)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -137,7 +137,12 @@ function renderTeamMembers(members, allItems) {
         </div>`;
     }).join('');
 }
-function updateStats(itemsToCount) {    
+function updateStats(itemsToCount) {
+    // === 修正：讓所有卡片都計算所有類型的項目 ===
+    
+    // 移除'projectsAndTasks'篩選，直接使用'itemsToCount'
+    // const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
+    
     // 總項目數
     document.getElementById('totalTasks').textContent = itemsToCount.length;
     
@@ -150,10 +155,10 @@ function updateStats(itemsToCount) {
     // 已完成 (計算所有 'completed' 項目)
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
     
-    // === 新增：計算活動與會議總數 ===
-    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
-    document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
-    // === 結束 ===
+    // === 移除錯誤的 'activityCount' ===
+    // (下面這行會導致錯誤，因為 project.html 中沒有 'activityCount' 元素)
+    // const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
+    // document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
 
     // 榮譽榜
     document.getElementById('honorCount').textContent = allHonors.length;
@@ -187,8 +192,12 @@ function renderDashboard() {
     updateStats(itemsToConsider);
     renderTeamMembers(membersInGroup, itemsToConsider);
     
-    // 顯示所有類型的項目 (project, task, activity, meeting)
-    renderItems(itemsToDisplay);
+    // ==================================================================
+    // === 修正點：移除 .filter(...) ===
+    // 原本: renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
+    // 修正後:
+    renderItems(itemsToDisplay); // 顯示所有類型的項目 (project, task, activity, meeting)
+    // ==================================================================
 }
 
 // --- Filtering Functions ---
@@ -207,6 +216,9 @@ function showItemsInModal(e){
           o=document.getElementById("itemListModalTitle"),
           s=document.getElementById("itemListModalContent");
     let n=[],a="";
+    
+    // 移除錯誤的 'r' 變數
+    // const r=allActivities.filter(e=>"project"===e.type||"task"===e.type),
     
     const i={active:1,planning:2,overdue:3,completed:4};
 
@@ -548,8 +560,7 @@ function setupItemListModal(){setupModal("itemListModal",null,"closeItemListModa
 
 // === 新增：設定活動日曆 Modal ===
 function setupActivityModal() {
-    // 修正：將 "activityBtn" 改為 "activityCardBtn" (我們在 HTML 新增的卡片 ID)
-    setupModal("activityModal", "activityCardBtn", "closeActivityModalBtn", () => {
+    setupModal("activityModal", "activityBtn", "closeActivityModalBtn", () => {
         calendarDate = new Date(); // 每次打開時都重設為當前月份
         renderCalendarView();
     });
@@ -605,7 +616,7 @@ async function initializeDashboard() {
 
 document.addEventListener('DOMContentLoaded', async function() {
     if (!sessionStorage.getItem('dashboardUser')) {
-B       window.location.href = 'index.html';
+        window.location.href = 'index.html';
         return;
     }
     setupUserInfo();
