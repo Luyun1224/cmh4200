@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.6 - New Calendar UI & Timezone Fix)
+// script.js (FINAL & COMPLETE - v14.7 - Dashboard Stats Update)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -166,27 +166,31 @@ function renderTeamMembers(members, allItems) {
         </div>`;
     }).join('');
 }
+
+// *** START OF MODIFICATION ***
 function updateStats(itemsToCount) {
-    // 總項目數 (排除活動與會議)
-    const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
-    document.getElementById('totalTasks').textContent = projectsAndTasks.length;
+    // 總項目數 (包含所有類型)
+    const allItemTypes = itemsToCount; // itemsToCount 已經是根據篩選器過濾過的
+    document.getElementById('totalTasks').textContent = allItemTypes.length;
     
-    // 進行中 (計算專案/任務)
-    document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
+    // 進行中 (計算所有類型)
+    document.getElementById('activeTasks').textContent = allItemTypes.filter(t => t.status === 'active').length;
     
-    // 逾期項目 (計算專案/任務)
-    document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
+    // 逾期項目 (計算所有類型)
+    document.getElementById('overdueTasks').textContent = allItemTypes.filter(t => t.status === 'overdue').length;
     
-    // 已完成 (計算專案/任務)
-    document.getElementById('completedTasks').textContent = projectsAndTasks.filter(t => t.status === 'completed').length;
+    // 已完成 (計算所有類型)
+    document.getElementById('completedTasks').textContent = allItemTypes.filter(t => t.status === 'completed').length;
     
-    // 活動總數 (計算活動/會議)
+    // 活動總數 (計算活動/會議) - 這個小卡保持不變，因為它是獨立的
     const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
     document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
 
     // 榮譽榜
     document.getElementById('honorCount').textContent = allHonors.length;
 }
+// *** END OF MODIFICATION ***
+
 function renderDashboard() {
     let itemsForYear = allActivities;
     // *** UPDATED: 使用 startDateObj 進行過濾 ***
@@ -223,8 +227,10 @@ function renderDashboard() {
     updateStats(itemsToConsider); // 使用 itemsToConsider 來計算所有統計數據
     renderTeamMembers(membersInGroup, itemsToConsider);
     
-    // 在主儀表板上只顯示「專案」和「任務」
-    renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
+    // *** START OF MODIFICATION ***
+    // 在主儀表板上顯示所有類型的項目 (不再過濾 project/task)
+    renderItems(itemsToDisplay);
+    // *** END OF MODIFICATION ***
 }
 
 // --- Filtering Functions ---
@@ -238,6 +244,8 @@ function filterItemsByStatus(e,t){currentStatusFilter=e;const o={all:["bg-blue-1
 
 // --- Feature Functions (Modals, etc.) ---
 function viewMemberHistory(e,t){t.stopPropagation(),"盧英云"===e?window.open("https://qpig0218.github.io/Ying-Yun/","_blank"):alert(`檢視 ${e} 的個人歷程 (功能開發中)`)}
+
+// *** START OF MODIFICATION ***
 function showItemsInModal(e){
     const t=document.getElementById("itemListModal"),
           o=document.getElementById("itemListModalTitle"),
@@ -265,36 +273,37 @@ function showItemsInModal(e){
         .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
         .map(s => s.name);
 
-    // 3. 根據可見成員，篩選出所有相關的"專案和任務"
-    const visibleProjectsAndTasks = itemsForMonth.filter(item => {
-        const isProjectOrTask = item.type === 'project' || item.type === 'task';
+    // 3. 根據可見成員，篩選出所有相關的"項目" (不過濾類型)
+    const visibleItems = itemsForMonth.filter(item => {
         const isVisible = (item.assignees || []).some(assignee => visibleStaffNames.includes(assignee)) ||
                (item.collaborators || []).some(collaborator => visibleStaffNames.includes(collaborator));
-        return isProjectOrTask && isVisible;
+        return isVisible;
     });
     // --- 結束過濾 ---
 
     switch(e){
         case"total":
-            n = visibleProjectsAndTasks.sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
-            a="總項目列表 (專案/任務)";
+            n = visibleItems.sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
+            a="總項目列表 (全類型)";
             break;
         case"active":
-            n = visibleProjectsAndTasks.filter(e=>"active"===e.status);
-            a="進行中項目 (專案/任務)";
+            n = visibleItems.filter(e=>"active"===e.status);
+            a="進行中項目 (全類型)";
             break;
         case"overdue":
-            n = visibleProjectsAndTasks.filter(e=>"overdue"===e.status);
-            a="逾期項目 (專案/任務)";
+            n = visibleItems.filter(e=>"overdue"===e.status);
+            a="逾期項目 (全類型)";
             break;
         case"completed":
-            n = visibleProjectsAndTasks.filter(e=>"completed"===e.status);
-            a="已完成項目 (專案/任務)";
+            n = visibleItems.filter(e=>"completed"===e.status);
+            a="已完成項目 (全類型)";
             break;
     }
     
     o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")
 }
+// *** END OF MODIFICATION ***
+
 
 // === *** START: REBUILT Calendar Function (v14.6) *** ===
 function renderCalendarView() {
@@ -326,6 +335,7 @@ function renderCalendarView() {
         itemsToConsider = itemsToConsider.filter(item => (item.assignees || []).includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
     }
     
+    // (*** 這是「活動概覽」彈窗，所以我們只篩選 activity 和 meeting ***)
     const visibleEvents = itemsToConsider.filter(item => item.type === 'activity' || item.type === 'meeting');
     visibleEvents.sort((a, b) => a.startDateObj - b.startDateObj);
 
