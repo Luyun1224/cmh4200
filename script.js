@@ -173,7 +173,13 @@ function renderDashboard() {
     itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
     updateStats(itemsToConsider);
     renderTeamMembers(membersInGroup, itemsToConsider);
-    renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
+    
+    // ==================================================================
+    // === 修正點：移除 .filter(...) ===
+    // 原本: renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
+    // 修正後:
+    renderItems(itemsToDisplay); // 顯示所有類型的項目 (project, task, activity, meeting)
+    // ==================================================================
 }
 
 // --- Filtering Functions ---
