@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.7 - Dashboard Stats Update)
+// script.js (FINAL & COMPLETE - v14.8 - Sorting & UI Update)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -120,10 +120,49 @@ function renderItems(itemsToRender) {
         const progressChange = item.progress - (item.lastWeekProgress || 0);
         const progressChangeHTML = progressChange > 0 ? `<span class="bg-green-100 text-green-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▲ ${progressChange}%</span>` : progressChange < 0 ? `<span class="bg-red-100 text-red-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▼ ${Math.abs(progressChange)}%</span>` : `<span class="text-gray-400 text-xs font-medium ml-2">—</span>`;
         const checklistHTML = totalSteps > 0 ? checklist.map(cp => `<li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}"><span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span><span>${cp.name}</span></li>`).join('') : '<li>無定義的檢查點</li>';
-        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}"><div class="flex-grow"><div class="flex justify-between items-start mb-3"><div class="flex-1"><h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}<p class="text-sm text-gray-600">主要負責: ${(item.assignees || []).join(', ')}</p>${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}</div><div class="flex items-center space-x-2 ml-2"><span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div></div><div class="mt-auto border-t border-gray-100 pt-3"><div class="mb-3"><div class="flex justify-between items-center text-sm mb-1"><span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>${progressChangeHTML}</div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div><div class="relative group"><p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p><div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"><h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4><ul class="space-y-1 mt-2">${checklistHTML}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div></div><div class="flex justify-between items-center text-xs text-gray-500">
-        <!-- *** UPDATED: 使用 startDateObj 和 deadlineObj *** -->
-        <span>日期: ${formatDatePretty(item.startDateObj)} - ${item.deadlineObj ? formatDatePretty(item.deadlineObj) : '無'}</span>
-        ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}</div></div>`;
+        
+        // *** 任務 #2 變更 ***
+        // 新增 'overdue-card' class (如果 item.status === 'overdue')
+        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-card overdue-glow' : 'border-gray-200'}">
+            <div class="flex-grow">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>
+                        ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
+                        <p class="text-sm text-gray-600">主要負責: ${(item.assignees || []).join(', ')}</p>
+                        ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}
+                    </div>
+                    <div class="flex items-center space-x-2 ml-2">
+                        <span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-auto border-t border-gray-100 pt-3">
+                <div class="mb-3">
+                    <div class="flex justify-between items-center text-sm mb-1">
+                        <span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>
+                        ${progressChangeHTML}
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div>
+                    </div>
+                    <div class="relative group">
+                        <p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p>
+                        <div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+                            <h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4>
+                            <ul class="space-y-1 mt-2">${checklistHTML}</ul>
+                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                    <!-- *** UPDATED: 使用 startDateObj 和 deadlineObj *** -->
+                    <span>日期: ${formatDatePretty(item.startDateObj)} - ${item.deadlineObj ? formatDatePretty(item.deadlineObj) : '無'}</span>
+                    ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}
+                </div>
+                ${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}
+            </div>
+        </div>`;
     }).join('');
 }
 function renderTeamMembers(members, allItems) {
@@ -218,10 +257,22 @@ function renderDashboard() {
     if (currentMemberFilter !== 'all') {
         itemsToDisplay = itemsToConsider.filter(item => (item.assignees || []).includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
     }
-    // *** UPDATED: 使用 startDateObj 進行排序 ***
+
+    // *** 任務 #2 變更 ***
+    // 調整主儀表板排序
+    const statusSortOrder = { 'planning': 1, 'active': 1, 'completed': 2, 'overdue': 3 };
     itemsToDisplay.sort((a, b) => {
-        if (a.startDateObj && b.startDateObj) return a.startDateObj - b.startDateObj;
-        return 0; // 處理 null 的情況
+        const statusA = statusSortOrder[a.status] || 99;
+        const statusB = statusSortOrder[b.status] || 99;
+        
+        if (statusA !== statusB) {
+            return statusA - statusB; // 狀態排序 (規劃中/進行中 -> 已完成 -> 逾期)
+        }
+        
+        // 狀態相同，日期近到遠 (descending)
+        const dateA = a.startDateObj || 0;
+        const dateB = b.startDateObj || 0;
+        return dateB - dateA; // b - a for descending
     });
     
     updateStats(itemsToConsider); // 使用 itemsToConsider 來計算所有統計數據
@@ -245,15 +296,13 @@ function filterItemsByStatus(e,t){currentStatusFilter=e;const o={all:["bg-blue-1
 // --- Feature Functions (Modals, etc.) ---
 function viewMemberHistory(e,t){t.stopPropagation(),"盧英云"===e?window.open("https://qpig0218.github.io/Ying-Yun/","_blank"):alert(`檢視 ${e} 的個人歷程 (功能開發中)`)}
 
-// *** START OF MODIFICATION ***
+// *** START OF MODIFICATION (任務 #1 和 #2) ***
 function showItemsInModal(e){
     const t=document.getElementById("itemListModal"),
           o=document.getElementById("itemListModalTitle"),
           s=document.getElementById("itemListModalContent");
     let n=[],a="";
     
-    const i={active:1,planning:2,overdue:3,completed:4};
-
     // --- 統一的過濾邏輯 (同 renderDashboard) ---
     // 1. 依據 年/月 篩選
     let itemsForYear = allActivities;
@@ -281,26 +330,53 @@ function showItemsInModal(e){
     });
     // --- 結束過濾 ---
 
+    // *** 任務 #1 變更：移除 (全類型) ***
     switch(e){
         case"total":
-            n = visibleItems.sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
-            a="總項目列表 (全類型)";
+            n = visibleItems; // 排序在後面統一處理
+            a="總項目列表";
             break;
         case"active":
             n = visibleItems.filter(e=>"active"===e.status);
-            a="進行中項目 (全類型)";
+            a="進行中項目";
             break;
         case"overdue":
             n = visibleItems.filter(e=>"overdue"===e.status);
-            a="逾期項目 (全類型)";
+            a="逾期項目";
             break;
         case"completed":
             n = visibleItems.filter(e=>"completed"===e.status);
-            a="已完成項目 (全類型)";
+            a="已完成項目";
             break;
     }
     
-    o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")
+    // *** 任務 #2 變更：調整彈窗排序 ***
+    const statusSortOrder = { 'planning': 1, 'active': 1, 'completed': 2, 'overdue': 3 };
+    n.sort((a, b) => {
+        const statusA = statusSortOrder[a.status] || 99;
+        const statusB = statusSortOrder[b.status] || 99;
+        if (statusA !== statusB) return statusA - statusB;
+        
+        // 狀態相同，日期近到遠 (descending)
+        const dateA = a.startDateObj || 0;
+        const dateB = b.startDateObj || 0;
+        return dateB - dateA; // b - a for descending
+    });
+    
+    o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,
+    
+    // *** 任務 #2 變更：調整彈窗樣式 ***
+    s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`
+        <div class="p-3 rounded-lg border ${e.status === 'overdue' ? 'overdue-card-modal' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}">
+            <p class="font-semibold text-gray-800">${e.name}</p>
+            <p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p>
+            <div class="flex justify-between items-center text-xs mt-1">
+                <span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span>
+                <span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span>
+            </div>
+        </div>
+    `).join(""),
+    t.classList.remove("hidden")
 }
 // *** END OF MODIFICATION ***
 
