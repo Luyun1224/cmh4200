@@ -153,7 +153,17 @@
             </div>
             <div class="lg:col-span-3 space-y-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <div onclick="showItemsInModal('total')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600" title="專案/任務">總項目數</p><p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p></div><div class="text-blue-500 text-4xl stat-card-icon"><i class="fas fa-dragon"></i></div></div></div>
+                    <!-- *** START OF MODIFICATION *** -->
+                    <div onclick="showItemsInModal('total')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">總項目數 (全)</p>
+                                <p class="text-3xl font-bold text-gray-900" id="totalTasks">0</p>
+                            </div>
+                            <div class="text-blue-500 text-4xl stat-card-icon"><i class="fas fa-dragon"></i></div>
+                        </div>
+                    </div>
+                    <!-- *** END OF MODIFICATION *** -->
                     <div onclick="showItemsInModal('active')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-purple-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">進行中</p><p class="text-3xl font-bold text-purple-700" id="activeTasks">0</p></div><div class="text-purple-500 text-4xl stat-card-icon"><i class="fas fa-rocket"></i></div></div></div>
                     <div onclick="showItemsInModal('overdue')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-red-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">逾期項目</p><p class="text-3xl font-bold text-red-700" id="overdueTasks">0</p></div><div class="text-red-500 text-4xl stat-card-icon"><i class="fas fa-skull-crossbones"></i></div></div></div>
                     <div onclick="showItemsInModal('completed')" class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-green-500 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"><div class="flex items-center justify-between"><div><p class="text-sm font-medium text-gray-600">已完成</p><p class="text-3xl font-bold text-green-700" id="completedTasks">0</p></div><div class="text-green-500 text-4xl stat-card-icon"><i class="fas fa-check-circle"></i></div></div></div>
