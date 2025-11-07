@@ -4,7 +4,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyG
 let allActivities = [];
 let allHonors = [];
 let staffData = [];
-const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.png','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
+const localProfileImages = { '盧英云': '盧英云.png', '陳詩芸': '陳詩芸.jpg', '楊宜婷': '楊宜婷.png','黃惠津': '黃惠津.png','王嬿茹': '王嬿茹.jpg','侯昱瑾': '侯昱瑾.png','高瑞穗': '高瑞穗.png','林盟淦': '林盟淦.png','吳曉琪': '吳曉琪.png','許淑怡': '許淑怡.png','林汶秀': '林汶秀.png','林淑雅': '林淑雅.png','廖家德': '廖家德.jpg','劉雯': '劉雯.jpg','楊依玲': '楊依玲.png','李迎真': '李迎真.png','蔡長志': '蔡長志.png','郭妍伶': '郭妍伶.png','郭進榮': '郭進榮.png'};
 let currentUnitFilter = 'all';
 let currentGroupFilter = 'all';
 let currentStatusFilter = 'all';
@@ -211,23 +211,55 @@ function filterItemsByStatus(e,t){currentStatusFilter=e;const o={all:["bg-blue-1
 
 // --- Feature Functions (Modals, etc.) ---
 function viewMemberHistory(e,t){t.stopPropagation(),"盧英云"===e?window.open("https://qpig0218.github.io/Ying-Yun/","_blank"):alert(`檢視 ${e} 的個人歷程 (功能開發中)`)}
-function showItemsInModal(e){const t=document.getElementById("itemListModal"),o=document.getElementById("itemListModalTitle"),s=document.getElementById("itemListModalContent");let n=[],a="";const r=allActivities.filter(e=>"project"===e.type||"task"===e.type),i={active:1,planning:2,overdue:3,completed:4};switch(e){case"total":
-    // === 修正：點擊「總項目」卡片時，顯示所有項目 ===
-    n = allActivities
-        .filter(item => {
-             // 過濾邏輯：確保項目至少有一個負責人是在當前篩選的 staffData 範圍內
-             const visibleStaffNames = staffData
-                .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter)
-                .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
-                .map(s => s.name);
-            
-             return (item.assignees || []).some(assignee => visibleStaffNames.includes(assignee)) ||
-                    (item.collaborators || []).some(collaborator => visibleStaffNames.includes(collaborator));
-        })
-        .sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
-    a="總項目列表";
-    break;
-case"active":n=r.filter(e=>"active"===e.status),a="進行中項目列表";break;case"overdue":n=r.filter(e=>"overdue"===e.status),a="逾期項目列表";break;case"completed":n=allActivities.filter(e=>"completed"===e.status),a="已完成項目列表"}o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")}
+function showItemsInModal(e){
+    const t=document.getElementById("itemListModal"),
+          o=document.getElementById("itemListModalTitle"),
+          s=document.getElementById("itemListModalContent");
+    let n=[],a="";
+    
+    // 移除錯誤的 'r' 變數
+    // const r=allActivities.filter(e=>"project"===e.type||"task"===e.type),
+    
+    const i={active:1,planning:2,overdue:3,completed:4};
+
+    // === 新增：統一的過濾邏輯 ===
+    // 1. 找出當前畫面上所有可見的成員
+    const visibleStaffNames = staffData
+        .filter(s => currentUnitFilter === 'all' || s.unit === currentUnitFilter)
+        .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
+        .map(s => s.name);
+
+    // 2. 根據可見成員，篩選出所有相關的活動
+    const visibleActivities = allActivities.filter(item => {
+        return (item.assignees || []).some(assignee => visibleStaffNames.includes(assignee)) ||
+               (item.collaborators || []).some(collaborator => visibleStaffNames.includes(collaborator));
+    });
+    // === 結束新邏輯 ===
+
+    switch(e){
+        case"total":
+            n = visibleActivities.sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
+            a="總項目列表";
+            break;
+        case"active":
+            // === 修正：從 visibleActivities 中篩選 ===
+            n = visibleActivities.filter(e=>"active"===e.status);
+            a="進行中項目列表";
+            break;
+        case"overdue":
+            // === 修正：從 visibleActivities 中篩選 ===
+            n = visibleActivities.filter(e=>"overdue"===e.status);
+            a="逾期項目列表";
+            break;
+        case"completed":
+            // === 修正：從 visibleActivities 中篩選 ===
+            n = visibleActivities.filter(e=>"completed"===e.status);
+            a="已完成項目列表";
+            break;
+    }
+    
+    o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")
+}
 
 // === 新增：日曆相關功能 ===
 function renderCalendarView() {
