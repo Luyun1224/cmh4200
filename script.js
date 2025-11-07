@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.4 - Re-added Activity Calendar)
+// script.js (FINAL & COMPLETE - v14.6 - New Calendar UI & Timezone Fix)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -18,7 +18,32 @@ let allDutiesData = {};
 // --- Helper Functions ---
 const getStatusColor = (status) => ({ completed: 'bg-green-500', active: 'bg-purple-500', overdue: 'bg-red-500', planning: 'bg-yellow-500' }[status] || 'bg-gray-500');
 const getStatusText = (status) => ({ completed: '已完成', active: '進行中', overdue: '逾期', planning: '規劃中' }[status] || '未知');
-const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+// *** NEW: 格式化 Date 物件為易讀字串 ***
+const formatDatePretty = (dateObj) => dateObj ? dateObj.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+// *** NEW: 輔助函式，將 "YYYY-MM-DD" 字串解析為本地時區的 Date 物件 ***
+function parseLocalDate(dateString) {
+    if (!dateString) return null;
+    // 確保 dateString 是字串
+    const str = String(dateString);
+    // 檢查是否為 "YYYY-MM-DD" 格式
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const parts = str.split('-');
+        if (parts.length === 3) {
+            // new Date(year, monthIndex, day) - 這會建立一個本地時區的日期
+            return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        }
+    }
+    // 對於 "YYYY/MM/DD" 或其他格式的備用方案 (仍可能有風險)
+    const date = new Date(str);
+    if (!isNaN(date.getTime())) {
+        // 如果日期有效，返回一個僅包含 Y/M/D 的新本地日期物件，清除時間影響
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+    return null; // 無效日期
+}
+
 const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目');
 const getTypeStyle = (type, status) => {
     switch(type) {
@@ -67,7 +92,8 @@ function renderGroupTabs(membersToConsider) {
 }
 function renderYearFilter() {
     const yearFilterSelect = document.getElementById('yearFilter');
-    const years = ['all', ...new Set(allActivities.map(item => item.startDate ? new Date(item.startDate).getFullYear() : null).filter(Boolean))].sort();
+    // *** UPDATED: 使用 startDateObj 進行過濾 ***
+    const years = ['all', ...new Set(allActivities.map(item => item.startDateObj ? item.startDateObj.getFullYear() : null).filter(Boolean))].sort();
     yearFilterSelect.innerHTML = years.map(year => `<option value="${year}">${year === 'all' ? '全部年份' : `${year}年`}</option>`).join('');
     yearFilterSelect.value = currentYearFilter;
 }
@@ -94,7 +120,10 @@ function renderItems(itemsToRender) {
         const progressChange = item.progress - (item.lastWeekProgress || 0);
         const progressChangeHTML = progressChange > 0 ? `<span class="bg-green-100 text-green-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▲ ${progressChange}%</span>` : progressChange < 0 ? `<span class="bg-red-100 text-red-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▼ ${Math.abs(progressChange)}%</span>` : `<span class="text-gray-400 text-xs font-medium ml-2">—</span>`;
         const checklistHTML = totalSteps > 0 ? checklist.map(cp => `<li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}"><span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span><span>${cp.name}</span></li>`).join('') : '<li>無定義的檢查點</li>';
-        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}"><div class="flex-grow"><div class="flex justify-between items-start mb-3"><div class="flex-1"><h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}<p class="text-sm text-gray-600">主要負責: ${(item.assignees || []).join(', ')}</p>${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}</div><div class="flex items-center space-x-2 ml-2"><span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div></div><div class="mt-auto border-t border-gray-100 pt-3"><div class="mb-3"><div class="flex justify-between items-center text-sm mb-1"><span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>${progressChangeHTML}</div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div><div class="relative group"><p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p><div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"><h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4><ul class="space-y-1 mt-2">${checklistHTML}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div></div><div class="flex justify-between items-center text-xs text-gray-500"><span>日期: ${formatDate(item.startDate)} - ${item.deadline ? formatDate(item.deadline) : '無'}</span>${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}</div></div>`;
+        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-glow' : 'border-gray-200'}"><div class="flex-grow"><div class="flex justify-between items-start mb-3"><div class="flex-1"><h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}<p class="text-sm text-gray-600">主要負責: ${(item.assignees || []).join(', ')}</p>${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}</div><div class="flex items-center space-x-2 ml-2"><span class="flex items-center text-sm font-semibold px-2 py-1 rounded-full ${getStatusColor(item.status)} text-white">${getStatusText(item.status)}</span></div></div></div><div class="mt-auto border-t border-gray-100 pt-3"><div class="mb-3"><div class="flex justify-between items-center text-sm mb-1"><span class="text-gray-600 font-semibold">進度: ${item.progress}%</span>${progressChangeHTML}</div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar h-2.5 rounded-full ${getStatusColor(item.status)}" style="width: ${item.progress}%"></div></div><div class="relative group"><p class="text-sm text-gray-600 mt-1 cursor-pointer">檢查點: ${completedSteps}/${totalSteps}</p><div class="absolute bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"><h4 class="font-bold mb-2 border-b border-b-slate-600 pb-1">標準化流程</h4><ul class="space-y-1 mt-2">${checklistHTML}</ul><div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div></div></div></div><div class="flex justify-between items-center text-xs text-gray-500">
+        <!-- *** UPDATED: 使用 startDateObj 和 deadlineObj *** -->
+        <span>日期: ${formatDatePretty(item.startDateObj)} - ${item.deadlineObj ? formatDatePretty(item.deadlineObj) : '無'}</span>
+        ${item.status === 'overdue' ? '<span class="text-red-600 font-medium">⚠️ 已逾期</span>' : ''}</div>${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}</div></div>`;
     }).join('');
 }
 function renderTeamMembers(members, allItems) {
@@ -138,39 +167,36 @@ function renderTeamMembers(members, allItems) {
     }).join('');
 }
 function updateStats(itemsToCount) {
-    // === 修正：讓所有卡片都計算所有類型的項目 ===
+    // 總項目數 (排除活動與會議)
+    const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
+    document.getElementById('totalTasks').textContent = projectsAndTasks.length;
     
-    // 移除'projectsAndTasks'篩選，直接使用'itemsToCount'
-    // const projectsAndTasks = itemsToCount.filter(item => item.type === 'project' || item.type === 'task');
+    // 進行中 (計算專案/任務)
+    document.getElementById('activeTasks').textContent = projectsAndTasks.filter(t => t.status === 'active').length;
     
-    // 總項目數
-    document.getElementById('totalTasks').textContent = itemsToCount.length;
+    // 逾期項目 (計算專案/任務)
+    document.getElementById('overdueTasks').textContent = projectsAndTasks.filter(t => t.status === 'overdue').length;
     
-    // 進行中 (計算所有 'active' 項目)
-    document.getElementById('activeTasks').textContent = itemsToCount.filter(t => t.status === 'active').length;
+    // 已完成 (計算專案/任務)
+    document.getElementById('completedTasks').textContent = projectsAndTasks.filter(t => t.status === 'completed').length;
     
-    // 逾期項目 (計算所有 'overdue' 項目)
-    document.getElementById('overdueTasks').textContent = itemsToCount.filter(t => t.status === 'overdue').length;
-    
-    // 已完成 (計算所有 'completed' 項目)
-    document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
-    
-    // === *** 修改點：恢復活動總數的計算 *** ===
+    // 活動總數 (計算活動/會議)
     const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
     document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
-    // === *** 修改結束 *** ===
 
     // 榮譽榜
     document.getElementById('honorCount').textContent = allHonors.length;
 }
 function renderDashboard() {
     let itemsForYear = allActivities;
+    // *** UPDATED: 使用 startDateObj 進行過濾 ***
     if (currentYearFilter !== 'all') {
-         itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
+         itemsForYear = allActivities.filter(item => item.startDateObj && item.startDateObj.getFullYear() == currentYearFilter);
     }
     let itemsForMonth = itemsForYear;
+    // *** UPDATED: 使用 startDateObj 進行過濾 ***
     if (currentMonthFilter !== 'all') {
-        itemsForMonth = itemsForYear.filter(item => item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
+        itemsForMonth = itemsForYear.filter(item => item.startDateObj && (item.startDateObj.getMonth() + 1) == currentMonthFilter);
     }
     let membersAfterUnitFilter = staffData;
     if (currentUnitFilter !== 'all') {
@@ -188,16 +214,17 @@ function renderDashboard() {
     if (currentMemberFilter !== 'all') {
         itemsToDisplay = itemsToConsider.filter(item => (item.assignees || []).includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
     }
-    itemsToDisplay.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-    updateStats(itemsToConsider);
+    // *** UPDATED: 使用 startDateObj 進行排序 ***
+    itemsToDisplay.sort((a, b) => {
+        if (a.startDateObj && b.startDateObj) return a.startDateObj - b.startDateObj;
+        return 0; // 處理 null 的情況
+    });
+    
+    updateStats(itemsToConsider); // 使用 itemsToConsider 來計算所有統計數據
     renderTeamMembers(membersInGroup, itemsToConsider);
     
-    // ==================================================================
-    // === 修正點：移除 .filter(...) ===
-    // 原本: renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
-    // 修正後:
-    renderItems(itemsToDisplay); // 顯示所有類型的項目 (project, task, activity, meeting)
-    // ==================================================================
+    // 在主儀表板上只顯示「專案」和「任務」
+    renderItems(itemsToDisplay.filter(item => item.type === 'project' || item.type === 'task'));
 }
 
 // --- Filtering Functions ---
@@ -217,23 +244,20 @@ function showItemsInModal(e){
           s=document.getElementById("itemListModalContent");
     let n=[],a="";
     
-    // 移除錯誤的 'r' 變數
-    // const r=allActivities.filter(e=>"project"===e.type||"task"===e.type),
-    
     const i={active:1,planning:2,overdue:3,completed:4};
 
-    // === 修正：統一的過濾邏輯 ===
-    
-    // 1. 依據 年/月 篩選 (這是之前遺漏的步驟)
+    // --- 統一的過濾邏輯 (同 renderDashboard) ---
+    // 1. 依據 年/月 篩選
     let itemsForYear = allActivities;
+    // *** UPDATED: 使用 startDateObj 進行過濾 ***
     if (currentYearFilter !== 'all') {
-         itemsForYear = allActivities.filter(item => item.startDate && new Date(item.startDate).getFullYear() == currentYearFilter);
+         itemsForYear = allActivities.filter(item => item.startDateObj && item.startDateObj.getFullYear() == currentYearFilter);
     }
     let itemsForMonth = itemsForYear;
+    // *** UPDATED: 使用 startDateObj 進行過濾 ***
     if (currentMonthFilter !== 'all') {
-        itemsForMonth = itemsForYear.filter(item => item.startDate && (new Date(item.startDate).getMonth() + 1) == currentMonthFilter);
+        itemsForMonth = itemsForYear.filter(item => item.startDateObj && (item.startDateObj.getMonth() + 1) == currentMonthFilter);
     }
-    // itemsForMonth 是我們的主要基礎列表
 
     // 2. 找出當前畫面上所有可見的成員
     const visibleStaffNames = staffData
@@ -241,103 +265,195 @@ function showItemsInModal(e){
         .filter(s => currentGroupFilter === 'all' || s.group === currentGroupFilter)
         .map(s => s.name);
 
-    // 3. 根據可見成員，篩選出所有相關的活動
-    //    (基礎列表從 allActivities 改為 itemsForMonth)
-    const visibleActivities = itemsForMonth.filter(item => {
-        return (item.assignees || []).some(assignee => visibleStaffNames.includes(assignee)) ||
+    // 3. 根據可見成員，篩選出所有相關的"專案和任務"
+    const visibleProjectsAndTasks = itemsForMonth.filter(item => {
+        const isProjectOrTask = item.type === 'project' || item.type === 'task';
+        const isVisible = (item.assignees || []).some(assignee => visibleStaffNames.includes(assignee)) ||
                (item.collaborators || []).some(collaborator => visibleStaffNames.includes(collaborator));
+        return isProjectOrTask && isVisible;
     });
-    // === 結束修正 ===
+    // --- 結束過濾 ---
 
     switch(e){
         case"total":
-            n = visibleActivities.sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
-            a="總項目列表";
+            n = visibleProjectsAndTasks.sort((e,t)=>(i[e.status]||99)-(i[t.status]||99));
+            a="總項目列表 (專案/任務)";
             break;
         case"active":
-            // === 修正：從 visibleActivities 中篩選 ===
-            n = visibleActivities.filter(e=>"active"===e.status);
-            a="進行中項目列表";
+            n = visibleProjectsAndTasks.filter(e=>"active"===e.status);
+            a="進行中項目 (專案/任務)";
             break;
         case"overdue":
-            // === 修正：從 visibleActivities 中篩選 ===
-            n = visibleActivities.filter(e=>"overdue"===e.status);
-            a="逾期項目列表";
+            n = visibleProjectsAndTasks.filter(e=>"overdue"===e.status);
+            a="逾期項目 (專案/任務)";
             break;
         case"completed":
-            // === 修正：從 visibleActivities 中篩選 ===
-            n = visibleActivities.filter(e=>"completed"===e.status);
-            a="已完成項目列表";
+            n = visibleProjectsAndTasks.filter(e=>"completed"===e.status);
+            a="已完成項目 (專案/任務)";
             break;
     }
     
     o.innerHTML=`<i class="fas fa-list-check mr-3"></i> ${a} (${n.length})`,s.innerHTML=0===n.length?'<p class="text-center text-gray-500 py-4">此類別中沒有項目。</p>':n.map(e=>`<div class="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100"><p class="font-semibold text-gray-800">${e.name}</p><p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p><div class="flex justify-between items-center text-xs mt-1"><span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span><span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span></div></div>`).join(""),t.classList.remove("hidden")
 }
 
-// === 新增：日曆相關功能 ===
+// === *** START: REBUILT Calendar Function (v14.6) *** ===
 function renderCalendarView() {
     const contentEl = document.getElementById('activity-content');
     const month = calendarDate.getMonth();
     const year = calendarDate.getFullYear();
 
+    // 1. Get filtered list of events (based on main page filters)
+    let itemsForYear = allActivities;
+    if (currentYearFilter !== 'all') {
+         itemsForYear = allActivities.filter(item => item.startDateObj && item.startDateObj.getFullYear() == currentYearFilter);
+    }
+    let itemsForMonth = itemsForYear;
+    if (currentMonthFilter !== 'all') {
+        itemsForMonth = itemsForYear.filter(item => item.startDateObj && (item.startDateObj.getMonth() + 1) == currentMonthFilter);
+    }
+    let membersAfterUnitFilter = staffData;
+    if (currentUnitFilter !== 'all') {
+        membersAfterUnitFilter = staffData.filter(s => s.unit === currentUnitFilter);
+    }
+    const membersInGroup = currentGroupFilter === 'all' ? membersAfterUnitFilter : membersAfterUnitFilter.filter(s => s.group === currentGroupFilter);
+    const finalVisibleMemberNames = membersInGroup.map(m => m.name);
+    let itemsToConsider = itemsForMonth.filter(item => (item.assignees || []).some(assignee => finalVisibleMemberNames.includes(assignee)) || (item.collaborators && item.collaborators.some(collaborator => finalVisibleMemberNames.includes(collaborator))));
+    if (currentSearchTerm) {
+        const lowerCaseTerm = currentSearchTerm.toLowerCase();
+        itemsToConsider = itemsToConsider.filter(item => item.name.toLowerCase().includes(lowerCaseTerm) || (item.description && item.description.toLowerCase().includes(lowerCaseTerm)));
+    }
+    if (currentMemberFilter !== 'all') {
+        itemsToConsider = itemsToConsider.filter(item => (item.assignees || []).includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
+    }
+    
+    const visibleEvents = itemsToConsider.filter(item => item.type === 'activity' || item.type === 'meeting');
+    visibleEvents.sort((a, b) => a.startDateObj - b.startDateObj);
+
+    // 2. Prepare calendar grid data
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const firstDayIndex = firstDay.getDay(); // 0 = Sunday, 1 = Monday...
+    const firstDayIndex = firstDay.getDay(); // 0 = Sunday
     const lastDate = lastDay.getDate();
-
     const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
     const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
 
-    // 篩選出當前的活動
-    const eventsThisMonth = allActivities.filter(item => {
-        const itemDate = new Date(item.startDate);
-        return (item.type === 'activity' || item.type === 'meeting') &&
-               itemDate.getFullYear() === year &&
-               itemDate.getMonth() === month;
-    });
-
+    // Get event days for the *currently viewed* month
+    // *** 使用 allActivities (未經篩選) 來標記日期點，這樣使用者切換篩選器時，日曆背景點點不會改變 ***
+    const eventDaysThisMonth = new Set();
+    for (const event of allActivities.filter(e => e.type === 'activity' || e.type === 'meeting')) {
+        if (event.startDateObj && event.startDateObj.getFullYear() === year && event.startDateObj.getMonth() === month) {
+            eventDaysThisMonth.add(event.startDateObj.getDate());
+        }
+    }
+    
+    // 3. Render Calendar HTML
     let calendarHTML = `
-        <div class="flex justify-between items-center mb-4">
-            <button onclick="prevMonth()" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">&lt; 上個月</button>
-            <h3 class="text-lg font-bold">${year}年 ${monthNames[month]}</h3>
-            <button onclick="nextMonth()" class="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300">下個月 &gt;</button>
+        <div class="flex justify-between items-center mb-4 px-2">
+            <button onclick="prevMonth()" class="text-gray-500 hover:text-blue-600 p-2 rounded-full transition-colors focus:outline-none">
+                <i class="fas fa-chevron-left fa-fw"></i>
+            </button>
+            <h3 class="text-xl font-bold text-gray-800">${year}年 ${monthNames[month]}</h3>
+            <button onclick="nextMonth()" class="text-gray-500 hover:text-blue-600 p-2 rounded-full transition-colors focus:outline-none">
+                <i class="fas fa-chevron-right fa-fw"></i>
+            </button>
         </div>
-        <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-600">
-            ${dayNames.map(day => `<div class="p-2 bg-gray-100 rounded-t-lg">${day}</div>`).join('')}
+        <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-500 mb-2">
+            ${dayNames.map(day => `<div class="p-2 text-sm">${day}</div>`).join('')}
         </div>
-        <div class="grid grid-cols-7 gap-1 border border-t-0 border-gray-200 rounded-b-lg p-1">
+        <div class="grid grid-cols-7 gap-1">
     `;
 
-    // 補齊開頭的空白
+    // Empty cells before start of month
     for (let i = 0; i < firstDayIndex; i++) {
-        calendarHTML += `<div class="h-20"></div>`;
+        calendarHTML += `<div></div>`;
     }
 
-    // 填入日期
+    // Date cells
+    const today = new Date();
+    const todayDate = today.getDate();
+    const todayMonth = today.getMonth();
+    const todayYear = today.getFullYear();
+
     for (let day = 1; day <= lastDate; day++) {
-        const today = new Date();
-        const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = day === todayDate && month === todayMonth && year === todayYear;
+        const hasEvent = eventDaysThisMonth.has(day);
 
-        const eventsOnThisDay = eventsThisMonth.filter(e => e.startDate && e.startDate.startsWith(dateStr));
+        let dayClass = 'h-10 w-10 flex items-center justify-center rounded-full transition-all text-sm';
         
-        let dayClass = 'h-20 p-1.5 border border-gray-100 rounded-md transition-colors hover:bg-gray-50';
-        if (isToday) dayClass += ' bg-blue-50 border-blue-300';
-        if (eventsOnThisDay.length > 0) dayClass += ' bg-orange-50 cursor-pointer';
-
-        calendarHTML += `
-            <div class="${dayClass}" onclick="showEventsForDay('${dateStr}')">
-                <div class="font-semibold ${isToday ? 'text-blue-600' : 'text-gray-800'}">${day}</div>
-                ${eventsOnThisDay.length > 0 ? `
-                    <div class="mt-1 text-xs text-orange-700 bg-orange-200 rounded-full px-1.5 py-0.5 font-medium">
-                        ${eventsOnThisDay.length} 個活動
-                    </div>
-                ` : ''}
-            </div>
-        `;
+        if (isToday) {
+            // 今天 (範例圖中的紫色)
+            dayClass += ' bg-purple-100 text-purple-700 font-bold ring-2 ring-purple-300';
+        } else if (hasEvent) {
+            // 有活動 (範例圖中的紅色)
+            dayClass += ' bg-red-100 text-red-700 font-bold';
+        } else {
+            // 一般日期
+            dayClass += ' text-gray-700 hover:bg-gray-100';
+        }
+        calendarHTML += `<div class="flex justify-center items-center"><div class="${dayClass}">${day}</div></div>`;
     }
-
-    calendarHTML += `</div><div id="event-list-for-day" class="mt-4"></div>`;
+    calendarHTML += `</div>`;
+    
+    // 4. Render Event List HTML (based on filtered list 'visibleEvents')
+    calendarHTML += `<div class="mt-6 border-t border-gray-200 pt-4 space-y-4 max-h-[35vh] overflow-y-auto pr-2">`;
+    
+    if (visibleEvents.length > 0) {
+        // Group events by month
+        const eventsByMonth = {};
+        for (const event of visibleEvents) {
+            if (!event.startDateObj) continue;
+            const eventMonth = event.startDateObj.getMonth();
+            const eventYear = event.startDateObj.getFullYear();
+            const monthKey = `${eventYear}-${String(eventMonth + 1).padStart(2, '0')}`; // "2025-11"
+            
+            if (!eventsByMonth[monthKey]) {
+                eventsByMonth[monthKey] = {
+                    year: eventYear,
+                    monthName: monthNames[eventMonth],
+                    events: {}
+                };
+            }
+            
+            const day = event.startDateObj.getDate();
+            if (!eventsByMonth[monthKey].events[day]) {
+                eventsByMonth[monthKey].events[day] = [];
+            }
+            eventsByMonth[monthKey].events[day].push(event);
+        }
+        
+        // Render each month group (sorted by monthKey)
+        for (const monthKey of Object.keys(eventsByMonth).sort()) {
+            const monthGroup = eventsByMonth[monthKey];
+            calendarHTML += `<h4 class="font-bold text-gray-800 text-lg mb-2">${monthGroup.year}年 ${monthGroup.monthName}</h4>`;
+            
+            // Render each day's events (sorted by day)
+            for (const day of Object.keys(monthGroup.events).map(Number).sort((a, b) => a - b)) {
+                const events = monthGroup.events[day];
+                calendarHTML += `
+                <div class="flex items-start space-x-4 pb-2">
+                    <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
+                        <span class="text-xl font-bold text-gray-700">${day}</span>
+                    </div>
+                    <div class="flex-grow divide-y divide-gray-100">
+                        ${events.map(item => `
+                            <div class="py-2">
+                                <p class="font-semibold ${getTypeStyle(item.type, item.status)}">${item.name}</p>
+                                <p class="text-sm text-gray-600">日期: ${formatDatePretty(item.startDateObj)} ${item.deadlineObj ? `- ${formatDatePretty(item.deadlineObj)}` : ''}</p>
+                                <p class="text-sm text-gray-600">負責人: ${(item.assignees || []).join(', ')}</p>
+                                ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                `;
+            }
+        }
+        
+    } else {
+        calendarHTML += `<p class="text-center text-gray-500 py-4">沒有符合目前篩選條件的活動或會議。</p>`;
+    }
+    
+    calendarHTML += `</div>`;
     contentEl.innerHTML = calendarHTML;
 }
 
@@ -350,40 +466,15 @@ function nextMonth() {
     calendarDate.setMonth(calendarDate.getMonth() + 1);
     renderCalendarView();
 }
-
-function showEventsForDay(dateStr) {
-    const eventsOnThisDay = allActivities.filter(e => 
-        (e.type === 'activity' || e.type === 'meeting') && 
-        e.startDate && e.startDate.startsWith(dateStr)
-    );
-    
-    const eventListEl = document.getElementById('event-list-for-day');
-    if (eventsOnThisDay.length === 0) {
-        eventListEl.innerHTML = `<p class="text-center text-gray-500"> ${new Date(dateStr + 'T00:00:00').toLocaleDateString('zh-TW', {month: 'long', day: 'numeric'})} 沒有活動。</p>`;
-        return;
-    }
-
-    eventListEl.innerHTML = `
-        <h4 class="text-md font-bold text-gray-800 mb-2">${new Date(dateStr + 'T00:00:00').toLocaleDateString('zh-TW', {month: 'long', day: 'numeric'})} 的活動/會議</h4>
-        <div class="space-y-2">
-            ${eventsOnThisDay.map(item => `
-                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <p class="font-semibold ${getTypeStyle(item.type, item.status)}">${item.name} <span class="text-sm font-medium">(${getTypeText(item.type)})</span></p>
-                    <p class="text-sm text-gray-600">負責人: ${(item.assignees || []).join(', ')}</p>
-                    ${item.description ? `<p class="text-xs text-gray-500 mt-1">${item.description}</p>` : ''}
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-// === 結束：日曆相關功能 ===
+// === *** END: REBUILT Calendar Function (v14.6) *** ===
 
 
 function openHonorRollModal() {
     const modal = document.getElementById('honorRollModal');
     const contentEl = document.getElementById('honor-roll-content');
     
-    const sortedHonors = [...allHonors].sort((a, b) => new Date(b.date) - new Date(a.date));
+    // *** UPDATED: 使用 dateObj 進行排序 ***
+    const sortedHonors = [...allHonors].sort((a, b) => b.dateObj - a.dateObj);
 
     if (sortedHonors.length === 0) {
         contentEl.innerHTML = '<p class="text-center text-gray-500 py-8">目前尚無榮譽事項記錄。</p>';
@@ -391,8 +482,7 @@ function openHonorRollModal() {
         contentEl.innerHTML = sortedHonors.map(honor => {
             const isPdf = honor.fileName && honor.fileName.toLowerCase().endsWith('.pdf');
             
-            // === 最終修正：改用 Google Drive 更可靠的 `thumbnail` 連結格式來強制顯示圖片 ===
-            const imgSrc = honor.fileId ? `https://drive.google.com/thumbnail?id=${honor.fileId}&sz=w400` : '#'; // sz=w400 代表圖片寬度約 400px
+            const imgSrc = honor.fileId ? `https://drive.google.com/thumbnail?id=${honor.fileId}&sz=w400` : '#';
             const fileLink = honor.fileId ? `https://drive.google.com/file/d/${honor.fileId}/view` : '#';
 
             return `
@@ -417,7 +507,8 @@ function openHonorRollModal() {
                         `}
                     </div>
                     <div class="md:col-span-2">
-                        <span class="text-sm font-semibold text-yellow-600">${formatDate(honor.date)}</span>
+                        <!-- *** UPDATED: 使用 dateObj *** -->
+                        <span class="text-sm font-semibold text-yellow-600">${formatDatePretty(honor.dateObj)}</span>
                         <h3 class="text-2xl font-bold text-gray-900 mt-1">${honor.title}</h3>
                         <p class="text-base text-gray-600 mt-2 mb-4 whitespace-pre-wrap">${honor.description || ''}</p>
                         <div class="border-t pt-3">
@@ -440,17 +531,20 @@ function generateWeeklySummary() {
     const oneWeekAgo = new Date(); oneWeekAgo.setDate(today.getDate() - 7);
     const nextWeek = new Date(); nextWeek.setDate(today.getDate() + 7);
     const projectsAndTasks = allActivities.filter(item => ['project', 'task'].includes(item.type));
-    const completedThisWeek = projectsAndTasks.filter(item => { if (item.status !== 'completed') return false; const completionDate = item.deadline ? new Date(item.deadline) : new Date(item.startDate); return completionDate >= oneWeekAgo && completionDate <= today; });
+    
+    // *** UPDATED: 使用 dateObj ***
+    const completedThisWeek = projectsAndTasks.filter(item => { if (item.status !== 'completed') return false; const completionDate = item.deadlineObj ? item.deadlineObj : item.startDateObj; return completionDate >= oneWeekAgo && completionDate <= today; });
     const progressMade = projectsAndTasks.filter(item => item.status !== 'completed' && item.progress > (item.lastWeekProgress || 0));
-    const newlyAdded = projectsAndTasks.filter(item => new Date(item.startDate) >= oneWeekAgo && new Date(item.startDate) <= today);
+    const newlyAdded = projectsAndTasks.filter(item => item.startDateObj >= oneWeekAgo && item.startDateObj <= today);
     const stalled = projectsAndTasks.filter(item => item.status === 'active' && item.progress === (item.lastWeekProgress || 0) && item.progress < 100);
-    const upcomingDeadlines = projectsAndTasks.filter(item => item.deadline && new Date(item.deadline) > today && new Date(item.deadline) <= nextWeek && item.status !== 'completed');
+    const upcomingDeadlines = projectsAndTasks.filter(item => item.deadlineObj && item.deadlineObj > today && item.deadlineObj <= nextWeek && item.status !== 'completed');
     const helpNeeded = projectsAndTasks.filter(item => item.helpMessage && item.helpMessage.trim() !== '');
+    
     const totalProgressGained = progressMade.reduce((sum, item) => sum + (item.progress - (item.lastWeekProgress || 0)), 0);
     const memberContributions = {};
     progressMade.forEach(item => {
         const progress = item.progress - (item.lastWeekProgress || 0);
-        item.assignees.forEach(name => {
+        (item.assignees || []).forEach(name => {
             if (!memberContributions[name]) memberContributions[name] = 0;
             memberContributions[name] += progress;
         });
@@ -468,7 +562,8 @@ function generateWeeklySummary() {
                 `<li class="text-sm text-gray-800 p-2 bg-gray-50 rounded-md border-l-4 ${color.replace('text-', 'border-')}">
                     <strong>${item.name}</strong> - <span class="text-gray-500">負責人: ${(item.assignees || []).join(', ')}</span>
                     ${title.includes('進度') ? `<span class="font-medium text-green-600"> (+${item.progress - (item.lastWeekProgress || 0)}%)</span>` : ''}
-                    ${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDate(item.deadline)})</span>` : ''}
+                    <!-- *** UPDATED: 使用 dateObj *** -->
+                    ${title.includes('到期') ? `<span class="font-medium text-yellow-800"> (到期日: ${formatDatePretty(item.deadlineObj)})</span>` : ''}
                     ${title.includes('協助') ? `<p class="text-sm text-red-700 mt-1 pl-2 border-l-2 border-red-200 bg-red-50 py-1"><em>"${item.helpMessage}"</em></p>` : ''}
                 </li>`
             ).join('') + '</ul>';
@@ -511,10 +606,13 @@ function generateDashboardReportHTML() {
     const birthdayMembers = staffData.filter(s => s.birthday === todayStr);
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const recentHonors = allHonors.filter(h => new Date(h.date) >= oneMonthAgo);
+    
+    // *** UPDATED: 使用 dateObj ***
+    const recentHonors = allHonors.filter(h => h.dateObj && h.dateObj >= oneMonthAgo);
+    
     const createSection = (title, icon, colorClass, items, emptyText) => {
         if (items.length === 0) return emptyText ? `<p class="text-sm text-gray-500 pl-2">${emptyText}</p>`: '';
-        let itemsHtml = items.map(item => `<li class="text-sm text-gray-800"><span class="font-semibold">"${item.name}"</span> - (主責: ${item.assignees.join(', ') || '未指定'})</li>`).join('');
+        let itemsHtml = items.map(item => `<li class="text-sm text-gray-800"><span class="font-semibold">"${item.name}"</span> - (主責: ${(item.assignees || []).join(', ') || '未指定'})</li>`).join('');
         return `<div class="p-3 bg-white rounded-lg border-l-4 ${colorClass} shadow-sm"><h3 class="font-bold text-gray-800 flex items-center mb-2"><i class="fas ${icon} fa-fw mr-2"></i>${title} (${items.length})</h3><ul class="space-y-1 pl-5 list-disc">${itemsHtml}</ul></div>`;
     };
     let reportHTML = `
@@ -534,7 +632,7 @@ function generateDashboardReportHTML() {
     }
     const topTarget = overdueProjects.find(p => p.priority === 'high') || overdueProjects[0] || stalledProjects.find(p => p.priority === 'high') || stalledProjects[0];
     if (topTarget) {
-         reportHTML += `<div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm"><h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3><p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${topTarget.assignees.join(', ')} 集中火力，優先處理！</p></div>`;
+         reportHTML += `<div class="p-3 bg-red-50 rounded-lg border-l-4 border-red-500 shadow-sm"><h3 class="font-bold text-red-800 flex items-center mb-1"><i class="fas fa-crosshairs fa-fw mr-2"></i>今日首要目標</h3><p class="text-sm text-red-700">領航員已鎖定今日首要殲滅目標：<strong class="font-bold">"${topTarget.name}"</strong>！此項目已進入紅色警戒，請 ${(topTarget.assignees || []).join(', ')} 集中火力，優先處理！</p></div>`;
     }
     reportHTML += createSection('前線膠著區', 'fa-traffic-jam', 'border-yellow-500', stalledProjects);
     reportHTML += createSection('緊急呼救', 'fa-first-aid', 'border-amber-500', helpNeededProjects, '✔️ 各單位回報狀況良好，無人請求支援。');
@@ -558,7 +656,7 @@ function setupAiModal(){const e=document.getElementById("aiModal"),t=document.ge
 function setupWeeklySummaryModal(){setupModal("weeklySummaryModal","weeklySummaryBtn","closeWeeklySummaryBtn",generateWeeklySummary)}
 function setupItemListModal(){setupModal("itemListModal",null,"closeItemListModalBtn")}
 
-// === 新增：設定活動日曆 Modal ===
+// === 設定活動日曆 Modal (v14.6) ===
 function setupActivityModal() {
     setupModal("activityModal", "activityBtn", "closeActivityModalBtn", () => {
         calendarDate = new Date(); // 每次打開時都重設為當前月份
@@ -586,19 +684,41 @@ async function initializeDashboard() {
         const userData = result.data.staffData || [];
         staffData = userData.map(user => ({ id: user.employeeId, name: user.name, group: user.group, birthday: user.birthday, unit: user.unit }));
         
-        allHonors = result.data.honors || []; // 新增：取得榮譽榜資料
+        // *** UPDATED: 為榮譽榜項目新增 dateObj ***
+        allHonors = (result.data.honors || []).map(h => ({
+            ...h,
+            dateObj: parseLocalDate(h.date) // 使用新的日期解析函式
+        }));
 
         const itemData = result.data.activities || [];
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        allActivities = itemData.map(item => {
+        
+        // *** UPDATED: 為所有項目新增 startDateObj 和 deadlineObj ***
+        allActivities = itemData.map(item => {
             const progress = parseInt(item.progress, 10) || 0;
-            const deadline = item.deadline ? new Date(item.deadline) : null;
+            
+            // *** 關鍵修正：使用 parseLocalDate 解析日期 ***
+            const startDateObj = parseLocalDate(item.startDate);
+            const deadlineObj = parseLocalDate(item.deadline);
+            
             let finalStatus = item.status || 'planning';
             if (progress >= 100) finalStatus = 'completed';
-            else if (finalStatus !== 'completed' && deadline && deadline < today) finalStatus = 'overdue';
-            return { ...item, progress, status: finalStatus, lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0, helpMessage: item.helpMessage || '', checklist: Array.isArray(item.checklist) ? item.checklist : [] };
+            // 使用 dateObj 進行比較
+            else if (finalStatus !== 'completed' && deadlineObj && deadlineObj < today) finalStatus = 'overdue';
+            
+            return { 
+                ...item, 
+                progress, 
+                status: finalStatus, 
+                lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0, 
+                helpMessage: item.helpMessage || '', 
+                checklist: Array.isArray(item.checklist) ? item.checklist : [],
+                startDateObj: startDateObj, // 新增 Date 物件
+                deadlineObj: deadlineObj  // 新增 Date 物件
+            };
         });
+        
         renderUnitTabs();
         renderYearFilter();
         renderMonthFilter();
@@ -616,17 +736,20 @@ async function initializeDashboard() {
 
 document.addEventListener('DOMContentLoaded', async function() {
     if (!sessionStorage.getItem('dashboardUser')) {
+  	// 驗證失敗，導回登入頁
         window.location.href = 'index.html';
         return;
     }
+    // 驗證成功，開始設定儀表板
     setupUserInfo();
     setupAiModal();
     setupWeeklySummaryModal();
     setupScrollToTop();
     setupItemListModal();
     setupDutySearchModal();
-    setupActivityModal(); // === 新增：啟用活動日曆 Modal ===
+    setupActivityModal(); // 啟用活動日曆 Modal
     setupHonorRollModal(); 
     setupChatBot();
+  	// 載入所有資料
     await initializeDashboard();
 });
