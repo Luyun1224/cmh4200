@@ -128,3 +128,29 @@ body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f4f8; }
 .confetti:nth-child(7) { left: 70%; animation-delay: -3s; background-color: #106a3f; }
 .confetti:nth-child(8) { left: 80%; animation-delay: -3.5s; background-color: #1a3a6e; }
 .confetti:nth-child(9) { left: 90%; animation-delay: -4s; background-color: #a52326; }
+
+/* --- 任務 #2 樣式：逾期項目 --- */
+.overdue-card {
+    background-color: #f3f4f6; /* bg-gray-100 */
+    opacity: 0.75;
+}
+.overdue-card:hover {
+    opacity: 1;
+    background-color: #fef2f2; /* bg-red-50 */
+}
+.overdue-card h4, .overdue-card p, .overdue-card span {
+    color: #6b7280; /* text-gray-500 */
+}
+.overdue-card .progress-bar {
+     background-color: #d1d5db !important; /* bg-gray-300 */
+}
+
+.overdue-card-modal {
+    background-color: #f3f4f6; /* bg-gray-100 */
+    opacity: 0.7;
+    border-color: #d1d5db;
+}
+.overdue-card-modal p, 
+.overdue-card-modal span {
+    color: #9ca3af !important; /* text-gray-400 */
+}
