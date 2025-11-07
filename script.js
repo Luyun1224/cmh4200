@@ -155,10 +155,10 @@ function updateStats(itemsToCount) {
     // 已完成 (計算所有 'completed' 項目)
     document.getElementById('completedTasks').textContent = itemsToCount.filter(t => t.status === 'completed').length;
     
-    // === 移除錯誤的 'activityCount' ===
-    // (下面這行會導致錯誤，因為 project.html 中沒有 'activityCount' 元素)
-    // const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
-    // document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
+    // === *** 修改點：恢復活動總數的計算 *** ===
+    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
+    document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
+    // === *** 修改結束 *** ===
 
     // 榮譽榜
     document.getElementById('honorCount').textContent = allHonors.length;
