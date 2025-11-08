@@ -378,12 +378,24 @@
             return Array.from(selectElement.options).filter(option => option.selected).map(option => option.value);
         }
 
+        // ==========================================================
+        // === *** 這就是修正的函式 *** ===
+        // ==========================================================
         function formatDateForInput(dateString) {
             if (!dateString) return '';
             try {
+                // 1. 建立一個 Date 物件 (它會自動轉換為本地時區)
                 const date = new Date(dateString);
                 if (isNaN(date.getTime())) return '';
-                return date.toISOString().split('T')[0];
+
+                // 2. 直接從這個本地時區的 Date 物件中提取年、月、日
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1; // getMonth() 是 0-11
+                const day = date.getDate();
+
+                // 3. 手動組合回 "YYYY-MM-DD" 格式
+                // 這樣可以確保顯示的是本地日期，而不是 UTC 日期
+                return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             } catch (e) {
                 return '';
             }
