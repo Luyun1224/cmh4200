@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.8 - Sorting & UI Update)
+// script.js (FINAL & COMPLETE - v14.9 - Date Fix)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -22,25 +22,32 @@ const getStatusText = (status) => ({ completed: '已完成', active: '進行中'
 // *** NEW: 格式化 Date 物件為易讀字串 ***
 const formatDatePretty = (dateObj) => dateObj ? dateObj.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
-// *** NEW: 輔助函式，將 "YYYY-MM-DD" 字串解析為本地時區的 Date 物件 ***
+// *** UPDATED (v14.9): 修正日期時區問題 ***
+// 這個函式現在會優先解析 "YYYY-MM-DD" 格式並將其視為本地日期，
+// 避免 "YYYY-MM-DD" 字串被解析為 UTC 午夜，導致時區差異（例如顯示為前一天）。
 function parseLocalDate(dateString) {
     if (!dateString) return null;
-    // 確保 dateString 是字串
     const str = String(dateString);
-    // 檢查是否為 "YYYY-MM-DD" 格式
-    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-        const parts = str.split('-');
-        if (parts.length === 3) {
-            // new Date(year, monthIndex, day) - 這會建立一個本地時區的日期
-            return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        }
+
+    // 優先嘗試從 "YYYY-MM-DD" (字串開頭) 中解析
+    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+        // match 陣列會是 [ "2025-09-13", "2025", "09", "13" ]
+        const year = parseInt(match[1]);
+        const month = parseInt(match[2]) - 1; // JavaScript 的月份是 0-11
+        const day = parseInt(match[3]);
+        // new Date(y, m, d) 會建立一個 *本地時區* 的日期物件
+        return new Date(year, month, day);
     }
-    // 對於 "YYYY/MM/DD" 或其他格式的備用方案 (仍可能有風險)
+
+    // 備用方案：如果 YYYY-MM-DD 不匹配, 嘗試 new Date()
+    // 這適用於完整的 ISO 日期字串或其他格式
     const date = new Date(str);
     if (!isNaN(date.getTime())) {
         // 如果日期有效，返回一個僅包含 Y/M/D 的新本地日期物件，清除時間影響
         return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     }
+    
     return null; // 無效日期
 }
 
