@@ -22,15 +22,15 @@ const getStatusText = (status) => ({ completed: '已完成', active: '進行中'
 // *** NEW: 格式化 Date 物件為易讀字串 ***
 const formatDatePretty = (dateObj) => dateObj ? dateObj.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
-// *** UPDATED (v14.9): 修正日期時區問題 ***
+// *** UPDATED (v14.10): 修正日期時區問題 (anchor) ***
 // 這個函式現在會優先解析 "YYYY-MM-DD" 格式並將其視為本地日期，
 // 避免 "YYYY-MM-DD" 字串被解析為 UTC 午夜，導致時區差異（例如顯示為前一天）。
 function parseLocalDate(dateString) {
     if (!dateString) return null;
     const str = String(dateString);
 
-    // 優先嘗試從 "YYYY-MM-DD" (字串開頭) 中解析
-    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    // 優先嘗試從 *剛好* "YYYY-MM-DD" (字串開頭到結尾) 中解析
+    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (match) {
         // match 陣列會是 [ "2025-09-13", "2025", "09", "13" ]
         const year = parseInt(match[1]);
@@ -41,7 +41,7 @@ function parseLocalDate(dateString) {
     }
 
     // 備用方案：如果 YYYY-MM-DD 不匹配, 嘗試 new Date()
-    // 這適用於完整的 ISO 日期字串或其他格式
+    // 這適用於完整的 ISO 日期字串 (e.g., 2025-09-12T16:00:00.000Z)
     const date = new Date(str);
     if (!isNaN(date.getTime())) {
         // 如果日期有效，返回一個僅包含 Y/M/D 的新本地日期物件，清除時間影響
@@ -584,17 +584,17 @@ function openHonorRollModal() {
                     <div class="md:col-span-1">
                         ${honor.fileId ? (
                             isPdf ? `
-                            <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-48 bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
+                            <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-72 bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
                                 <i class="fas fa-file-pdf text-red-500 text-6xl"></i>
                                 <span class="mt-2 font-semibold text-sm text-gray-700 truncate w-full">${honor.fileName || '點擊查看PDF'}</span>
                             </a>
                             ` : `
                             <a href="${fileLink}" target="_blank">
-                                <img src="${imgSrc}" alt="${honor.title}" class="w-full h-48 object-contain rounded-lg bg-gray-50 p-2">
+                                <img src="${imgSrc}" alt="${honor.title}" class="w-full h-72 object-contain rounded-lg bg-gray-50 p-2">
                             </a>
                             `
                         ) : `
-                        <div class="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                        <div class="flex items-center justify-center h-72 bg-gray-100 rounded-lg">
                             <i class="fas fa-award text-gray-300 text-6xl"></i>
                         </div>
                         `}
