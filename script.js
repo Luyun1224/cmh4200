@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.11 - Date Fix & Calendar Enhancements)
+// script.js (FINAL & COMPLETE - v14.12 - Final Date Fix & Honor Image Resize)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -22,14 +22,13 @@ const getStatusText = (status) => ({ completed: '已完成', active: '進行中'
 // *** NEW: 格式化 Date 物件為易讀字串 ***
 const formatDatePretty = (dateObj) => dateObj ? dateObj.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
-// *** UPDATED (v14.11): More robust date parsing for timezone fix ***
-// 這個函式現在會優先解析 "YYYY-MM-DD" 格式並將其視為本地日期，
-// 避免 "YYYY-MM-DD" 字串被解析為 UTC 午夜，導致時區差異（例如顯示為前一天）。
+// *** UPDATED (v14.12): Final attempt at robust date parsing ***
 function parseLocalDate(dateString) {
     if (!dateString) return null;
     const str = String(dateString);
 
-    // 1. Check for "YYYY-MM-DD" format *only*
+    // 1. Check for "YYYY-MM-DD" format *only* (ISO 8601 date-only string)
+    // These strings are notoriously parsed as UTC by new Date(). We must force local.
     const simpleDateMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (simpleDateMatch) {
         const year = parseInt(simpleDateMatch[1]);
@@ -39,24 +38,13 @@ function parseLocalDate(dateString) {
         return new Date(year, month, day);
     }
 
-    // 2. Check for full ISO string (e.g., "2025-09-13T00:00:00.000Z")
-    // This is likely how Google Sheets sends dates.
-    const isoDateMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})T/);
-    if (isoDateMatch) {
-        // We parse it as UTC, but then we *only* use the UTC date parts
-        // to create a new *local* date. This discards the time and timezone.
-        const date = new Date(str);
-        const year = date.getUTCFullYear();
-        const month = date.getUTCMonth();
-        const day = date.getUTCDate();
-        // Create a new date using these components in the *local* timezone.
-        return new Date(year, month, day);
-    }
-
-    // 3. Fallback for other formats (less reliable)
-    const fallbackDate = new Date(str);
-    if (!isNaN(fallbackDate.getTime())) {
-        return new Date(fallbackDate.getFullYear(), fallbackDate.getMonth(), fallbackDate.getDate());
+    // 2. For *all other* valid date strings (full ISO, "YYYY/MM/DD", etc.)
+    // Let new Date() parse it (which correctly handles timezones for full strings)
+    // and then normalize to the start of that date *in the local timezone*.
+    const date = new Date(str);
+    if (!isNaN(date.getTime())) {
+        // Get the year, month, and day *from the resulting local date*
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     }
     
     return null; // Invalid date
@@ -627,26 +615,26 @@ function openHonorRollModal() {
 
             return `
             <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-200 mb-6 transition-all hover:shadow-2xl hover:border-yellow-400">
-                <div class="grid md:grid-cols-3 gap-6 items-center">
+                <div class="grid md:grid-cols-2 gap-6 items-center">
                     <div class="md:col-span-1">
                         ${honor.fileId ? (
                             isPdf ? `
-                            <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
+                            <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-[32rem] bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
                                 <i class="fas fa-file-pdf text-red-500 text-6xl"></i>
                                 <span class="mt-2 font-semibold text-sm text-gray-700 truncate w-full">${honor.fileName || '點擊查看PDF'}</span>
                             </a>
                             ` : `
                             <a href="${fileLink}" target="_blank">
-                                <img src="${imgSrc}" alt="${honor.title}" class="w-full h-96 object-contain rounded-lg bg-gray-50 p-2">
+                                <img src="${imgSrc}" alt="${honor.title}" class="w-full h-[32rem] object-contain rounded-lg bg-gray-50 p-2">
                             </a>
                             `
                         ) : `
-                        <div class="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+                        <div class="flex items-center justify-center h-[32rem] bg-gray-100 rounded-lg">
                             <i class="fas fa-award text-gray-300 text-6xl"></i>
                         </div>
                         `}
                     </div>
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-1">
                         <!-- *** UPDATED: 使用 dateObj *** -->
                         <span class="text-sm font-semibold text-yellow-600">${formatDatePretty(honor.dateObj)}</span>
                         <h3 class="text-2xl font-bold text-gray-900 mt-1">${honor.title}</h3>
