@@ -1,4 +1,4 @@
-// script.js (FINAL & COMPLETE - v14.9 - Date Fix)
+// script.js (FINAL & COMPLETE - v14.11 - Date Fix & Calendar Enhancements)
 // --- Configuration & State Variables ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
 let allActivities = [];
@@ -22,34 +22,46 @@ const getStatusText = (status) => ({ completed: '已完成', active: '進行中'
 // *** NEW: 格式化 Date 物件為易讀字串 ***
 const formatDatePretty = (dateObj) => dateObj ? dateObj.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
-// *** UPDATED (v14.10): 修正日期時區問題 (anchor) ***
+// *** UPDATED (v14.11): More robust date parsing for timezone fix ***
 // 這個函式現在會優先解析 "YYYY-MM-DD" 格式並將其視為本地日期，
 // 避免 "YYYY-MM-DD" 字串被解析為 UTC 午夜，導致時區差異（例如顯示為前一天）。
 function parseLocalDate(dateString) {
     if (!dateString) return null;
     const str = String(dateString);
 
-    // 優先嘗試從 *剛好* "YYYY-MM-DD" (字串開頭到結尾) 中解析
-    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (match) {
-        // match 陣列會是 [ "2025-09-13", "2025", "09", "13" ]
-        const year = parseInt(match[1]);
-        const month = parseInt(match[2]) - 1; // JavaScript 的月份是 0-11
-        const day = parseInt(match[3]);
-        // new Date(y, m, d) 會建立一個 *本地時區* 的日期物件
+    // 1. Check for "YYYY-MM-DD" format *only*
+    const simpleDateMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (simpleDateMatch) {
+        const year = parseInt(simpleDateMatch[1]);
+        const month = parseInt(simpleDateMatch[2]) - 1; // JS month is 0-11
+        const day = parseInt(simpleDateMatch[3]);
+        // Create a local date
         return new Date(year, month, day);
     }
 
-    // 備用方案：如果 YYYY-MM-DD 不匹配, 嘗試 new Date()
-    // 這適用於完整的 ISO 日期字串 (e.g., 2025-09-12T16:00:00.000Z)
-    const date = new Date(str);
-    if (!isNaN(date.getTime())) {
-        // 如果日期有效，返回一個僅包含 Y/M/D 的新本地日期物件，清除時間影響
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    // 2. Check for full ISO string (e.g., "2025-09-13T00:00:00.000Z")
+    // This is likely how Google Sheets sends dates.
+    const isoDateMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+    if (isoDateMatch) {
+        // We parse it as UTC, but then we *only* use the UTC date parts
+        // to create a new *local* date. This discards the time and timezone.
+        const date = new Date(str);
+        const year = date.getUTCFullYear();
+        const month = date.getUTCMonth();
+        const day = date.getUTCDate();
+        // Create a new date using these components in the *local* timezone.
+        return new Date(year, month, day);
+    }
+
+    // 3. Fallback for other formats (less reliable)
+    const fallbackDate = new Date(str);
+    if (!isNaN(fallbackDate.getTime())) {
+        return new Date(fallbackDate.getFullYear(), fallbackDate.getMonth(), fallbackDate.getDate());
     }
     
-    return null; // 無效日期
+    return null; // Invalid date
 }
+
 
 const getTypeText = (type) => ({ project: '專案', task: '任務', activity: '活動', meeting: '會議' }[type] || '項目');
 const getTypeStyle = (type, status) => {
@@ -430,12 +442,14 @@ function renderCalendarView() {
     const monthNames = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
     const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
 
-    // Get event days for the *currently viewed* month
-    // *** 使用 allActivities (未經篩選) 來標記日期點，這樣使用者切換篩選器時，日曆背景點點不會改變 ***
-    const eventDaysThisMonth = new Set();
+    // Get event days AND counts for the *currently viewed* month
+    // *** USE ALL ACTIVITIES for consistent counts ***
+    const eventCountsThisMonth = new Map();
     for (const event of allActivities.filter(e => e.type === 'activity' || e.type === 'meeting')) {
         if (event.startDateObj && event.startDateObj.getFullYear() === year && event.startDateObj.getMonth() === month) {
-            eventDaysThisMonth.add(event.startDateObj.getDate());
+            const day = event.startDateObj.getDate();
+            const count = (eventCountsThisMonth.get(day) || 0) + 1;
+            eventCountsThisMonth.set(day, count);
         }
     }
     
@@ -469,26 +483,40 @@ function renderCalendarView() {
 
     for (let day = 1; day <= lastDate; day++) {
         const isToday = day === todayDate && month === todayMonth && year === todayYear;
-        const hasEvent = eventDaysThisMonth.has(day);
+        const eventCount = eventCountsThisMonth.get(day) || 0;
+        const hasEvent = eventCount > 0;
 
-        let dayClass = 'h-10 w-10 flex items-center justify-center rounded-full transition-all text-sm';
+        let dayClass = 'h-12 w-12 flex flex-col items-center justify-center rounded-lg transition-all text-sm relative cursor-pointer'; // Taller, rounded-lg, add cursor
+        let dayContent;
         
         if (isToday) {
             // 今天 (範例圖中的紫色)
             dayClass += ' bg-purple-100 text-purple-700 font-bold ring-2 ring-purple-300';
         } else if (hasEvent) {
             // 有活動 (範例圖中的紅色)
-            dayClass += ' bg-red-100 text-red-700 font-bold';
+            dayClass += ' bg-red-100 text-red-700 font-bold hover:bg-red-200';
         } else {
             // 一般日期
             dayClass += ' text-gray-700 hover:bg-gray-100';
         }
-        calendarHTML += `<div class="flex justify-center items-center"><div class="${dayClass}">${day}</div></div>`;
+
+        if (hasEvent) {
+            dayContent = `
+                <span class="text-xs font-bold absolute top-0.5 right-1.5 text-red-500">${eventCount}</span>
+                <span class="text-base">${day}</span>
+            `;
+        } else {
+            dayContent = `<span class="text-base">${day}</span>`;
+        }
+
+        // Add click handler for request 3b
+        calendarHTML += `<div class="flex justify-center items-center"><div class="${dayClass}" onclick="scrollToDayInList(${day}, ${hasEvent})">${dayContent}</div></div>`;
     }
     calendarHTML += `</div>`;
     
     // 4. Render Event List HTML (based on filtered list 'visibleEvents')
-    calendarHTML += `<div class="mt-6 border-t border-gray-200 pt-4 space-y-4 max-h-[35vh] overflow-y-auto pr-2">`;
+    const listContainerId = 'activity-list-container';
+    calendarHTML += `<div id="${listContainerId}" class="mt-6 border-t border-gray-200 pt-4 space-y-4 max-h-[35vh] overflow-y-auto pr-2 scroll-smooth">`;
     
     if (visibleEvents.length > 0) {
         // Group events by month
@@ -523,7 +551,7 @@ function renderCalendarView() {
             for (const day of Object.keys(monthGroup.events).map(Number).sort((a, b) => a - b)) {
                 const events = monthGroup.events[day];
                 calendarHTML += `
-                <div class="flex items-start space-x-4 pb-2">
+                <div class="flex items-start space-x-4 pb-2 transition-all" id="event-day-${day}">
                     <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
                         <span class="text-xl font-bold text-gray-700">${day}</span>
                     </div>
@@ -559,6 +587,25 @@ function nextMonth() {
     calendarDate.setMonth(calendarDate.getMonth() + 1);
     renderCalendarView();
 }
+
+// *** NEW (v14.11): Scroll to day in activity list ***
+function scrollToDayInList(day, hasEvent) {
+    if (!hasEvent) return; // Don't scroll if no events
+    const listContainer = document.getElementById('activity-list-container');
+    const dayElement = document.getElementById(`event-day-${day}`);
+    if (listContainer && dayElement) {
+        // Scroll the container so that the element is at the top
+        listContainer.scrollTo({
+            top: dayElement.offsetTop - listContainer.offsetTop, // Calculate relative offset
+            behavior: 'smooth'
+        });
+        // Add a temporary highlight
+        dayElement.classList.add('bg-yellow-50', 'rounded-lg');
+        setTimeout(() => {
+            dayElement.classList.remove('bg-yellow-50', 'rounded-lg');
+        }, 1500);
+    }
+}
 // === *** END: REBUILT Calendar Function (v14.6) *** ===
 
 
@@ -584,17 +631,17 @@ function openHonorRollModal() {
                     <div class="md:col-span-1">
                         ${honor.fileId ? (
                             isPdf ? `
-                            <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-72 bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
+                            <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
                                 <i class="fas fa-file-pdf text-red-500 text-6xl"></i>
                                 <span class="mt-2 font-semibold text-sm text-gray-700 truncate w-full">${honor.fileName || '點擊查看PDF'}</span>
                             </a>
                             ` : `
                             <a href="${fileLink}" target="_blank">
-                                <img src="${imgSrc}" alt="${honor.title}" class="w-full h-72 object-contain rounded-lg bg-gray-50 p-2">
+                                <img src="${imgSrc}" alt="${honor.title}" class="w-full h-96 object-contain rounded-lg bg-gray-50 p-2">
                             </a>
                             `
                         ) : `
-                        <div class="flex items-center justify-center h-72 bg-gray-100 rounded-lg">
+                        <div class="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
                             <i class="fas fa-award text-gray-300 text-6xl"></i>
                         </div>
                         `}
