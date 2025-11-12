@@ -172,6 +172,10 @@ function renderItems(itemsToRender) {
         </div>`;
     }).join('');
 }
+
+// =======================================================
+// === *** 這就是您要求修改的函式 *** ===
+// =======================================================
 function renderTeamMembers(members, allItems) {
     const teamMembersDiv = document.getElementById('teamMembers');
     if (!members || members.length === 0) {
@@ -186,6 +190,8 @@ function renderTeamMembers(members, allItems) {
         const overdueCount = memberItems.filter(t => t.status === 'overdue').length;
         const projectCount = memberItems.filter(item => item.type === 'project').length;
         const taskCount = memberItems.filter(item => item.type === 'task').length;
+        // *** 變更點 1: 新增活動計數 ***
+        const activityCount = memberItems.filter(item => item.type === 'activity').length; 
         const isActive = name === currentMemberFilter;
         
         const isBirthday = memberInfo.birthday === todayStr;
@@ -193,6 +199,7 @@ function renderTeamMembers(members, allItems) {
         const birthdayHatHTML = isBirthday ? '<div class="birthday-hat"></div>' : '';
         const confettiHTML = isBirthday ? Array.from({length: 9}).map(() => `<div class="confetti"></div>`).join('') : '';
         return `<div onclick="filterByMember('${name}')" class="group relative ${birthdayContainerClass} flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-blue-100 shadow-md' : 'hover:bg-gray-100 hover:shadow-md hover:scale-105'}">
+            <!-- 彈出式個人資訊卡 -->
             <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2 w-52 p-4 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-30">
                 <img src="${localProfileImages[name] ? localProfileImages[name] : `https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}`}" alt="${name}" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-blue-300 object-cover shadow-md" onerror="this.src='https://placehold.co/100x100/93c5fd/ffffff?text=${name.charAt(0)}'; this.onerror=null;">
                 <p class="font-bold text-center text-gray-900 text-lg">${name}</p>
@@ -203,15 +210,32 @@ function renderTeamMembers(members, allItems) {
                 </div>
                 <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-white"></div>
             </div>
-            ${confettiHTML}
+            
+            ${confettiHTML} <!-- 生日特效 -->
+            
+            <!-- 成員卡片主要內容 -->
             <div class="flex items-center min-w-0">
                 <div class="relative flex-shrink-0">${birthdayHatHTML}${localProfileImages[name] ? `<img src="${localProfileImages[name]}" alt="${name}" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.replaceWith(this.parentElement.querySelector('.initial-avatar'))" />` : `<div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white font-semibold initial-avatar">${name.charAt(0)}</div>`}</div>
-                <div class="ml-3 min-w-0"><p class="font-medium text-gray-900 truncate">${name}</p><div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1"><span>專案: ${projectCount}</span><span>任務: ${taskCount}</span></div></div>
+                <div class="ml-3 min-w-0">
+                    <p class="font-medium text-gray-900 truncate">${name}</p>
+                    <!-- *** 變更點 2: 在此處新增活動 span *** -->
+                    <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                        <span>專案: ${projectCount}</span>
+                        <span>任務: ${taskCount}</span>
+                        <span>活動: ${activityCount}</span>
+                    </div>
+                </div>
             </div>
+            
+            <!-- 逾期計數 -->
             <div class="text-right flex-shrink-0 ml-2">${overdueCount > 0 ? `<span class="text-xs font-bold text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center">${overdueCount}</span>` : ''}</div>
         </div>`;
     }).join('');
 }
+// =======================================================
+// === *** 函式修改結束 *** ===
+// =======================================================
+
 
 // *** START OF MODIFICATION ***
 function updateStats(itemsToCount) {
@@ -378,7 +402,7 @@ function showItemsInModal(e){
             <p class="font-semibold text-gray-800">${e.name}</p>
             <p class="text-sm text-gray-600">負責人: ${(e.assignees||[]).join(", ")}</p>
             <div class="flex justify-between items-center text-xs mt-1">
-                <span class="font-medium ${getTypeStyle(e.type,e.status)}">(${getTypeText(e.type)})</span>
+                <span class="font-medium ${getTypeStyle(e.type, e.status)}">(${getTypeText(e.type)})</span>
                 <span class="px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(e.status)} text-white">${getStatusText(e.status)}</span>
             </div>
         </div>
@@ -610,30 +634,36 @@ function openHonorRollModal() {
         contentEl.innerHTML = sortedHonors.map(honor => {
             const isPdf = honor.fileName && honor.fileName.toLowerCase().endsWith('.pdf');
             
+            // *** UPDATED: 使用新的縮圖 URL 格式 ***
             const imgSrc = honor.fileId ? `https://drive.google.com/thumbnail?id=${honor.fileId}&sz=w400` : '#';
             const fileLink = honor.fileId ? `https://drive.google.com/file/d/${honor.fileId}/view` : '#';
 
             return `
             <div class="bg-white rounded-xl shadow-lg p-5 border border-gray-200 mb-6 transition-all hover:shadow-2xl hover:border-yellow-400">
                 <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <!-- 檔案預覽區 -->
                     <div class="md:col-span-1">
                         ${honor.fileId ? (
                             isPdf ? `
+                            <!-- PDF 預覽 -->
                             <a href="${fileLink}" target="_blank" class="flex flex-col items-center justify-center h-[32rem] bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100">
                                 <i class="fas fa-file-pdf text-red-500 text-6xl"></i>
                                 <span class="mt-2 font-semibold text-sm text-gray-700 truncate w-full">${honor.fileName || '點擊查看PDF'}</span>
                             </a>
                             ` : `
+                            <!-- 圖片預覽 -->
                             <a href="${fileLink}" target="_blank">
                                 <img src="${imgSrc}" alt="${honor.title}" class="w-full h-[32rem] object-contain rounded-lg bg-gray-50 p-2">
                             </a>
                             `
                         ) : `
+                        <!-- 無檔案預覽 -->
                         <div class="flex items-center justify-center h-[32rem] bg-gray-100 rounded-lg">
                             <i class="fas fa-award text-gray-300 text-6xl"></i>
                         </div>
                         `}
                     </div>
+                    <!-- 榮譽內容區 -->
                     <div class="md:col-span-1">
                         <!-- *** UPDATED: 使用 dateObj *** -->
                         <span class="text-sm font-semibold text-yellow-600">${formatDatePretty(honor.dateObj)}</span>
@@ -862,7 +892,9 @@ async function initializeDashboard() {
     }
 }
 
+// --- DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', async function() {
+    // 簡易登入驗證
     if (!sessionStorage.getItem('dashboardUser')) {
   	// 驗證失敗，導回登入頁
         window.location.href = 'index.html';
