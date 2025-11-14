@@ -25,6 +25,33 @@
             padding: 0.5rem;
             object-fit: contain;
         }
+        /* 新增：檢查點拖曳樣式 */
+        .checklist-item {
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+        .checklist-item:hover {
+            background-color: #f9fafb;
+        }
+        .checklist-item.dragging {
+            opacity: 0.5;
+            background-color: #dbeafe;
+            transform: scale(0.98);
+        }
+        .checklist-item.drag-over {
+            border-top: 3px solid #3b82f6;
+        }
+        .drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+            padding: 0 0.5rem;
+        }
+        .drag-handle:hover {
+            color: #3b82f6;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -282,7 +309,7 @@
         // --- Configuration ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvl5lYY1LssljDNJJyGuAGsLd3D0sbGSs4QTZxgz2PAZJ38EpsHzEk740LGiQ5AMok/exec";
         let activities = [];
-        let honors = []; // 新增：儲存榮譽榜資料
+        let honors = [];
         let staffData = [];
         let loggedInUser = { name: '', id: '' };
         const statusData = { 'planning': '規劃中', 'active': '進行中', 'completed': '已完成', 'overdue': '逾期' };
@@ -562,6 +589,12 @@
         function addChecklistItem(name = '', completed = false) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'flex items-center space-x-3 checklist-item';
+            itemDiv.draggable = true;
+            
+            // 新增拖曳手柄
+            const dragHandle = document.createElement('div');
+            dragHandle.className = 'drag-handle';
+            dragHandle.innerHTML = '<i class="fas fa-grip-vertical"></i>';
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -580,103 +613,80 @@
             removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
             removeBtn.onclick = () => itemDiv.remove();
             
+            // 拖曳事件處理
+            itemDiv.addEventListener('dragstart', handleDragStart);
+            itemDiv.addEventListener('dragend', handleDragEnd);
+            itemDiv.addEventListener('dragover', handleDragOver);
+            itemDiv.addEventListener('drop', handleDrop);
+            itemDiv.addEventListener('dragleave', handleDragLeave);
+            
+            itemDiv.appendChild(dragHandle);
             itemDiv.appendChild(checkbox);
             itemDiv.appendChild(input);
             itemDiv.appendChild(removeBtn);
             checklistContainer.appendChild(itemDiv);
         }
 
-        function getTemplates() { return JSON.parse(localStorage.getItem('checklistTemplates') || '{}'); }
-        function saveTemplates(templates) { localStorage.setItem('checklistTemplates', JSON.stringify(templates)); }
+        // 拖曳相關函數
+        let draggedElement = null;
 
-        function populateTemplateDropdown() {
-            const templates = getTemplates();
-            loadChecklistTemplateSelect.innerHTML = '<option value="">載入範本...</option>';
-            for (const name in templates) {
-                const option = new Option(name, name);
-                loadChecklistTemplateSelect.add(option);
-            }
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
         }
 
-        function saveChecklistTemplate() {
-            const checklistData = [];
-            document.querySelectorAll('#checklist-container .checklist-item').forEach(itemDiv => {
-                const input = itemDiv.querySelector('input[type="text"]');
-                if (input.value.trim()) {
-                    checklistData.push({ name: input.value.trim(), completed: false });
-                }
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            // 移除所有拖曳樣式
+            document.querySelectorAll('.checklist-item').forEach(item => {
+                item.classList.remove('drag-over');
             });
-            if (checklistData.length === 0) {
-                showToast('沒有可儲存的檢查點項目。', 'error');
-                return;
-            }
-
-            const modal = document.getElementById('template-name-modal');
-            const okBtn = document.getElementById('template-modal-ok');
-            const input = document.getElementById('template-name-input');
-            input.value = '';
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            input.focus();
-
-            const newOkBtn = okBtn.cloneNode(true);
-            okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-            newOkBtn.onclick = () => {
-                const templateName = input.value.trim();
-                if (!templateName) {
-                    showToast('範本名稱不能為空！', 'error');
-                    return;
-                }
-                const templates = getTemplates();
-                templates[templateName] = checklistData;
-                saveTemplates(templates);
-                populateTemplateDropdown();
-                showToast(`範本 "${templateName}" 已儲存！`, 'success');
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            };
         }
 
-        function loadChecklistTemplate() {
-            const templateName = loadChecklistTemplateSelect.value;
-            if (!templateName) return;
-            const templates = getTemplates();
-            const template = templates[templateName];
-            if (template) {
-                checklistContainer.innerHTML = '';
-                template.forEach(item => addChecklistItem(item.name, item.completed));
-                showToast(`已載入範本 "${templateName}"`, 'success');
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
             }
-        }
-        
-        function deleteChecklistTemplate() {
-            const templateName = loadChecklistTemplateSelect.value;
-            if (!templateName) {
-                showToast('請先從下拉選單中選擇一個要刪除的範本。', 'error');
-                return;
-            }
-            const confirmModal = document.getElementById('confirm-modal');
-            const modalTitle = document.getElementById('confirm-modal-title');
-            const modalMessage = document.getElementById('confirm-modal-message');
-
-            modalTitle.textContent = '確認刪除範本';
-            modalMessage.textContent = `您確定要刪除範本 "${templateName}" 嗎？此操作無法復原。`;
-            confirmModal.classList.remove('hidden');
-            confirmModal.classList.add('flex');
+            e.dataTransfer.dropEffect = 'move';
             
-            const confirmOkBtn = document.getElementById('confirm-modal-ok');
-            const newOkBtn = confirmOkBtn.cloneNode(true);
-            confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+            return false;
+        }
 
-            newOkBtn.onclick = () => {
-                const templates = getTemplates();
-                delete templates[templateName];
-                saveTemplates(templates);
-                populateTemplateDropdown();
-                showToast(`範本 "${templateName}" 已刪除！`, 'success');
-                confirmModal.classList.add('hidden');
-            };
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            this.classList.remove('drag-over');
+            
+            if (draggedElement !== this) {
+                // 取得被拖曳元素和目標元素的資料
+                const draggedCheckbox = draggedElement.querySelector('input[type="checkbox"]').checked;
+                const draggedText = draggedElement.querySelector('input[type="text"]').value;
+                
+                const targetCheckbox = this.querySelector('input[type="checkbox"]').checked;
+                const targetText = this.querySelector('input[type="text"]').value;
+                
+                // 交換內容
+                this.querySelector('input[type="checkbox"]').checked = draggedCheckbox;
+                this.querySelector('input[type="text"]').value = draggedText;
+                
+                draggedElement.querySelector('input[type="checkbox"]').checked = targetCheckbox;
+                draggedElement.querySelector('input[type="text"]').value = targetText;
+                
+                showToast('檢查點順序已調整', 'success');
+            }
+            
+            return false;
         }
 
         // ===============================================================
