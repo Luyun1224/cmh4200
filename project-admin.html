@@ -290,6 +290,24 @@
         let currentAssigneeFilter = 'all';
         let currentStatusFilter = 'all';
 
+        // *** 日期解析函數（與前台同步）***
+        function parseLocalDate(dateString) {
+            if (!dateString) return null;
+            const str = String(dateString);
+            const simpleDateMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (simpleDateMatch) {
+                const year = parseInt(simpleDateMatch[1]);
+                const month = parseInt(simpleDateMatch[2]) - 1;
+                const day = parseInt(simpleDateMatch[3]);
+                return new Date(year, month, day);
+            }
+            const date = new Date(str);
+            if (!isNaN(date.getTime())) {
+                return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            }
+            return null;
+        }
+
         // --- DOM Elements ---
         const form = document.getElementById('item-form');
         const formTitle = document.getElementById('form-title');
@@ -341,13 +359,56 @@
         }
         
         async function fetchInitialData() {
-            const users = await handleApiRequest('getAllUsers');
-            if (users) {
-                staffData = users;
-            }
-            const honorData = await handleApiRequest('getHonors');
-            if(honorData) {
-                honors = honorData;
+            try {
+                const result = await handleApiRequest('getDashboardData');
+                if (result) {
+                    // 處理用戶數據
+                    const userData = result.staffData || [];
+                    staffData = userData.map(user => ({
+                        id: user.employeeId,
+                        name: user.name,
+                        group: user.group,
+                        birthday: user.birthday,
+                        unit: user.unit
+                    }));
+                    
+                    // 處理榮譽榜數據，添加 dateObj
+                    honors = (result.honors || []).map(h => ({
+                        ...h,
+                        dateObj: parseLocalDate(h.date)
+                    }));
+                    
+                    // 處理活動數據（如果需要的話）
+                    if (result.activities) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        // 為所有項目添加日期對象和自動狀態更新
+                        const allItems = result.activities.map(item => {
+                            const progress = parseInt(item.progress, 10) || 0;
+                            const startDateObj = parseLocalDate(item.startDate);
+                            const deadlineObj = parseLocalDate(item.deadline);
+                            
+                            let finalStatus = item.status || 'planning';
+                            if (progress >= 100) finalStatus = 'completed';
+                            else if (finalStatus !== 'completed' && deadlineObj && deadlineObj < today) finalStatus = 'overdue';
+                            
+                            return {
+                                ...item,
+                                progress,
+                                status: finalStatus,
+                                lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
+                                helpMessage: item.helpMessage || '',
+                                checklist: Array.isArray(item.checklist) ? item.checklist : [],
+                                startDateObj: startDateObj,
+                                deadlineObj: deadlineObj
+                            };
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('fetchInitialData failed:', error);
+                showToast('載入初始數據失敗', 'error');
             }
         }
         
@@ -355,7 +416,26 @@
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在載入您的專屬資料...</td></tr>`;
             const items = await handleApiRequest('getAllItems', { userId: loggedInUser.id });
             if (items) {
-                activities = items;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // 處理項目數據，完全保持用戶設定的狀態
+                activities = items.map(item => {
+                    const progress = parseInt(item.progress, 10) || 0;
+                    const startDateObj = parseLocalDate(item.startDate);
+                    const deadlineObj = parseLocalDate(item.deadline);
+                    
+                    return {
+                        ...item,
+                        progress,
+                        status: item.status || 'planning', // 使用原始狀態，不做任何修改
+                        lastWeekProgress: item.lastWeekProgress ? parseInt(item.lastWeekProgress, 10) : 0,
+                        helpMessage: item.helpMessage || '',
+                        checklist: Array.isArray(item.checklist) ? item.checklist : [],
+                        startDateObj: startDateObj,
+                        deadlineObj: deadlineObj
+                    };
+                });
                 renderTable();
             } else {
                  tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">載入資料失敗或您尚未新增任何項目。</td></tr>`;
@@ -446,6 +526,7 @@
         }
 
        function renderTable() {
+            // 完全不做狀態自動更新，使用用戶設定的狀態
             let filtered = activities;
             if (currentGroupFilter !== 'all') filtered = filtered.filter(i => i.group === currentGroupFilter);
             if (currentAssigneeFilter !== 'all') filtered = filtered.filter(i => (i.assignees || []).includes(currentAssigneeFilter));
@@ -937,7 +1018,7 @@
                 assignees: selectedAssignees,
                 collaborators: getSelectedOptions(collaboratorsSelect),
                 type: document.getElementById('item-type').value,
-                status: document.getElementById('item-status').value,
+                status: document.getElementById('item-status').value, // 完全使用用戶選擇的狀態
                 priority: document.getElementById('item-priority').value,
                 startDate: document.getElementById('item-start-date').value,
                 deadline: document.getElementById('item-deadline').value,
@@ -948,13 +1029,47 @@
             };
             
             const originalButtonHTML = id ? '<i class="fas fa-save mr-2"></i>儲存變更' : '<i class="fas fa-plus mr-2"></i>新增項目';
+            
+            // 先在本地立即更新（確保即時顯示）
+            if (id) {
+                // 編輯現有項目：找到並更新本地數據
+                const index = activities.findIndex(item => String(item.id) === String(id));
+                if (index !== -1) {
+                    activities[index] = {
+                        ...activities[index],
+                        ...itemData,
+                        startDateObj: parseLocalDate(itemData.startDate),
+                        deadlineObj: parseLocalDate(itemData.deadline)
+                    };
+                    // 立即重新渲染表格（在 API 調用之前）
+                    renderTable();
+                }
+            }
+            
             const result = await handleApiRequest('saveItem', { item: itemData }, saveBtn);
             saveBtn.innerHTML = originalButtonHTML;
 
             if (result) {
+                if (!id) {
+                    // 新增項目：加入數組
+                    activities.push({
+                        ...itemData,
+                        startDateObj: parseLocalDate(itemData.startDate),
+                        deadlineObj: parseLocalDate(itemData.deadline)
+                    });
+                    renderTable();
+                }
+                
                 showToast(result.message, 'success');
                 resetForm();
-                await loadItems();
+                
+                // 背景重新載入數據以確保與伺服器同步
+                setTimeout(() => loadItems(), 500);
+            } else {
+                // 如果保存失敗，重新載入以恢復原狀態
+                if (id) {
+                    await loadItems();
+                }
             }
         });
         
