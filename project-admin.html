@@ -129,10 +129,26 @@
                         <input type="date" id="item-start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
                 </div>
-                <div class="grid md:grid-cols-3 gap-6">
+                <div class="grid md:grid-cols-3 gap-6 items-start">
                     <div>
                         <label for="item-deadline" class="block text-sm font-medium text-gray-700 mb-2">截止日期 (非必填)</label>
                         <input type="date" id="item-deadline" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div class="flex items-center">
+                            <input id="item-is-major-event" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                            <label for="item-is-major-event" class="ml-2 text-sm font-bold text-blue-800 cursor-pointer">顯示於活動日曆 (重要活動)</label>
+                        </div>
+                        <div id="major-event-details" class="hidden mt-3 pl-7 grid md:grid-cols-2 gap-4 border-t border-blue-200 pt-3">
+                            <div>
+                                <label for="major-event-date" class="block text-xs font-medium text-gray-700 mb-1">活動顯示日期 (預設為截止/開始日)</label>
+                                <input type="date" id="major-event-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-white">
+                            </div>
+                            <div>
+                                <label for="major-event-name" class="block text-xs font-medium text-gray-700 mb-1">活動顯示名稱 (預設為項目名稱)</label>
+                                <input type="text" id="major-event-name" placeholder="例如：PGY甄選日" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-white">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="pt-2">
@@ -560,6 +576,13 @@
             updateProgress(0);
             commentsInput.value = '';
             document.getElementById('item-id').value = '';
+            
+            // Reset Major Event fields
+            document.getElementById('item-is-major-event').checked = false;
+            document.getElementById('major-event-date').value = '';
+            document.getElementById('major-event-name').value = '';
+            document.getElementById('major-event-details').classList.add('hidden');
+            
             formTitle.textContent = '新增項目';
             saveBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>新增項目';
             cancelBtn.classList.add('hidden');
@@ -576,7 +599,32 @@
             
             document.getElementById('item-id').value = item.id;
             document.getElementById('item-name').value = item.name;
-            document.getElementById('item-description').value = item.description || '';
+            
+            // Handle description and major event tag
+            let desc = item.description || '';
+            const isMajor = desc.includes('#重要活動');
+            document.getElementById('item-is-major-event').checked = isMajor;
+            
+            // Parse extra fields
+            const dateMatch = desc.match(/#活動日期:(\d{4}-\d{2}-\d{2})/);
+            const nameMatch = desc.match(/#活動名稱:\[(.*?)\]/);
+            
+            document.getElementById('major-event-date').value = dateMatch ? dateMatch[1] : '';
+            document.getElementById('major-event-name').value = nameMatch ? nameMatch[1] : '';
+            
+            // Toggle visibility
+            if (isMajor) {
+                document.getElementById('major-event-details').classList.remove('hidden');
+            } else {
+                document.getElementById('major-event-details').classList.add('hidden');
+            }
+
+            // Clean description for display
+            desc = desc.replace('#重要活動', '')
+                       .replace(/#活動日期:\d{4}-\d{2}-\d{2}/, '')
+                       .replace(/#活動名稱:\[.*?\]/, '')
+                       .trim();
+            document.getElementById('item-description').value = desc;
             
             const groupExistsInDropdown = [...groupSelect.options].some(opt => opt.value === item.group);
             if (groupExistsInDropdown) {
@@ -880,6 +928,15 @@
         }
 
         // --- Event Listeners ---
+        document.getElementById('item-is-major-event').addEventListener('change', (e) => {
+            const detailsDiv = document.getElementById('major-event-details');
+            if (e.target.checked) {
+                detailsDiv.classList.remove('hidden');
+            } else {
+                detailsDiv.classList.add('hidden');
+            }
+        });
+
         function updateProgress(value) {
             const val = Math.max(0, Math.min(100, value));
             progressInput.value = val;
@@ -1010,10 +1067,27 @@
                 }
             });
 
+            // Handle description and major event tag
+            let description = document.getElementById('item-description').value.trim();
+            const isMajor = document.getElementById('item-is-major-event').checked;
+            if (isMajor) {
+                description += ' #重要活動';
+                
+                const majorDate = document.getElementById('major-event-date').value;
+                if (majorDate) {
+                    description += ` #活動日期:${majorDate}`;
+                }
+                
+                const majorName = document.getElementById('major-event-name').value.trim();
+                if (majorName) {
+                    description += ` #活動名稱:[${majorName}]`;
+                }
+            }
+
             const itemData = {
                 id: id ? id : String(Date.now()),
                 name: document.getElementById('item-name').value,
-                description: document.getElementById('item-description').value,
+                description: description,
                 group: groupValue,
                 assignees: selectedAssignees,
                 collaborators: getSelectedOptions(collaboratorsSelect),

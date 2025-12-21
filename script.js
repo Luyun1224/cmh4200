@@ -252,8 +252,12 @@ function updateStats(itemsToCount) {
     // 已完成 (計算所有類型)
     document.getElementById('completedTasks').textContent = allItemTypes.filter(t => t.status === 'completed').length;
     
-    // 活動總數 (計算活動/會議) - 這個小卡保持不變，因為它是獨立的
-    const activitiesAndMeetings = itemsToCount.filter(item => item.type === 'activity' || item.type === 'meeting');
+    // 活動總數 (計算活動/會議 + #重要活動)
+    const activitiesAndMeetings = itemsToCount.filter(item => 
+        item.type === 'activity' || 
+        item.type === 'meeting' ||
+        (item.description && item.description.includes('#重要活動'))
+    );
     document.getElementById('activityCount').textContent = activitiesAndMeetings.length;
 
     // 榮譽榜
@@ -418,6 +422,32 @@ function renderCalendarView() {
     const month = calendarDate.getMonth();
     const year = calendarDate.getFullYear();
 
+    // *** Helper: 決定項目在日曆上顯示的日期 ***
+    // 邏輯：如果是標記為 #重要活動 的任務/專案，優先顯示截止日期(視為活動日)；否則顯示開始日期
+    const getEventDate = (item) => {
+        if ((item.type === 'project' || item.type === 'task') && item.description && item.description.includes('#重要活動')) {
+            // 1. Check for explicit date tag
+            const dateMatch = item.description.match(/#活動日期:(\d{4}-\d{2}-\d{2})/);
+            if (dateMatch) {
+                return parseLocalDate(dateMatch[1]);
+            }
+            // 2. Fallback to deadline or start date
+            return item.deadlineObj || item.startDateObj;
+        }
+        return item.startDateObj;
+    };
+    
+    // *** Helper: 決定項目在日曆上顯示的名稱 ***
+    const getEventName = (item) => {
+        if ((item.type === 'project' || item.type === 'task') && item.description && item.description.includes('#重要活動')) {
+            const nameMatch = item.description.match(/#活動名稱:\[(.*?)\]/);
+            if (nameMatch) {
+                return nameMatch[1];
+            }
+        }
+        return item.name;
+    };
+
     // 1. Get filtered list of events (based on main page filters)
     let itemsForYear = allActivities;
     if (currentYearFilter !== 'all') {
@@ -442,9 +472,19 @@ function renderCalendarView() {
         itemsToConsider = itemsToConsider.filter(item => (item.assignees || []).includes(currentMemberFilter) || (item.collaborators && item.collaborators.includes(currentMemberFilter)));
     }
     
-    // (*** 這是「活動概覽」彈窗，所以我們只篩選 activity 和 meeting ***)
-    const visibleEvents = itemsToConsider.filter(item => item.type === 'activity' || item.type === 'meeting');
-    visibleEvents.sort((a, b) => a.startDateObj - b.startDateObj);
+    // (*** 修改點：除了 activity/meeting，也包含描述中有 #重要活動 的項目 ***)
+    const visibleEvents = itemsToConsider.filter(item => 
+        item.type === 'activity' || 
+        item.type === 'meeting' || 
+        (item.description && item.description.includes('#重要活動'))
+    );
+    
+    // (*** 修改點：使用 getEventDate 進行排序 ***)
+    visibleEvents.sort((a, b) => {
+        const dateA = getEventDate(a) || new Date(0);
+        const dateB = getEventDate(b) || new Date(0);
+        return dateA - dateB;
+    });
 
     // 2. Prepare calendar grid data
     const firstDay = new Date(year, month, 1);
@@ -455,11 +495,13 @@ function renderCalendarView() {
     const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
 
     // Get event days AND counts for the *currently viewed* month
-    // *** USE ALL ACTIVITIES for consistent counts ***
     const eventCountsThisMonth = new Map();
-    for (const event of allActivities.filter(e => e.type === 'activity' || e.type === 'meeting')) {
-        if (event.startDateObj && event.startDateObj.getFullYear() === year && event.startDateObj.getMonth() === month) {
-            const day = event.startDateObj.getDate();
+    
+    for (const event of visibleEvents) {
+        // (*** 修改點：使用 getEventDate 判斷日期 ***)
+        const evtDate = getEventDate(event);
+        if (evtDate && evtDate.getFullYear() === year && evtDate.getMonth() === month) {
+            const day = evtDate.getDate();
             const count = (eventCountsThisMonth.get(day) || 0) + 1;
             eventCountsThisMonth.set(day, count);
         }
@@ -530,13 +572,22 @@ function renderCalendarView() {
     const listContainerId = 'activity-list-container';
     calendarHTML += `<div id="${listContainerId}" class="mt-6 border-t border-gray-200 pt-4 space-y-4 max-h-[35vh] overflow-y-auto pr-2 scroll-smooth">`;
     
-    if (visibleEvents.length > 0) {
-        // Group events by month
+    // *** 關鍵修正：只顯示當前月份的活動，避免 ID 衝突與顯示錯誤月份資料 ***
+    const eventsInCurrentView = visibleEvents.filter(event => {
+        const evtDate = getEventDate(event);
+        return evtDate && evtDate.getFullYear() === year && evtDate.getMonth() === month;
+    });
+
+    if (eventsInCurrentView.length > 0) {
+        // Group events by month (雖然只剩一個月，但保留結構)
         const eventsByMonth = {};
-        for (const event of visibleEvents) {
-            if (!event.startDateObj) continue;
-            const eventMonth = event.startDateObj.getMonth();
-            const eventYear = event.startDateObj.getFullYear();
+        for (const event of eventsInCurrentView) {
+            // (*** 修改點：使用 getEventDate 進行分組 ***)
+            const evtDate = getEventDate(event);
+            if (!evtDate) continue;
+            
+            const eventMonth = evtDate.getMonth();
+            const eventYear = evtDate.getFullYear();
             const monthKey = `${eventYear}-${String(eventMonth + 1).padStart(2, '0')}`; // "2025-11"
             
             if (!eventsByMonth[monthKey]) {
@@ -547,7 +598,7 @@ function renderCalendarView() {
                 };
             }
             
-            const day = event.startDateObj.getDate();
+            const day = evtDate.getDate();
             if (!eventsByMonth[monthKey].events[day]) {
                 eventsByMonth[monthKey].events[day] = [];
             }
@@ -570,7 +621,10 @@ function renderCalendarView() {
                     <div class="flex-grow divide-y divide-gray-100">
                         ${events.map(item => `
                             <div class="py-2">
-                                <p class="font-semibold ${getTypeStyle(item.type, item.status)}">${item.name}</p>
+                                <p class="font-semibold ${getTypeStyle(item.type, item.status)}">
+                                    ${getEventName(item)} 
+                                    ${(item.description && item.description.includes('#重要活動')) ? '<span class="text-xs bg-red-100 text-red-600 px-1 rounded ml-1">重要活動</span>' : ''}
+                                </p>
                                 <p class="text-sm text-gray-600">日期: ${formatDatePretty(item.startDateObj)} ${item.deadlineObj ? `- ${formatDatePretty(item.deadlineObj)}` : ''}</p>
                                 <p class="text-sm text-gray-600">負責人: ${(item.assignees || []).join(', ')}</p>
                                 ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-500">協助: ${item.collaborators.join(', ')}</p>` : ''}
@@ -583,7 +637,7 @@ function renderCalendarView() {
         }
         
     } else {
-        calendarHTML += `<p class="text-center text-gray-500 py-4">沒有符合目前篩選條件的活動或會議。</p>`;
+        calendarHTML += `<p class="text-center text-gray-500 py-4">本月沒有符合目前篩選條件的活動或會議。</p>`;
     }
     
     calendarHTML += `</div>`;
