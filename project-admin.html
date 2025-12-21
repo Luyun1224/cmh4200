@@ -675,7 +675,9 @@
                 const result = await handleApiRequest('deleteItem', { id, userId: loggedInUser.id });
                 if (result) {
                     showToast('項目已刪除', 'success');
-                    await loadItems();
+                    // await loadItems();
+                    activities = activities.filter(item => String(item.id) !== String(id));
+                    renderTable();
                 }
                 confirmModal.classList.add('hidden');
                 newOkBtn.disabled = false;
@@ -1137,8 +1139,8 @@
                 showToast(result.message, 'success');
                 resetForm();
                 
-                // 背景重新載入數據以確保與伺服器同步
-                setTimeout(() => loadItems(), 500);
+                // 移除自動重新載入，避免因伺服器延遲導致顯示舊資料
+                // setTimeout(() => loadItems(), 500);
             } else {
                 // 如果保存失敗，重新載入以恢復原狀態
                 if (id) {
