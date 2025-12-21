@@ -120,7 +120,11 @@ function renderItems(itemsToRender) {
         itemsList.innerHTML = `<div class="text-center text-gray-400 py-8 col-span-full"><i class="fas fa-folder-open fa-3x mb-4"></i><p class="font-semibold">沒有符合條件的項目</p><p class="text-sm mt-1">請嘗試調整篩選條件</p></div>`;
         return;
     }
-    itemsList.innerHTML = filteredItems.map(item => {
+
+    let lastRole = null;
+    let lastStatusGroup = null;
+
+    itemsList.innerHTML = filteredItems.map((item, index) => {
         const checklist = item.checklist || [];
         const totalSteps = checklist.length;
         const completedSteps = checklist.filter(c => c.completed).length;
@@ -128,13 +132,47 @@ function renderItems(itemsToRender) {
         const progressChangeHTML = progressChange > 0 ? `<span class="bg-green-100 text-green-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▲ ${progressChange}%</span>` : progressChange < 0 ? `<span class="bg-red-100 text-red-800 text-xs font-semibold ml-2 px-2.5 py-0.5 rounded-full">▼ ${Math.abs(progressChange)}%</span>` : `<span class="text-gray-400 text-xs font-medium ml-2">—</span>`;
         const checklistHTML = totalSteps > 0 ? checklist.map(cp => `<li class="flex items-center ${cp.completed ? 'text-emerald-300' : 'text-gray-400'}"><span class="w-5 text-left">${cp.completed ? '✓' : '○'}</span><span>${cp.name}</span></li>`).join('') : '<li>無定義的檢查點</li>';
         
-        // *** 任務 #2 變更 ***
+        // *** 任務 #3 變更: 視覺區隔與標籤 ***
+        let sectionHeader = '';
+        let roleBadge = '';
+        
+        if (currentMemberFilter !== 'all') {
+            const isAssignee = (item.assignees || []).includes(currentMemberFilter);
+            const role = isAssignee ? 'assignee' : 'collaborator';
+            const isCompleted = item.status === 'completed';
+            const statusGroup = isCompleted ? 'completed' : 'active';
+            
+            // 產生區隔標題
+            let title = '';
+            if (statusGroup === 'active' && role === 'assignee') {
+                if (lastRole !== 'assignee' || lastStatusGroup !== 'active') title = '💪 主責項目 (進行中/待辦)';
+            } else if (statusGroup === 'active' && role === 'collaborator') {
+                if (lastRole !== 'collaborator' || lastStatusGroup !== 'active') title = '🤝 協助項目 (進行中/待辦)';
+            } else if (statusGroup === 'completed') {
+                if (lastStatusGroup !== 'completed') title = '✅ 已完成項目';
+            }
+            
+            if (title) {
+                sectionHeader = `<div class="col-span-full pb-2 border-b border-gray-200 mb-2 ${index > 0 ? 'mt-6' : 'mt-2'}"><h3 class="text-gray-500 font-bold text-sm">${title}</h3></div>`;
+            }
+            
+            lastRole = role;
+            lastStatusGroup = statusGroup;
+
+            // 產生卡片上的標籤
+            if (isAssignee) {
+                roleBadge = `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded border border-blue-200 mr-2">主責</span>`;
+            } else {
+                roleBadge = `<span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded border border-gray-200 mr-2">協助</span>`;
+            }
+        }
+
         // 新增 'overdue-card' class (如果 item.status === 'overdue')
-        return `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-card overdue-glow' : 'border-gray-200'}">
+        const cardHtml = `<div class="bg-white border rounded-xl p-4 flex flex-col h-full shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ${item.status === 'overdue' ? 'overdue-card overdue-glow' : 'border-gray-200'}">
             <div class="flex-grow">
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex-1">
-                        <h4 class="font-bold text-lg text-gray-900 mb-1">${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>
+                        <h4 class="font-bold text-lg text-gray-900 mb-1">${roleBadge}${item.name} <span class="text-sm font-medium ${getTypeStyle(item.type, item.status)}">(${getTypeText(item.type)})</span></h4>
                         ${item.description ? `<p class="text-sm text-gray-500 mt-1 mb-2 whitespace-pre-wrap">${item.description}</p>` : ''}
                         <p class="text-sm text-gray-600">主要負責: ${(item.assignees || []).join(', ')}</p>
                         ${item.collaborators && item.collaborators.length > 0 ? `<p class="text-sm text-gray-600">協助: ${item.collaborators.join(', ')}</p>` : ''}
@@ -170,6 +208,8 @@ function renderItems(itemsToRender) {
                 ${item.helpMessage ? `<div class="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 flex items-start space-x-3"><span class="text-xl pt-1">😭</span><div><p class="font-semibold text-red-800 text-sm">需要協助：</p><p class="text-sm text-red-700 whitespace-pre-wrap">${item.helpMessage}</p></div></div>` : ''}
             </div>
         </div>`;
+        
+        return sectionHeader + cardHtml;
     }).join('');
 }
 
@@ -187,11 +227,15 @@ function renderTeamMembers(members, allItems) {
     teamMembersDiv.innerHTML = members.map(memberInfo => {
         const name = memberInfo.name;
         const memberItems = allItems.filter(t => (t.assignees || []).includes(name) || (t.collaborators && t.collaborators.includes(name)));
+        
+        // 過濾掉已完成的項目，只保留進行中、規劃中、逾期
+        const activeMemberItems = memberItems.filter(t => t.status !== 'completed');
+
         const overdueCount = memberItems.filter(t => t.status === 'overdue').length;
-        const projectCount = memberItems.filter(item => item.type === 'project').length;
-        const taskCount = memberItems.filter(item => item.type === 'task').length;
+        const projectCount = activeMemberItems.filter(item => item.type === 'project').length;
+        const taskCount = activeMemberItems.filter(item => item.type === 'task').length;
         // *** 變更點 1: 新增活動計數 ***
-        const activityCount = memberItems.filter(item => item.type === 'activity').length; 
+        const activityCount = activeMemberItems.filter(item => item.type === 'activity').length;  
         const isActive = name === currentMemberFilter;
         
         const isBirthday = memberInfo.birthday === todayStr;
@@ -295,19 +339,36 @@ function renderDashboard() {
 
     // *** 任務 #2 變更 ***
     // 調整主儀表板排序
-    const statusSortOrder = { 'planning': 1, 'active': 1, 'completed': 2, 'overdue': 3 };
     itemsToDisplay.sort((a, b) => {
-        const statusA = statusSortOrder[a.status] || 99;
-        const statusB = statusSortOrder[b.status] || 99;
+        // 1. Completed items always at the bottom
+        const isCompletedA = a.status === 'completed';
+        const isCompletedB = b.status === 'completed';
+        if (isCompletedA !== isCompletedB) {
+            return isCompletedA ? 1 : -1; // Non-completed first
+        }
+
+        // 2. If member filter is active, prioritize Assignee over Collaborator
+        if (currentMemberFilter !== 'all') {
+            const isAssigneeA = (a.assignees || []).includes(currentMemberFilter);
+            const isAssigneeB = (b.assignees || []).includes(currentMemberFilter);
+            if (isAssigneeA !== isAssigneeB) {
+                return isAssigneeA ? -1 : 1; // Assignee comes first
+            }
+        }
+
+        // 3. Status Priority (Overdue > Active > Planning)
+        const statusPriority = { 'overdue': 0, 'active': 1, 'planning': 2, 'completed': 3 };
+        const statusA = statusPriority[a.status] !== undefined ? statusPriority[a.status] : 99;
+        const statusB = statusPriority[b.status] !== undefined ? statusPriority[b.status] : 99;
         
         if (statusA !== statusB) {
-            return statusA - statusB; // 狀態排序 (規劃中/進行中 -> 已完成 -> 逾期)
+            return statusA - statusB;
         }
         
-        // 狀態相同，日期近到遠 (descending)
+        // 4. Date Sorting
         const dateA = a.startDateObj || 0;
         const dateB = b.startDateObj || 0;
-        return dateB - dateA; // b - a for descending
+        return dateB - dateA; 
     });
     
     updateStats(itemsToConsider); // 使用 itemsToConsider 來計算所有統計數據
